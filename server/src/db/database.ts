@@ -1,7 +1,7 @@
 import { config } from "../config";
 import { Sequelize } from "sequelize-typescript";
 import { User } from "./models/user";
-import { RefreshToken } from "./models/refresh-token";
+import { RefreshToken } from "./models/session";
 
 const models = [User, RefreshToken];
 

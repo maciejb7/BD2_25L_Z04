@@ -2,17 +2,18 @@ import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { User } from "../db/models/user";
 import { DateTime } from "luxon";
-import { RefreshToken } from "../db/models/refresh-token";
+import { Session } from "../db/models/session";
 import {
   ExpiredRefreshTokenError,
   InvalidRefreshTokenError,
 } from "../errors/auth-errors";
 import { UserNotFoundError } from "../errors/user-errors";
+import { createHash, randomUUID } from "crypto";
 
 /**
  * Class with static methods to use in authentication process
  */
-class JWTService {
+export class JWTService {
   /**
    * Generates a JWT access token for given user.
    * @param user
@@ -29,28 +30,24 @@ class JWTService {
   }
 
   /**
-   * Generaters a JWT refresh token for given user stored in database.
+   * Generaters a refresh token for given user stored in database.
    * @param user
    * @returns jwt refresh token
    */
   static async generateRefreshToken(user: User): Promise<string> {
-    const tokenBody = jwt.sign(
-      { userId: user.userId, userNickname: user.nickname, userRole: user.role },
-      config.REFRESH_TOKEN_SECRET as string,
-      {
-        expiresIn: "30d",
-      },
-    );
+    const token = randomUUID().toString();
+
+    const hashedToken = createHash("sha256").update(token).digest("hex");
 
     const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
 
-    await RefreshToken.create({
-      tokenBody: tokenBody,
+    await Session.create({
+      token: hashedToken,
       expiresAt: expiresAt,
       userId: user.userId,
     });
 
-    return tokenBody;
+    return token;
   }
 
   /**
@@ -61,20 +58,24 @@ class JWTService {
    * @throws ExpiredRefreshTokenError if refresh token is expired
    * @throws UserNotFoundError if user for refresh token is not found
    */
-  static async refreshAccessToken(refreshTokenBody: string): Promise<string> {
-    const refreshToken = await RefreshToken.findOne({
-      where: { tokenBody: refreshTokenBody },
+  static async refreshAccessToken(refreshToken: string): Promise<string> {
+    const hashedRefreshToken = createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
+    const session = await Session.findOne({
+      where: { token: hashedRefreshToken },
     });
 
-    if (!refreshToken) {
+    if (!session) {
       throw new InvalidRefreshTokenError();
     }
 
-    if (DateTime.now() > DateTime.fromJSDate(refreshToken.expiresAt)) {
+    if (DateTime.now() > DateTime.fromJSDate(session.expiresAt)) {
       throw new ExpiredRefreshTokenError();
     }
 
-    const user = await User.findByPk(refreshToken.userId);
+    const user = await User.findByPk(session.userId);
 
     if (!user) {
       throw new UserNotFoundError();
@@ -88,9 +89,9 @@ class JWTService {
    * @param refreshTokenBody refresh token to delete
    * @throws InvalidRefreshTokenError if refresh token is invalid (not found in database)
    */
-  static async revokeRefreshToken(refreshTokenBody: string): Promise<void> {
-    const destroyCounter = await RefreshToken.destroy({
-      where: { tokenBody: refreshTokenBody },
+  static async revokeRefreshToken(refreshToken: string): Promise<void> {
+    const destroyCounter = await Session.destroy({
+      where: { token: refreshToken },
     });
 
     if (destroyCounter === 0) {
@@ -104,7 +105,7 @@ class JWTService {
    * @throws UserNotFoundError if user for refresh token is not found
    */
   static async revokeAllRefreshTokens(userId: string): Promise<void> {
-    const destroyCounter = await RefreshToken.destroy({
+    const destroyCounter = await Session.destroy({
       where: { userId: userId },
     });
 

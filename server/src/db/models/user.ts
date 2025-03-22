@@ -1,5 +1,5 @@
 import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
-import { RefreshToken } from "./refresh-token";
+import { Session } from "./session";
 
 export enum Gender {
   M = "male",
@@ -86,6 +86,16 @@ export class User extends Model {
   })
   declare isActive: boolean;
 
-  @HasMany(() => RefreshToken)
-  declare refreshTokens: RefreshToken[];
+  @HasMany(() => Session)
+  declare sessions: Session[];
+
+  public toJSON(): object {
+    const userData = this.get({ plain: true });
+
+    delete userData.password;
+    delete userData.sessions;
+    delete userData.isActive;
+
+    return userData;
+  }
 }

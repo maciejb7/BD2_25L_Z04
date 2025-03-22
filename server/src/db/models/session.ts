@@ -8,21 +8,21 @@ import {
 import { User } from "./user";
 
 @Table({
-  tableName: "refresh_tokens",
+  tableName: "sessions",
 })
-export class RefreshToken extends Model {
+export class Session extends Model {
   @Column({
     primaryKey: true,
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
   })
-  declare refreshTokenId: string;
+  declare sessionId: string;
 
   @Column({
     type: DataType.UUID,
     allowNull: false,
   })
-  declare tokenBody: string;
+  declare refreshToken: string;
 
   @Column({
     type: DataType.DATE,
