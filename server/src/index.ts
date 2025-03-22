@@ -1,12 +1,12 @@
 import express from "express";
-import { friendsAppDatabase } from "./db/database";
+import { database } from "./db/database";
 import logger from "./logger";
 import { config } from "./config";
 
 const startServer = async () => {
   try {
-    await friendsAppDatabase.authenticate();
-    await friendsAppDatabase.sync({ force: false });
+    await database.authenticate();
+    await database.sync({ force: false });
     logger.info("Połączono z bazą danych.");
 
     const app = express();
