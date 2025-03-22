@@ -84,7 +84,7 @@ export class User extends Model {
     allowNull: false,
     defaultValue: false,
   })
-  declare isActivate: boolean;
+  declare isActive: boolean;
 
   @HasMany(() => RefreshToken)
   declare refreshTokens: RefreshToken[];
