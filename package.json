@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "luxon": "^3.5.0",
+    "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/luxon": "^3.4.2",
+    "@types/zxcvbn": "^4.4.5"
+  }
+}
