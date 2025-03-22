@@ -1,4 +1,5 @@
-import { DataType, Table, Model, Column } from "sequelize-typescript";
+import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
+import { RefreshToken } from "./refresh-token";
 
 export enum Gender {
   M = "male",
@@ -84,4 +85,7 @@ export class User extends Model {
     defaultValue: false,
   })
   declare isActivate: boolean;
+
+  @HasMany(() => RefreshToken)
+  declare refreshTokens: RefreshToken[];
 }
