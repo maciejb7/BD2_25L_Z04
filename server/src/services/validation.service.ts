@@ -79,7 +79,7 @@ export class ValidationService {
       .regex(/[A-Z]/, { message: "Hasło musi zawierać dużą literę." })
       .regex(/[0-9]/, { message: "Hasło musi zawierać cyfrę." })
       .regex(/[!@#$%^&*()_\-+={}[\]:;"'<>,.?/~`|\\]/, {
-        message: "Hasło musi zawierać znak specjalny",
+        message: "Hasło musi zawierać znak specjalny.",
       })
       .max(50, { message: "Hasło nie może mieć więcej niż 50 znaków." });
 

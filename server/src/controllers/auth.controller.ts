@@ -12,11 +12,11 @@ import { Op } from "sequelize";
 export class AuthController {
   static async register(req: Request, res: Response): Promise<void> {
     try {
-      const nickname = req.body.nickname?.trim();
-      const name = req.body.name?.trim();
-      const surname = req.body.surname?.trim();
-      const email = req.body.email?.trim();
-      const password = req.body.password?.trim();
+      const nickname = req.body.nickname?.trim() ?? "";
+      const name = req.body.name?.trim() ?? "";
+      const surname = req.body.surname?.trim() ?? "";
+      const email = req.body.email?.trim() ?? "";
+      const password = req.body.password?.trim() ?? "";
 
       const nicknameValidation = ValidationService.isStringFieldValid(
         nickname,
@@ -25,6 +25,12 @@ export class AuthController {
         20,
       );
       if (nicknameValidation !== true) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${nicknameValidation}`,
+          {
+            service: "register",
+          },
+        );
         res.status(400).json({ message: nicknameValidation });
         return;
       }
@@ -36,6 +42,12 @@ export class AuthController {
         50,
       );
       if (nameValidation !== true) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${nameValidation}`,
+          {
+            service: "register",
+          },
+        );
         res.status(400).json({ message: nameValidation });
         return;
       }
@@ -47,12 +59,24 @@ export class AuthController {
         50,
       );
       if (surnameValidation !== true) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${surnameValidation}`,
+          {
+            service: "register",
+          },
+        );
         res.status(400).json({ message: surnameValidation });
         return;
       }
 
       const emailValidation = ValidationService.isEmailValid(email);
       if (emailValidation !== true) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${emailValidation}`,
+          {
+            service: "register",
+          },
+        );
         res.status(400).json({ message: emailValidation });
         return;
       }
@@ -90,6 +114,12 @@ export class AuthController {
       }
 
       const passwordValidation = ValidationService.isPasswordValid(password);
+      logger.warn(
+        `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${passwordValidation}`,
+        {
+          service: "register",
+        },
+      );
       if (passwordValidation !== true) {
         res.status(400).json({ message: passwordValidation });
         return;
@@ -137,18 +167,65 @@ export class AuthController {
     }
   }
 
-  // static async login(req: Request, res: Response): Promise<void> {
-  //   try {
-  //     const {nicknameOrEmail, password} = req.body;
+  static async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { nicknameOrEmail, password } = req.body;
 
-  //     const user = await User.findOne({
-  //       where: {
-  //         [Op.or]: [
-  //           { nickname: nicknameOrEmail },
-  //           { email: nicknameOrEmail },
-  //         ],
-  //       }
-  //     });
-  //   }
-  // }
+      const user = await User.findOne({
+        where: {
+          [Op.or]: [{ nickname: nicknameOrEmail }, { email: nicknameOrEmail }],
+        },
+      });
+
+      if (!user) {
+        logger.warn(
+          `Nieudana próba logowania przez użytkownika ${nicknameOrEmail} - użytkownik nie istnieje.`,
+          {
+            service: "login",
+          },
+        );
+        res.status(401).json({ message: "Nieprawidłowy login lub hasło." });
+        return;
+      }
+
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        logger.warn(
+          `Nieudana próba logowania przez użytkownika ${user.nickname} - nieprawidłowe hasło.`,
+          {
+            service: "login",
+          },
+        );
+        res.status(401).json({ message: "Nieprawidłowy login lub hasło." });
+        return;
+      }
+
+      const accessToken = TokenService.generateAccessToken(user);
+      const refreshToken = TokenService.generateRefreshToken(user);
+
+      logger.info(`Użytkownik ${user.nickname} zalogował się pomyślnie.`, {
+        service: "login",
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(200).json({
+        message: "Zalogowano pomyślnie.",
+        accessToken: accessToken,
+        user: user.toJSON(),
+      });
+    } catch (error) {
+      logger.error("Wystąpił błąd podczas logowania", error, {
+        service: "login",
+      });
+      res
+        .status(500)
+        .send("Wystąpił błąd podczas logowania. Spróbuj ponownie.");
+      return;
+    }
+  }
 }
