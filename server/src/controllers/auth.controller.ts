@@ -3,21 +3,34 @@ import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import logger from "../logger";
 import { TokenService } from "../services/token.service";
+import { PasswordService } from "../services/password.service";
 
+/**
+ * Class with static methods to handle authentication requests.
+ */
 export class AuthController {
   static async register(req: Request, res: Response): Promise<void> {
     try {
       const { name, surname, nickname, email, password, role } = req.body;
 
-      if (role === "admin") {
-        res.status(403).json({
-          message: "Nie masz uprawnień do rejestracji jako administrator.",
+      if (!name || !surname || !nickname || !email || !password) {
+        logger.warn("Nieudana próba rejestracji - brak wymaganych pól.", {
+          service: "register",
         });
+        res.status(400).json({ message: "Wypełnij wszystkie wymagane pola." });
         return;
       }
 
-      if (!name || !surname || !nickname || !email || !password) {
-        res.status(400).json({ message: "Wypełnij wszystkie wymagane pola." });
+      if (role === "admin") {
+        logger.warn(
+          `Nieautoryzowana próba rejestracji przez użytkownika o nicku ${nickname} jako administrator.`,
+          {
+            service: "register",
+          },
+        );
+        res.status(403).json({
+          message: "Nie masz uprawnień do rejestracji jako administrator.",
+        });
         return;
       }
 
@@ -25,6 +38,12 @@ export class AuthController {
         where: { nickname: nickname },
       });
       if (existingUserByNickname) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - użytkownik o podanym nicku już istnieje.`,
+          {
+            service: "register",
+          },
+        );
         res.status(409).json({
           message: "Użytkownik o podanym nicku już istnieje.",
         });
@@ -35,9 +54,27 @@ export class AuthController {
         where: { email: email },
       });
       if (existingUserByEmail) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkonika o nicku ${nickname} na email ${email} - użytkownik o podanym nicku już istnieje.`,
+          {
+            service: "register",
+          },
+        );
         res.status(409).json({
           message: "Użytkownik o podanym adresie email już istnieje.",
         });
+        return;
+      }
+
+      const passwordValidation = PasswordService.isPasswordValid(password);
+      if (passwordValidation !== true) {
+        logger.warn(
+          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - hasło nie spełnia wymagań: ${passwordValidation}`,
+          {
+            service: "register",
+          },
+        );
+        res.status(400).json({ message: passwordValidation });
         return;
       }
 
