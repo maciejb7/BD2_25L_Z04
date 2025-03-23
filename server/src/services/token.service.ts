@@ -13,7 +13,7 @@ import { createHash, randomUUID } from "crypto";
 /**
  * Class with static methods to use in authentication process
  */
-export class JWTService {
+export class TokenService {
   /**
    * Generates a JWT access token for given user.
    * @param user

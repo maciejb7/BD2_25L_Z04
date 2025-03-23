@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import logger from "../logger";
-import { JWTService } from "../services/jwt-service";
+import { TokenService } from "../services/token.service";
 
 export class AuthController {
   static async register(req: Request, res: Response): Promise<void> {
@@ -51,8 +51,8 @@ export class AuthController {
         password: hashedPassword,
       });
 
-      const accessToken = JWTService.generateAccessToken(createdUser);
-      const refreshToken = JWTService.generateRefreshToken(createdUser);
+      const accessToken = TokenService.generateAccessToken(createdUser);
+      const refreshToken = TokenService.generateRefreshToken(createdUser);
 
       logger.info(
         `Użytkownik ${createdUser.nickname} zarejestrował się pomyślnie.`,

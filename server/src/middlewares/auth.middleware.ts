@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { Request, Response, NextFunction } from "express";
 
-export class AuthenticationMiddleware {
+export class AuthMiddleware {
   /**
    * Middleware function to authenticate user using JWT access token.
    * @returns middleware function
