@@ -3,7 +3,7 @@ import cookieParser from "cookie-parser";
 import { database } from "./db/database";
 import logger from "./logger";
 import { config } from "./config";
-import authRouter from "./routers/auth-router";
+import authRouter from "./routers/auth.router";
 
 const startServer = async () => {
   try {
