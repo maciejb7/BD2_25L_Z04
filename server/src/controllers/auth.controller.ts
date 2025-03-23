@@ -3,34 +3,57 @@ import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import logger from "../logger";
 import { TokenService } from "../services/token.service";
-import { PasswordService } from "../services/password.service";
+import { ValidationService } from "../services/validation.service";
+import { Op } from "sequelize";
 
 /**
- * Class with static methods to handle authentication requests.
+ * Controller for handling user authentication.
  */
 export class AuthController {
   static async register(req: Request, res: Response): Promise<void> {
     try {
-      const { name, surname, nickname, email, password, role } = req.body;
+      const nickname = req.body.nickname?.trim();
+      const name = req.body.name?.trim();
+      const surname = req.body.surname?.trim();
+      const email = req.body.email?.trim();
+      const password = req.body.password?.trim();
 
-      if (!name || !surname || !nickname || !email || !password) {
-        logger.warn("Nieudana próba rejestracji - brak wymaganych pól.", {
-          service: "register",
-        });
-        res.status(400).json({ message: "Wypełnij wszystkie wymagane pola." });
+      const nicknameValidation = ValidationService.isStringFieldValid(
+        nickname,
+        "Nick",
+        3,
+        20,
+      );
+      if (nicknameValidation !== true) {
+        res.status(400).json({ message: nicknameValidation });
         return;
       }
 
-      if (role === "admin") {
-        logger.warn(
-          `Nieautoryzowana próba rejestracji przez użytkownika o nicku ${nickname} jako administrator.`,
-          {
-            service: "register",
-          },
-        );
-        res.status(403).json({
-          message: "Nie masz uprawnień do rejestracji jako administrator.",
-        });
+      const nameValidation = ValidationService.isStringFieldValid(
+        name,
+        "Imię",
+        2,
+        50,
+      );
+      if (nameValidation !== true) {
+        res.status(400).json({ message: nameValidation });
+        return;
+      }
+
+      const surnameValidation = ValidationService.isStringFieldValid(
+        surname,
+        "Nazwisko",
+        2,
+        50,
+      );
+      if (surnameValidation !== true) {
+        res.status(400).json({ message: surnameValidation });
+        return;
+      }
+
+      const emailValidation = ValidationService.isEmailValid(email);
+      if (emailValidation !== true) {
+        res.status(400).json({ message: emailValidation });
         return;
       }
 
@@ -66,14 +89,8 @@ export class AuthController {
         return;
       }
 
-      const passwordValidation = PasswordService.isPasswordValid(password);
+      const passwordValidation = ValidationService.isPasswordValid(password);
       if (passwordValidation !== true) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - hasło nie spełnia wymagań: ${passwordValidation}`,
-          {
-            service: "register",
-          },
-        );
         res.status(400).json({ message: passwordValidation });
         return;
       }
@@ -105,7 +122,7 @@ export class AuthController {
       });
 
       res.status(201).json({
-        message: "Rejestracja przebiegła pomyślnie. Zaloguj się.",
+        message: "Rejestracja przebiegła pomyślnie.",
         accessToken: accessToken,
         user: createdUser.toJSON(),
       });
@@ -119,4 +136,19 @@ export class AuthController {
       return;
     }
   }
+
+  // static async login(req: Request, res: Response): Promise<void> {
+  //   try {
+  //     const {nicknameOrEmail, password} = req.body;
+
+  //     const user = await User.findOne({
+  //       where: {
+  //         [Op.or]: [
+  //           { nickname: nicknameOrEmail },
+  //           { email: nicknameOrEmail },
+  //         ],
+  //       }
+  //     });
+  //   }
+  // }
 }

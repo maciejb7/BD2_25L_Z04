@@ -11,7 +11,7 @@ import { UserNotFoundError } from "../errors/user-errors";
 import { createHash, randomUUID } from "crypto";
 
 /**
- * Class with static methods to use in authentication process
+ * Service for handling tokens.
  */
 export class TokenService {
   /**
