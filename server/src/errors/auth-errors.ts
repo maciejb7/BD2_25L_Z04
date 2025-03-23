@@ -1,11 +1,11 @@
-export class InvalidRefreshTokenError extends Error {
-  constructor(message = "Nieprawidłowy Refresh Token.") {
+export class InvalidSessionError extends Error {
+  constructor(message = "Twoja sesja jest nieprawidłowa.") {
     super(message);
   }
 }
 
-export class ExpiredRefreshTokenError extends Error {
-  constructor(message = "Refresh Token wygasł.") {
+export class ExpiredSessionError extends Error {
+  constructor(message = "Twoja sesja wygasła. Zaloguj się ponownie.") {
     super(message);
   }
 }
