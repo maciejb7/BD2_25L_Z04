@@ -4,8 +4,8 @@ import { User } from "../db/models/user";
 import { DateTime } from "luxon";
 import { Session } from "../db/models/session";
 import {
-  ExpiredRefreshTokenError,
-  InvalidRefreshTokenError,
+  ExpiredSessionError,
+  InvalidSessionError,
 } from "../errors/auth-errors";
 import { UserNotFoundError } from "../errors/user-errors";
 import { createHash, randomUUID } from "crypto";
@@ -54,8 +54,8 @@ export class TokenService {
    * Generates a new JWT access token for given refresh token.
    * @param refreshTokenBody
    * @returns jwt access token
-   * @throws InvalidRefreshTokenError if refresh token is invalid (not found in database)
-   * @throws ExpiredRefreshTokenError if refresh token is expired
+   * @throws InvalidSessionError if refresh token is invalid (not found in database)
+   * @throws ExpiredSessionError if refresh token is expired
    * @throws UserNotFoundError if user for refresh token is not found
    */
   static async refreshAccessToken(refreshToken: string): Promise<string> {
@@ -68,11 +68,11 @@ export class TokenService {
     });
 
     if (!session) {
-      throw new InvalidRefreshTokenError();
+      throw new InvalidSessionError();
     }
 
     if (DateTime.now() > DateTime.fromJSDate(session.expiresAt)) {
-      throw new ExpiredRefreshTokenError();
+      throw new ExpiredSessionError();
     }
 
     const user = await User.findByPk(session.userId);
@@ -85,32 +85,31 @@ export class TokenService {
   }
 
   /**
-   * Deletes given refresh token from database.
-   * @param refreshTokenBody refresh token to delete
-   * @throws InvalidRefreshTokenError if refresh token is invalid (not found in database)
+   * Deletes given session token from database.
+   * @param refreshToken session's refresh token to delete
+   * @throws InvalidSessionError if session is invalid (not found in database)
    */
-  static async revokeRefreshToken(refreshToken: string): Promise<void> {
+  static async revokeSession(refreshToken: string): Promise<void> {
+    const hashedRefreshToken = createHash("sha256")
+      .update(refreshToken)
+      .digest("hex");
+
     const destroyCounter = await Session.destroy({
-      where: { token: refreshToken },
+      where: { token: hashedRefreshToken },
     });
 
     if (destroyCounter === 0) {
-      throw new InvalidRefreshTokenError();
+      throw new InvalidSessionError();
     }
   }
 
   /**
    * Deletes all refresh tokens for given user from database.
    * @param userId user id to delete refresh tokens
-   * @throws UserNotFoundError if user for refresh token is not found
    */
-  static async revokeAllRefreshTokens(userId: string): Promise<void> {
-    const destroyCounter = await Session.destroy({
+  static async revokeAllSessions(userId: string): Promise<void> {
+    await Session.destroy({
       where: { userId: userId },
     });
-
-    if (destroyCounter === 0) {
-      throw new UserNotFoundError();
-    }
   }
 }

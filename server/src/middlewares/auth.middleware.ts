@@ -2,6 +2,9 @@ import jwt from "jsonwebtoken";
 import { config } from "../config";
 import { Request, Response, NextFunction } from "express";
 
+/**
+ * Class with static methods to authenticate and authorize user using JWT. To use before controller methods.
+ */
 export class AuthMiddleware {
   /**
    * Middleware function to authenticate user using JWT access token.
@@ -42,7 +45,7 @@ export class AuthMiddleware {
    * @param role - role to authenticate
    * @returns middleware function
    */
-  static authenticateRole(role: string) {
+  static authorizeRole(role: string) {
     return async (req: Request, res: Response, next: NextFunction) => {
       if (!req.user) {
         res.status(401).send("Brak autoryzacji.");
