@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { User } from "../db/models/user";
+import { Gender, User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import logger from "../logger";
 import { TokenService } from "../services/token.service";
@@ -23,12 +23,14 @@ export class AuthController {
       const surname = req.body.surname?.trim() ?? "";
       const email = req.body.email?.trim() ?? "";
       const password = req.body.password?.trim() ?? "";
+      const gender = req.body.gender?.trim() ?? "";
 
       // Form fields validation
       ValidationService.isStringFieldValid(nickname, "Nick", 3, 20);
       ValidationService.isStringFieldValid(name, "Imię", 2, 50);
       ValidationService.isStringFieldValid(surname, "Nazwisko", 2, 50);
       ValidationService.isEmailValid(email);
+      ValidationService.doesStringFieldMatchesEnum(gender, Gender, "Płeć");
       ValidationService.isPasswordValid(password);
 
       // Check if user already exists
@@ -40,7 +42,7 @@ export class AuthController {
         throw new UserAlreadyExistsError(
           "Użytkownik o podanym nicku już istnieje.",
           409,
-          `(nickname: ${nickname})`,
+          nickname,
         );
       }
 
@@ -52,7 +54,7 @@ export class AuthController {
         throw new UserAlreadyExistsError(
           "Użytkownik o podanym adresie email już istnieje.",
           409,
-          `(email: ${email})`,
+          email,
         );
       }
 
@@ -64,6 +66,7 @@ export class AuthController {
         surname: surname,
         nickname: nickname,
         email: email,
+        gender: gender,
         password: hashedPassword,
       });
 
@@ -98,12 +101,10 @@ export class AuthController {
         res.status(error.statusCode).json({ message: error.message });
         return;
       } else if (error instanceof UserAlreadyExistsError) {
-        logger.warn(
-          `Nieudana próba rejestracji - ${error.message} ${error.loggerMessage}`,
-          {
-            service: "register",
-          },
-        );
+        logger.warn(`Nieudana próba rejestracji - ${error.message}`, {
+          nickOrEmail: error.loggerMessage,
+          service: "register",
+        });
         res.status(error.statusCode).json({ message: error.message });
       } else {
         logger.error("Wystąpił błąd podczas rejestracji", error, {
@@ -177,13 +178,31 @@ export class AuthController {
         res.status(error.statusCode).json({ message: error.message });
         return;
       } else {
-        logger.error("Wystąpił błąd podczas logowania", error, {
+        logger.error("Wystąpił błąd podczas logowania ", error, {
           service: "login",
         });
         res
           .status(500)
           .send("Wystąpił błąd podczas logowania. Spróbuj ponownie.");
       }
+    }
+  }
+
+  static async tempDelete(req: Request, res: Response): Promise<void> {
+    try {
+      const { nickname } = req.body;
+
+      await User.destroy({
+        where: { nickname: nickname },
+      });
+      res.status(200).send("Usunięto użytkownika.");
+    } catch (error) {
+      logger.error("Wystąpił błąd podczas usuwania użytkownika", error, {
+        service: "tempDelete",
+      });
+      res
+        .status(500)
+        .send("Wystąpił błąd podczas usuwania użytkownika. Spróbuj ponownie.");
     }
   }
 }

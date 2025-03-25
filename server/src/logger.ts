@@ -15,7 +15,7 @@ if (!fs.existsSync(logDirectory)) {
 }
 
 const dailyRotateFileTransport = new winston.transports.DailyRotateFile({
-  filename: path.join(logDirectory, "server-%DATE%.log"),
+  filename: path.join(logDirectory, "clingclang-%DATE%.log"),
   datePattern: "YYYY-MM-DD",
   zippedArchive: true,
   maxSize: "20m",
@@ -31,7 +31,7 @@ const logger = winston.createLogger({
     }),
     winston.format.json(), // Output logs in JSON format
   ),
-  defaultMeta: { service: "friends-app" },
+  defaultMeta: { service: "clingclang-server" },
   transports: [
     new winston.transports.File({
       filename: path.join(logDirectory, "error.log"),

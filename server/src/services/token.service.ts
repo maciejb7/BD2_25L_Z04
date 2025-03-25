@@ -7,7 +7,7 @@ import {
   ExpiredSessionError,
   InvalidSessionError,
 } from "../errors/auth-errors";
-import { UserNotFoundError } from "../errors/user-errors";
+import { UserNotFoundError } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
 
 /**
@@ -39,10 +39,12 @@ export class TokenService {
 
     const hashedToken = createHash("sha256").update(token).digest("hex");
 
+    console.log("hashedToken", hashedToken);
+
     const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
 
     await Session.create({
-      token: hashedToken,
+      refreshToken: hashedToken,
       expiresAt: expiresAt,
       userId: user.userId,
     });
@@ -78,7 +80,7 @@ export class TokenService {
     const user = await User.findByPk(session.userId);
 
     if (!user) {
-      throw new UserNotFoundError();
+      throw new UserNotFoundError("Nie znaleziono użytkownika dla sesji.", 500);
     }
 
     return this.generateAccessToken(user);
