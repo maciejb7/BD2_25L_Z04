@@ -7,7 +7,7 @@ import {
   ExpiredSessionError,
   InvalidSessionError,
 } from "../errors/auth-errors";
-import { UserNotFoundError } from "../errors/errors";
+import { InvalidRefreshTokenError, UserNotFoundError } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
 
 /**
@@ -97,11 +97,11 @@ export class TokenService {
       .digest("hex");
 
     const destroyCounter = await Session.destroy({
-      where: { token: hashedRefreshToken },
+      where: { refreshToken: hashedRefreshToken },
     });
 
     if (destroyCounter === 0) {
-      throw new InvalidSessionError();
+      throw new InvalidRefreshTokenError("", 401);
     }
   }
 

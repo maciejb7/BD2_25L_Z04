@@ -1,9 +1,14 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const authRouter = Router();
 
 authRouter.post("/register", AuthController.register);
 authRouter.post("/login", AuthController.login);
-authRouter.delete("/tempdelete", AuthController.tempDelete);
+authRouter.delete(
+  "/logout",
+  AuthMiddleware.authenticateUser(),
+  AuthController.logout,
+);
 export default authRouter;

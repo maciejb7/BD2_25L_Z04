@@ -8,6 +8,8 @@ import { Op } from "sequelize";
 import {
   FieldValidationError,
   InvalidPasswordError,
+  NoRefreshTokenError,
+  InvalidRefreshTokenError,
   UserAlreadyExistsError,
   UserNotFoundError,
 } from "../errors/errors";
@@ -71,7 +73,9 @@ export class AuthController {
       });
 
       const accessToken = TokenService.generateAccessToken(createdUser);
-      const refreshToken = TokenService.generateRefreshToken(createdUser);
+      const refreshToken = await TokenService.generateRefreshToken(createdUser);
+
+      console.log(refreshToken);
 
       logger.info(
         `Użytkownik ${createdUser.nickname} zarejestrował się pomyślnie.`,
@@ -95,13 +99,13 @@ export class AuthController {
     } catch (error) {
       // Handle errors
       if (error instanceof FieldValidationError) {
-        logger.warn(`Nieudana próba rejestracji - ${error.message}`, {
+        logger.error(`Nieudana próba rejestracji - ${error.message}`, {
           service: "register",
         });
         res.status(error.statusCode).json({ message: error.message });
         return;
       } else if (error instanceof UserAlreadyExistsError) {
-        logger.warn(`Nieudana próba rejestracji - ${error.message}`, {
+        logger.error(`Nieudana próba rejestracji - ${error.message}`, {
           nickOrEmail: error.loggerMessage,
           service: "register",
         });
@@ -163,20 +167,19 @@ export class AuthController {
         user: user.toJSON(),
       });
     } catch (error) {
+      // Handle errors
       if (error instanceof UserNotFoundError) {
-        logger.warn(`Nieudana próba logowania - Nie znaleziono użytkownika.`, {
+        logger.error(`Nieudana próba logowania - Nie znaleziono użytkownika.`, {
           nickOrEmail: error.loggerMessage,
           service: "login",
         });
         res.status(error.statusCode).json({ message: error.message });
-        return;
       } else if (error instanceof InvalidPasswordError) {
-        logger.warn(`Nieudana próba logowania - Nieprawidłowe hasło.`, {
+        logger.error(`Nieudana próba logowania - Nieprawidłowe hasło.`, {
           nickOrEmail: error.loggerMessage,
           service: "login",
         });
         res.status(error.statusCode).json({ message: error.message });
-        return;
       } else {
         logger.error("Wystąpił błąd podczas logowania ", error, {
           service: "login",
@@ -188,21 +191,57 @@ export class AuthController {
     }
   }
 
-  static async tempDelete(req: Request, res: Response): Promise<void> {
-    try {
-      const { nickname } = req.body;
+  static async logout(req: Request, res: Response): Promise<void> {
+    const { userNickname } = req.user as { userNickname: string };
 
-      await User.destroy({
-        where: { nickname: nickname },
+    try {
+      const refreshToken = req.cookies.refreshToken;
+
+      if (!refreshToken) {
+        throw new NoRefreshTokenError("Nie jesteś zalogowany.", 401);
+      }
+
+      await TokenService.revokeSession(refreshToken);
+
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "strict",
+        secure: false,
       });
-      res.status(200).send("Usunięto użytkownika.");
+
+      res.status(200).json({ message: "Wylogowano pomyślnie." });
     } catch (error) {
-      logger.error("Wystąpił błąd podczas usuwania użytkownika", error, {
-        service: "tempDelete",
-      });
-      res
-        .status(500)
-        .send("Wystąpił błąd podczas usuwania użytkownika. Spróbuj ponownie.");
+      // Handle errors
+      if (error instanceof NoRefreshTokenError) {
+        logger.error(
+          `Nieudana próba wylogowania użytkownika ${userNickname} - brak refresh tokena.`,
+          {
+            service: "logout",
+          },
+        );
+        res.status(error.statusCode).json({ message: error.message });
+      } else if (error instanceof InvalidRefreshTokenError) {
+        logger.error(
+          `Nieudana próba wylogowania użytkownika ${userNickname} - nieprawidłowy refresh token.`,
+          {
+            service: "logout",
+          },
+        );
+        res
+          .status(error.statusCode)
+          .json({ message: "Nie jesteś zalogowany." });
+      } else {
+        logger.error(
+          `Wystąpił błąd podczas wylogowywania użytkownika ${userNickname}.`,
+          error,
+          {
+            service: "logout",
+          },
+        );
+        res
+          .status(500)
+          .send("Wystąpił błąd podczas wylogowywania. Spróbuj ponownie.");
+      }
     }
   }
 }

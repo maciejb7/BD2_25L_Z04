@@ -15,3 +15,9 @@ export class UserAlreadyExistsError extends APIError {}
 export class UserNotFoundError extends APIError {}
 
 export class InvalidPasswordError extends APIError {}
+
+export class NoRefreshTokenError extends APIError {}
+
+export class InvalidRefreshTokenError extends APIError {}
+
+export class ExpiredRefreshTokenError extends APIError {}
