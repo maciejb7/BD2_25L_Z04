@@ -42,7 +42,7 @@ export class ValidationService {
     value: string,
     fieldName: string,
     minLength: number,
-    maxLength: number,
+    maxLength = 500,
   ): void {
     const fieldSchema = z
       .string()
