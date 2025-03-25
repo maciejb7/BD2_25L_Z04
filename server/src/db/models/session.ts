@@ -19,7 +19,7 @@ export class Session extends Model {
   declare sessionId: string;
 
   @Column({
-    type: DataType.UUID,
+    type: DataType.STRING,
     allowNull: false,
   })
   declare refreshToken: string;
