@@ -112,4 +112,14 @@ export class TokenService {
       where: { userId: userId },
     });
   }
+
+  // static async validateRefreshToken(refreshToken: string): Promise<Session> {
+  //   const hashedRefreshToken = createHash("sha256")
+  //     .update(refreshToken)
+  //     .digest("hex");
+
+  //   const session = await Session.findOne({
+  //     where: { token: hashedRefreshToken },
+  //   });
+  // }
 }
