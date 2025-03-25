@@ -19,7 +19,7 @@ const startServer = async () => {
     addRouters(app);
 
     app.listen(appPort, () => {
-      logger.info(`Uruchomiono serwer na porcie ${appPort}`);
+      logger.info(`Uruchomiono serwer na porcie ${appPort}.`);
     });
   } catch (error) {
     logger.error("Błąd podczas łączenia z bazą danych: ", error);

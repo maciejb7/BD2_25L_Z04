@@ -5,6 +5,12 @@ import logger from "../logger";
 import { TokenService } from "../services/token.service";
 import { ValidationService } from "../services/validation.service";
 import { Op } from "sequelize";
+import {
+  FieldValidationError,
+  InvalidPasswordError,
+  UserAlreadyExistsError,
+  UserNotFoundError,
+} from "../errors/errors";
 
 /**
  * Controller for handling user authentication.
@@ -18,113 +24,39 @@ export class AuthController {
       const email = req.body.email?.trim() ?? "";
       const password = req.body.password?.trim() ?? "";
 
-      const nicknameValidation = ValidationService.isStringFieldValid(
-        nickname,
-        "Nick",
-        3,
-        20,
-      );
-      if (nicknameValidation !== true) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${nicknameValidation}`,
-          {
-            service: "register",
-          },
-        );
-        res.status(400).json({ message: nicknameValidation });
-        return;
-      }
+      // Form fields validation
+      ValidationService.isStringFieldValid(nickname, "Nick", 3, 20);
+      ValidationService.isStringFieldValid(name, "Imię", 2, 50);
+      ValidationService.isStringFieldValid(surname, "Nazwisko", 2, 50);
+      ValidationService.isEmailValid(email);
+      ValidationService.isPasswordValid(password);
 
-      const nameValidation = ValidationService.isStringFieldValid(
-        name,
-        "Imię",
-        2,
-        50,
-      );
-      if (nameValidation !== true) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${nameValidation}`,
-          {
-            service: "register",
-          },
-        );
-        res.status(400).json({ message: nameValidation });
-        return;
-      }
-
-      const surnameValidation = ValidationService.isStringFieldValid(
-        surname,
-        "Nazwisko",
-        2,
-        50,
-      );
-      if (surnameValidation !== true) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${surnameValidation}`,
-          {
-            service: "register",
-          },
-        );
-        res.status(400).json({ message: surnameValidation });
-        return;
-      }
-
-      const emailValidation = ValidationService.isEmailValid(email);
-      if (emailValidation !== true) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${emailValidation}`,
-          {
-            service: "register",
-          },
-        );
-        res.status(400).json({ message: emailValidation });
-        return;
-      }
-
+      // Check if user already exists
       const existingUserByNickname = await User.findOne({
         where: { nickname: nickname },
       });
+
       if (existingUserByNickname) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - użytkownik o podanym nicku już istnieje.`,
-          {
-            service: "register",
-          },
+        throw new UserAlreadyExistsError(
+          "Użytkownik o podanym nicku już istnieje.",
+          409,
+          `(nickname: ${nickname})`,
         );
-        res.status(409).json({
-          message: "Użytkownik o podanym nicku już istnieje.",
-        });
-        return;
       }
 
       const existingUserByEmail = await User.findOne({
         where: { email: email },
       });
+
       if (existingUserByEmail) {
-        logger.warn(
-          `Nieudana próba rejestracji przez użytkonika o nicku ${nickname} na email ${email} - użytkownik o podanym nicku już istnieje.`,
-          {
-            service: "register",
-          },
+        throw new UserAlreadyExistsError(
+          "Użytkownik o podanym adresie email już istnieje.",
+          409,
+          `(email: ${email})`,
         );
-        res.status(409).json({
-          message: "Użytkownik o podanym adresie email już istnieje.",
-        });
-        return;
       }
 
-      const passwordValidation = ValidationService.isPasswordValid(password);
-      logger.warn(
-        `Nieudana próba rejestracji przez użytkownika o nicku ${nickname} - ${passwordValidation}`,
-        {
-          service: "register",
-        },
-      );
-      if (passwordValidation !== true) {
-        res.status(400).json({ message: passwordValidation });
-        return;
-      }
-
+      // Hash password and create user
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const createdUser = await User.create({
@@ -147,23 +79,40 @@ export class AuthController {
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
+        sameSite: "strict",
         secure: false,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
       res.status(201).json({
-        message: "Rejestracja przebiegła pomyślnie.",
+        message: "Zarejestrowano pomyślnie.",
         accessToken: accessToken,
         user: createdUser.toJSON(),
       });
     } catch (error) {
-      logger.error("Wystąpił błąd podczas rejestracji", error, {
-        service: "register",
-      });
-      res
-        .status(500)
-        .send("Wystąpił błąd podczas rejestracji. Spróbuj ponownie.");
-      return;
+      // Handle errors
+      if (error instanceof FieldValidationError) {
+        logger.warn(`Nieudana próba rejestracji - ${error.message}`, {
+          service: "register",
+        });
+        res.status(error.statusCode).json({ message: error.message });
+        return;
+      } else if (error instanceof UserAlreadyExistsError) {
+        logger.warn(
+          `Nieudana próba rejestracji - ${error.message} ${error.loggerMessage}`,
+          {
+            service: "register",
+          },
+        );
+        res.status(error.statusCode).json({ message: error.message });
+      } else {
+        logger.error("Wystąpił błąd podczas rejestracji", error, {
+          service: "register",
+        });
+        res
+          .status(500)
+          .send("Wystąpił błąd podczas rejestracji. Spróbuj ponownie.");
+      }
     }
   }
 
@@ -178,26 +127,20 @@ export class AuthController {
       });
 
       if (!user) {
-        logger.warn(
-          `Nieudana próba logowania przez użytkownika ${nicknameOrEmail} - użytkownik nie istnieje.`,
-          {
-            service: "login",
-          },
+        throw new UserNotFoundError(
+          "Nieprawidłowy login lub hasło.",
+          401,
+          nicknameOrEmail,
         );
-        res.status(401).json({ message: "Nieprawidłowy login lub hasło." });
-        return;
       }
 
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
-        logger.warn(
-          `Nieudana próba logowania przez użytkownika ${user.nickname} - nieprawidłowe hasło.`,
-          {
-            service: "login",
-          },
+        throw new InvalidPasswordError(
+          "Nieprawidłowy login lub hasło.",
+          401,
+          nicknameOrEmail,
         );
-        res.status(401).json({ message: "Nieprawidłowy login lub hasło." });
-        return;
       }
 
       const accessToken = TokenService.generateAccessToken(user);
@@ -219,13 +162,28 @@ export class AuthController {
         user: user.toJSON(),
       });
     } catch (error) {
-      logger.error("Wystąpił błąd podczas logowania", error, {
-        service: "login",
-      });
-      res
-        .status(500)
-        .send("Wystąpił błąd podczas logowania. Spróbuj ponownie.");
-      return;
+      if (error instanceof UserNotFoundError) {
+        logger.warn(`Nieudana próba logowania - Nie znaleziono użytkownika.`, {
+          nickOrEmail: error.loggerMessage,
+          service: "login",
+        });
+        res.status(error.statusCode).json({ message: error.message });
+        return;
+      } else if (error instanceof InvalidPasswordError) {
+        logger.warn(`Nieudana próba logowania - Nieprawidłowe hasło.`, {
+          nickOrEmail: error.loggerMessage,
+          service: "login",
+        });
+        res.status(error.statusCode).json({ message: error.message });
+        return;
+      } else {
+        logger.error("Wystąpił błąd podczas logowania", error, {
+          service: "login",
+        });
+        res
+          .status(500)
+          .send("Wystąpił błąd podczas logowania. Spróbuj ponownie.");
+      }
     }
   }
 }
