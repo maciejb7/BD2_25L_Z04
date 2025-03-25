@@ -72,10 +72,9 @@ export class AuthController {
         password: hashedPassword,
       });
 
+      // Generate tokens
       const accessToken = TokenService.generateAccessToken(createdUser);
       const refreshToken = await TokenService.generateRefreshToken(createdUser);
-
-      console.log(refreshToken);
 
       logger.info(
         `Użytkownik ${createdUser.nickname} zarejestrował się pomyślnie.`,
@@ -84,6 +83,7 @@ export class AuthController {
         },
       );
 
+      // Put refresh token in http-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         sameSite: "strict",
@@ -103,7 +103,6 @@ export class AuthController {
           service: "register",
         });
         res.status(error.statusCode).json({ message: error.message });
-        return;
       } else if (error instanceof UserAlreadyExistsError) {
         logger.error(`Nieudana próba rejestracji - ${error.message}`, {
           nickOrEmail: error.loggerMessage,
@@ -123,7 +122,12 @@ export class AuthController {
 
   static async login(req: Request, res: Response): Promise<void> {
     try {
-      const { nicknameOrEmail, password } = req.body;
+      const nicknameOrEmail = req.body.nicknameOrEmail?.trim() ?? "";
+      const password = req.body.password?.trim() ?? "";
+
+      // Form fields validation
+      ValidationService.isStringFieldValid(nicknameOrEmail, "Login", 1);
+      ValidationService.isStringFieldValid(password, "Hasło", 1);
 
       const user = await User.findOne({
         where: {
@@ -149,7 +153,7 @@ export class AuthController {
       }
 
       const accessToken = TokenService.generateAccessToken(user);
-      const refreshToken = TokenService.generateRefreshToken(user);
+      const refreshToken = await TokenService.generateRefreshToken(user);
 
       logger.info(`Użytkownik ${user.nickname} zalogował się pomyślnie.`, {
         service: "login",
@@ -168,7 +172,12 @@ export class AuthController {
       });
     } catch (error) {
       // Handle errors
-      if (error instanceof UserNotFoundError) {
+      if (error instanceof FieldValidationError) {
+        logger.error(`Nieudana próba logowania - ${error.message}`, {
+          service: "login",
+        });
+        res.status(error.statusCode).json({ message: error.message });
+      } else if (error instanceof UserNotFoundError) {
         logger.error(`Nieudana próba logowania - Nie znaleziono użytkownika.`, {
           nickOrEmail: error.loggerMessage,
           service: "login",
@@ -208,7 +217,9 @@ export class AuthController {
         sameSite: "strict",
         secure: false,
       });
-
+      logger.info(`Użytkownik ${userNickname} wylogował się pomyślnie.`, {
+        service: "logout",
+      });
       res.status(200).json({ message: "Wylogowano pomyślnie." });
     } catch (error) {
       // Handle errors
