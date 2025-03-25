@@ -8,7 +8,7 @@ export class ValidationService {
   /**
    * Validates a string field that must match an enum.
    * @param value The value to validate.
-   * @param enumObj The enum object to match the value against.
+   * @param enumObj The enum object to match the given value.
    * @param fieldName The name of the field.
    * @throws FieldValidationError if the validation fails.
    * @returns void
