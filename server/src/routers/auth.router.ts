@@ -11,4 +11,5 @@ authRouter.delete(
   AuthMiddleware.authenticateUser(),
   AuthController.logout,
 );
+authRouter.post("/refresh", AuthController.refresh);
 export default authRouter;

@@ -41,7 +41,7 @@ export class ValidationService {
   static isStringFieldValid(
     value: string,
     fieldName: string,
-    minLength: number,
+    minLength = 1,
     maxLength = 500,
   ): void {
     const fieldSchema = z

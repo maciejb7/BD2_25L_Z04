@@ -4,10 +4,10 @@ import { User } from "../db/models/user";
 import { DateTime } from "luxon";
 import { Session } from "../db/models/session";
 import {
-  ExpiredSessionError,
-  InvalidSessionError,
-} from "../errors/auth-errors";
-import { InvalidRefreshTokenError, UserNotFoundError } from "../errors/errors";
+  ExpiredRefreshTokenError,
+  InvalidRefreshTokenError,
+  UserNotFoundError,
+} from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
 
 /**
@@ -56,9 +56,10 @@ export class TokenService {
    * Generates a new JWT access token for given refresh token.
    * @param refreshTokenBody
    * @returns jwt access token
-   * @throws InvalidSessionError if refresh token is invalid (not found in database)
-   * @throws ExpiredSessionError if refresh token is expired
-   * @throws UserNotFoundError if user for refresh token is not found
+   * @throws InvalidRefreshTokenError if refresh token is invalid
+   * @throws ExpiredRefreshTokenError if refresh token is expired
+   * @throws UserNotFoundError if user for session is not found
+   * @throws Error if any other error occurs
    */
   static async refreshAccessToken(refreshToken: string): Promise<string> {
     const hashedRefreshToken = createHash("sha256")
@@ -66,15 +67,15 @@ export class TokenService {
       .digest("hex");
 
     const session = await Session.findOne({
-      where: { token: hashedRefreshToken },
+      where: { refreshToken: hashedRefreshToken },
     });
 
     if (!session) {
-      throw new InvalidSessionError();
+      throw new InvalidRefreshTokenError("", 401);
     }
 
     if (DateTime.now() > DateTime.fromJSDate(session.expiresAt)) {
-      throw new ExpiredSessionError();
+      throw new ExpiredRefreshTokenError("", 401);
     }
 
     const user = await User.findByPk(session.userId);
@@ -114,14 +115,4 @@ export class TokenService {
       where: { userId: userId },
     });
   }
-
-  // static async validateRefreshToken(refreshToken: string): Promise<Session> {
-  //   const hashedRefreshToken = createHash("sha256")
-  //     .update(refreshToken)
-  //     .digest("hex");
-
-  //   const session = await Session.findOne({
-  //     where: { token: hashedRefreshToken },
-  //   });
-  // }
 }
