@@ -12,6 +12,7 @@ import {
   InvalidRefreshTokenError,
   UserAlreadyExistsError,
   UserNotFoundError,
+  ExpiredRefreshTokenError,
 } from "../errors/errors";
 
 /**
@@ -126,9 +127,10 @@ export class AuthController {
       const password = req.body.password?.trim() ?? "";
 
       // Form fields validation
-      ValidationService.isStringFieldValid(nicknameOrEmail, "Login", 1);
-      ValidationService.isStringFieldValid(password, "Hasło", 1);
+      ValidationService.isStringFieldValid(nicknameOrEmail, "Login");
+      ValidationService.isStringFieldValid(password, "Hasło");
 
+      // Find user by nickname or email
       const user = await User.findOne({
         where: {
           [Op.or]: [{ nickname: nicknameOrEmail }, { email: nicknameOrEmail }],
@@ -143,6 +145,7 @@ export class AuthController {
         );
       }
 
+      // Check if password is correct
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
         throw new InvalidPasswordError(
@@ -152,6 +155,7 @@ export class AuthController {
         );
       }
 
+      // Generate tokens
       const accessToken = TokenService.generateAccessToken(user);
       const refreshToken = await TokenService.generateRefreshToken(user);
 
@@ -159,6 +163,7 @@ export class AuthController {
         service: "login",
       });
 
+      // Put refresh token in http-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: false,
@@ -206,12 +211,15 @@ export class AuthController {
     try {
       const refreshToken = req.cookies.refreshToken;
 
+      // Check if refresh token exists
       if (!refreshToken) {
         throw new NoRefreshTokenError("Nie jesteś zalogowany.", 401);
       }
 
+      // Revoke session
       await TokenService.revokeSession(refreshToken);
 
+      // Clear refresh token cookie
       res.clearCookie("refreshToken", {
         httpOnly: true,
         sameSite: "strict",
@@ -252,6 +260,52 @@ export class AuthController {
         res
           .status(500)
           .send("Wystąpił błąd podczas wylogowywania. Spróbuj ponownie.");
+      }
+    }
+  }
+
+  static async refresh(req: Request, res: Response): Promise<void> {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+
+      // Check if refresh token exists
+      if (!refreshToken) {
+        throw new NoRefreshTokenError("Nie jesteś zalogowany.", 401);
+      }
+
+      const accessToken = await TokenService.refreshAccessToken(refreshToken);
+      res.status(200).json({
+        message: "Odświeżono token dostępu.",
+        accessToken: accessToken,
+      });
+    } catch (error) {
+      if (error instanceof InvalidRefreshTokenError) {
+        logger.error("Nieprawidłowy refresh token.", {
+          service: "refresh",
+        });
+        res
+          .status(error.statusCode)
+          .json({ message: "Nie jesteś zalogowany." });
+      } else if (error instanceof ExpiredRefreshTokenError) {
+        logger.error("Wygasły refresh token.", {
+          service: "refresh",
+        });
+        res
+          .status(error.statusCode)
+          .json({ message: "Twoja sesja wygasła. Zaloguj się ponownie." });
+      } else {
+        logger.error(
+          "Wystąpił błąd podczas odświeżania tokena dostępu.",
+          error,
+          {
+            service: "refresh",
+          },
+        );
+        res
+          .status(500)
+          .send(
+            "Wystąpił błąd podczas odświeżania tokena dostępu. Spróbuj ponownie.",
+          );
       }
     }
   }
