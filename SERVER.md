@@ -53,6 +53,8 @@ createdb example_db
 createuser -P example_user
 psql
 GRANT ALL PRIVILEGES ON DATABASE example_db TO example_user;
+\c example_db
+GRAND CREATE ON SCHEMA public TO example_user;
 \q
 logout
 ```
