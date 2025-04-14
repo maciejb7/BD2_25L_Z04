@@ -12,4 +12,5 @@ export const config = {
   LOGS_WINSTON_CONSOLE: process.env.LOGS_WINSTON_CONSOLE,
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
+  CLIENT_URL: process.env.CLIENT_URL,
 };

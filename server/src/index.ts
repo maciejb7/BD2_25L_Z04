@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import { database } from "./db/database";
 import logger from "./logger";
 import { config } from "./config";
@@ -15,6 +16,12 @@ const startServer = async () => {
     const appPort = config.SERVER_PORT;
 
     app.use(express.json());
+    app.use(
+      cors({
+        origin: config.CLIENT_URL,
+        credentials: true,
+      }),
+    );
     app.use(cookieParser());
     addRouters(app);
 
