@@ -5,12 +5,17 @@ import { database } from "./db/database";
 import logger from "./logger";
 import { config } from "./config";
 import authRouter from "./routers/auth.router";
+import matchPreferenceRouter from "./routers/match-preference.router";
+import { MatchPreferenceService } from "./services/match-preference.service";
 
 const startServer = async () => {
   try {
     await database.authenticate();
     await database.sync({ force: false });
     logger.info("Połączono z bazą danych.");
+
+    await MatchPreferenceService.initializeMatchTypes();
+    logger.info("Zainicjalizowano typy dopasowań.");
 
     const app = express();
     const appPort = config.SERVER_PORT;
@@ -36,6 +41,7 @@ const startServer = async () => {
 
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
+  app.use("/api/match-preferences", matchPreferenceRouter);
 };
 
 startServer();

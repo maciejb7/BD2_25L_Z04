@@ -1,5 +1,6 @@
 import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
 import { Session } from "./session";
+import { UserMatchPreference } from "./user_match_preference";
 
 export enum Gender {
   M = "male",
@@ -88,6 +89,9 @@ export class User extends Model {
 
   @HasMany(() => Session)
   declare sessions: Session[];
+
+  @HasMany(() => UserMatchPreference)
+  declare matchPreferences: UserMatchPreference[];
 
   public toJSON(): object {
     const userData = this.get({ plain: true });

@@ -1,0 +1,164 @@
+.match-preferences-container {
+    background-color: #121212;
+    min-height: 100vh;
+    color: white;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .match-preferences-container h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+  
+  .match-preferences-container p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.8;
+    text-align: center;
+  }
+  
+  .match-types-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1000px;
+    margin-bottom: 2rem;
+  }
+  
+  @media (max-width: 768px) {
+    .match-types-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .match-type-card {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    height: 100%;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .match-type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  .match-type-card.selected {
+    background-color: #2a2a5a;
+    border: 2px solid #6366f1;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+  }
+  
+  .match-type-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    text-transform: capitalize;
+  }
+  
+  .match-type-card p {
+    margin-bottom: 0;
+    opacity: 0.7;
+  }
+  
+  .checkbox {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 28px;
+    height: 28px;
+    border: 2px solid #6366f1;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    transition: background-color 0.2s;
+  }
+  
+  .match-type-card.selected .checkbox {
+    background-color: #6366f1;
+  }
+  
+  .checkbox svg {
+    width: 18px;
+    height: 18px;
+    fill: white;
+  }
+  
+  .save-button {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-top: 1rem;
+  }
+  
+  .save-button:hover {
+    background-color: #4f46e5;
+  }
+  
+  .save-button:active {
+    transform: scale(0.98);
+  }
+  
+  .save-button:disabled {
+    background-color: #4b5563;
+    cursor: not-allowed;
+  }
+  
+  .loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: white;
+    font-size: 1.5rem;
+    background-color: #121212;
+  }
+  
+  .error-message {
+    background-color: rgba(220, 38, 38, 0.2);
+    color: #ef4444;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .success-message {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+  }
+  
+  .login-note {
+    margin-top: 1rem;
+    opacity: 0.7;
+    font-style: italic;
+  }
