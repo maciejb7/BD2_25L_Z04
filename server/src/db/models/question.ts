@@ -15,5 +15,19 @@ export const questions: Question[] = [
     content: "Ulubiona pora dnia?",
     options: ["Rano", "Popołudnie", "Wieczór", "Noc"],
   },
-  // ... więcej pytań
+  {
+    id: "q3",
+    content: "Jakie masz hobby?",
+    options: ["Muzyka", "Sztuka", "Technologia", "Nauka"],
+  },
+  {
+    id: "q4",
+    content: "Ulubiony rodzaj filmu?",
+    options: ["Akcja", "Komedia", "Dramat", "Horror"],
+  },
+  {
+    id: "q5",
+    content: "Jakie masz ulubione jedzenie?",
+    options: ["Pizza", "Sushi", "Sałatka", "Zupa"],
+  },
 ];
