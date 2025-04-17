@@ -4,4 +4,4 @@ export type UserHobby = {
   rating: number; // 1-10
 };
 
-export const answers: UserHobby[] = []; // tymczasowe "pseudo-db"
+export const userHobbys: UserHobby[] = []; // tymczasowe "pseudo-db"

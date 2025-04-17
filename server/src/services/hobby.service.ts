@@ -1,4 +1,4 @@
-import { hobby_categories } from "../db/models/hobby_category";
+import { hobbyCategories } from "../db/models/hobbyCategory";
 import { hobbys } from "../db/models/hobby";
 
 export function getHobbyByCatygory(categoryID: number) {
@@ -10,7 +10,7 @@ export function getHobbyByID(ID: number) {
 }
 
 export function getCatigoryByID(ID: number) {
-  return hobby_categories.filter((a) => a.id === ID);
+  return hobbyCategories.filter((a) => a.id === ID);
 }
 
 export function getAllHobbys() {
@@ -18,5 +18,5 @@ export function getAllHobbys() {
 }
 
 export function getAllCategories() {
-  return hobby_categories;
+  return hobbyCategories;
 }
