@@ -8,23 +8,27 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
+    ignores: [
+      "**/*.config.{js,ts,cjs,mjs}",
+    ],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  pluginReact.configs.flat.recommended,
+  {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
-    plugins: {
-      js,
-      prettier: pluginPrettier,
-    },
-    extends: ["js/recommended", ...configPrettier],
     languageOptions: {
       globals: globals.browser,
     },
+    plugins: {
+      prettier: pluginPrettier,
+    },
     rules: {
-      "react/react-in-jsx-scope": "off",
-      "prettier/prettier": ["error", { endOfLine: "auto", tabWith: 2}], 
-      indent: ["error", 2],
+      "react/react-in-jsx-scope": "off",         
+      "prettier/prettier": "error",              
+      indent: ["error", 2],                       
     },
   },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  pluginReact.configs.flat.recommended,
-  prettier
+
+  configPrettier,
 ]);

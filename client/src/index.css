@@ -1,21 +1,3 @@
-:root {
-    --primary: #EC4899;
-    --secondary: #D6CFCB;
-    --primary-light: #FCE7F3;
-    --accent: #FCD34D;
-    --text: #1F2937;
-    --background: #F9FAFB;
-    --extra: #C4B5fD;
-    --font: 'Inter';
-    --backup-font: sans-serif;
-    --header-font: 3rem;
-    --text-font: 1.5rem;
-}
-
-body {
-    height: 100vh;
-    margin: 0;
-    background: var(--background);
-    font-size: var(--text-font);
-    font-family: var(--font), var(--backup-font);
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
