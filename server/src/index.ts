@@ -5,6 +5,7 @@ import { database } from "./db/database";
 import logger from "./logger";
 import { config } from "./config";
 import authRouter from "./routers/auth.router";
+import questionRouter from "./routers/question.router";
 
 const startServer = async () => {
   try {
@@ -36,6 +37,7 @@ const startServer = async () => {
 
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
+  app.use("/api/questions", questionRouter);
 };
 
 startServer();
