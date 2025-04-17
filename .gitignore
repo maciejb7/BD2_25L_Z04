@@ -7,7 +7,6 @@ logs/
 
 # Docker
 .docker
-.dockerignore
 
 # Node
 node_modules

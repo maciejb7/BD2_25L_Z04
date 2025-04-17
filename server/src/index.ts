@@ -6,6 +6,8 @@ import logger from "./logger";
 import { config } from "./config";
 import authRouter from "./routers/auth.router";
 import matchPreferenceRouter from "./routers/match-preference.router";
+import recommendationRouter from "./routers/recommendation.router";
+import userInteractionRouter from "./routers/user-interaction.router";
 import { MatchPreferenceService } from "./services/match-preference.service";
 
 const startServer = async () => {
@@ -42,6 +44,8 @@ const startServer = async () => {
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
   app.use("/api/match-preferences", matchPreferenceRouter);
+  app.use("/api/recommendations", recommendationRouter);
+  app.use("/api/interactions", userInteractionRouter);
 };
 
 startServer();

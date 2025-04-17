@@ -1,6 +1,7 @@
 import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
 import { Session } from "./session";
 import { UserMatchPreference } from "./user_match_preference";
+import { UserLike } from "./user_like";
 
 export enum Gender {
   M = "male",
@@ -52,6 +53,12 @@ export class User extends Model {
   declare surname: string;
 
   @Column({
+    type: DataType.DATEONLY,
+    allowNull: true,
+  })
+  declare birthdate: Date;
+
+  @Column({
     type: DataType.STRING,
     allowNull: false,
     unique: true,
@@ -93,12 +100,35 @@ export class User extends Model {
   @HasMany(() => UserMatchPreference)
   declare matchPreferences: UserMatchPreference[];
 
+  @HasMany(() => UserLike, { foreignKey: "likerId" })
+  declare givenLikes: UserLike[];
+
+  @HasMany(() => UserLike, { foreignKey: "likeeId" })
+  declare receivedLikes: UserLike[];
+
   public toJSON(): object {
     const userData = this.get({ plain: true });
 
     delete userData.password;
     delete userData.sessions;
     delete userData.isActive;
+
+    // Calculate age if birthdate exists
+    if (userData.birthdate) {
+      const birthDate = new Date(userData.birthdate);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+
+      userData.age = age;
+    }
 
     return userData;
   }
