@@ -11,3 +11,15 @@ export function saveAnswer(userId: string, questionId: string, answer: string) {
   answers.push(newAnswer);
   return newAnswer;
 }
+
+export function getAnswersByUser(userId: string) {
+  return answers.filter((a) => a.userId === userId);
+}
+
+export function getAnswersByQuestion(questionId: string) {
+  return answers.filter((a) => a.questionId === questionId);
+}
+
+export function getAllAnswers() {
+  return answers;
+}
