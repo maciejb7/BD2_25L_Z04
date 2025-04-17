@@ -1,8 +1,12 @@
 import api, { handleApiError } from "./api";
-import { AuthResponse, LoginForm, RegisterFormData } from "../types/auth.types";
+import {
+  AuthResponse,
+  LoginFormData,
+  RegisterFormData,
+} from "../types/auth.types";
 import { CommonResponse } from "../types/general.types";
 
-export const login = async (data: LoginForm): Promise<AuthResponse> => {
+export const login = async (data: LoginFormData): Promise<AuthResponse> => {
   try {
     const response = await api.post<AuthResponse>("/api/auth/login", data);
     localStorage.setItem("accessToken", response.data.accessToken);
