@@ -7,6 +7,7 @@ import { config } from "./config";
 import authRouter from "./routers/auth.router";
 import questionRouter from "./routers/question.router";
 import hobbyRouter from "./routers/hobby.router";
+import userHobbyRouter from "./routers/userHobby.router";
 
 const startServer = async () => {
   try {
@@ -40,6 +41,7 @@ const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
   app.use("/api/questions", questionRouter);
   app.use("/api/hobby", hobbyRouter);
+  app.use("/api/userHobby", userHobbyRouter);
 };
 
 startServer();
