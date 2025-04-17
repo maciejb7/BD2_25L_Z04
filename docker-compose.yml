@@ -1,0 +1,70 @@
+services:
+  # Database
+  postgres:
+    image: postgres:16
+    container_name: clingclang-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: clingclang-server
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: postgres
+      SERVER_PORT: ${SERVER_PORT}
+      LOGS_DB_CONSOLE: ${LOGS_DB_CONSOLE}
+      LOGS_WINSTON_CONSOLE: ${LOGS_WINSTON_CONSOLE}
+      ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
+      REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET}
+      CLIENT_URL: ${CLIENT_URL}
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    volumes:
+      - ./server/src:/app/src
+      - ./server/logs:/app/logs
+    networks:
+      - app-network
+    command: npm run dev
+
+  # Client
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: clingclang-client
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client/src:/app/src
+      - ./client/public:/app/public
+    networks:
+      - app-network
+    command: npm run dev
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

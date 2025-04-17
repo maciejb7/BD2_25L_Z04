@@ -2,8 +2,19 @@ import { config } from "../config";
 import { Sequelize } from "sequelize-typescript";
 import { User } from "./models/user";
 import { Session } from "./models/session";
+import { MatchType } from "./models/match_type";
+import { UserMatchPreference } from "./models/user_match_preference";
+import { UserLike } from "./models/user_like";
+import { UserMatch } from "./models/user_match";
 
-const models = [User, Session];
+const models = [
+  User,
+  Session,
+  MatchType,
+  UserMatchPreference,
+  UserLike,
+  UserMatch,
+];
 
 export const database = new Sequelize({
   dialect: "postgres",

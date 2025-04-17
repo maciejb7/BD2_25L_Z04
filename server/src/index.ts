@@ -5,12 +5,22 @@ import { database } from "./db/database";
 import logger from "./logger";
 import { config } from "./config";
 import authRouter from "./routers/auth.router";
+import matchPreferenceRouter from "./routers/match-preference.router";
+import recommendationRouter from "./routers/recommendation.router";
+import userInteractionRouter from "./routers/user-interaction.router";
+import { MatchPreferenceService } from "./services/match-preference.service";
+import questionRouter from "./routers/question.router";
+import hobbyRouter from "./routers/hobby.router";
+import userHobbyRouter from "./routers/userHobby.router";
 
 const startServer = async () => {
   try {
     await database.authenticate();
     await database.sync({ force: false });
     logger.info("Połączono z bazą danych.");
+
+    await MatchPreferenceService.initializeMatchTypes();
+    logger.info("Zainicjalizowano typy dopasowań.");
 
     const app = express();
     const appPort = config.SERVER_PORT;
@@ -36,6 +46,12 @@ const startServer = async () => {
 
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
+  app.use("/api/match-preferences", matchPreferenceRouter);
+  app.use("/api/recommendations", recommendationRouter);
+  app.use("/api/interactions", userInteractionRouter);
+  app.use("/api/questions", questionRouter);
+  app.use("/api/hobby", hobbyRouter);
+  app.use("/api/userHobby", userHobbyRouter);
 };
 
 startServer();
