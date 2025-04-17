@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ErrorResponse } from "../types/general.types";
 
-const API_URL = import.meta.env.API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 if (!API_URL) {
   throw new Error("API_URL is not defined in the environment variables.");
@@ -33,10 +33,7 @@ api.interceptors.request.use(
 
 export default api;
 
-export const handleApiError = (
-  error: unknown,
-  defaultMessage?: string,
-): never => {
+export const handleApiError = (error: unknown, defaultMessage?: string) => {
   if (axios.isAxiosError<ErrorResponse>(error)) {
     const message = error.response?.data.message || defaultMessage;
     throw new Error(message);

@@ -24,6 +24,7 @@ export default defineConfig([
       prettier: pluginPrettier,
     },
     rules: {
+      "@typescript-eslint/no-explicit-any": "off",
       "react/react-in-jsx-scope": "off",         
       "prettier/prettier": "error",              
       indent: ["error", 2],                       

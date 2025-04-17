@@ -1,10 +1,14 @@
 import TopBar from "../components/common/TopBar";
 
+const topBarOptions = [
+  { name: "Logowanie", link: "/login" },
+  { name: "Rejestracja", link: "/register" },
+];
+
 function HomePage() {
   return (
     <div>
-      <TopBar />
-      <h1>Home Page</h1>
+      <TopBar options={topBarOptions} />
     </div>
   );
 }

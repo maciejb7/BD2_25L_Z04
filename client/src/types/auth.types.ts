@@ -1,6 +1,6 @@
 import { User } from "./general.types";
 
-export interface LoginForm {
+export interface LoginFormData {
   nicknameOrEmail: string;
   password: string;
 }
