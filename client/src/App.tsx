@@ -1,9 +1,12 @@
-import RegisterForm from "./components/auth/RegisterFrom";
+import { BrowserRouter } from "react-router-dom";
+import PublicRouter from "./routes/PublicRouter";
 
 
 function App() {
     return (
-     <RegisterForm />
+     <BrowserRouter>
+        <PublicRouter />
+     </BrowserRouter>
     );
 }
 
