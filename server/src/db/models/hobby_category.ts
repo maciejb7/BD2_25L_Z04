@@ -4,7 +4,7 @@ export type HobbyCategory = {
   hobby_category_description: string;
 };
 
-export const questions: HobbyCategory[] = [
+export const hobby_categories: HobbyCategory[] = [
   {
     id: 1,
     hobby_category_name: "Sport",
