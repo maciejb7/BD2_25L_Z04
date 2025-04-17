@@ -4,7 +4,6 @@ import Alert from "./components/common/Alert";
 import { BrowserRouter } from "react-router-dom";
 
 function App() {
-
   return (
     <AlertProvider>
       <Alert />

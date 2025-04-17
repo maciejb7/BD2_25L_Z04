@@ -39,8 +39,6 @@ export class TokenService {
 
     const hashedToken = createHash("sha256").update(token).digest("hex");
 
-    console.log("hashedToken", hashedToken);
-
     const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
 
     await Session.create({
