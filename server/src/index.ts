@@ -10,6 +10,8 @@ import recommendationRouter from "./routers/recommendation.router";
 import userInteractionRouter from "./routers/user-interaction.router";
 import { MatchPreferenceService } from "./services/match-preference.service";
 import questionRouter from "./routers/question.router";
+import hobbyRouter from "./routers/hobby.router";
+import userHobbyRouter from "./routers/userHobby.router";
 
 const startServer = async () => {
   try {
@@ -48,6 +50,8 @@ const addRouters = (app: express.Application) => {
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/interactions", userInteractionRouter);
   app.use("/api/questions", questionRouter);
+  app.use("/api/hobby", hobbyRouter);
+  app.use("/api/userHobby", userHobbyRouter);
 };
 
 startServer();
