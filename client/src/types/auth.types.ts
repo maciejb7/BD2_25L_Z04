@@ -14,6 +14,11 @@ export interface RegisterFormData {
   gender: "male" | "female" | null;
 }
 
+export interface RefreshResponse {
+  message: string;
+  accessToken: string;
+}
+
 export interface AuthResponse {
   message: string;
   accessToken: string;
