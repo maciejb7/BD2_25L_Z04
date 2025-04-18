@@ -1,6 +1,6 @@
 import React, { createContext, useState, ReactNode } from "react";
 
-type AlertType = "success" | "error" | "info";
+export type AlertType = "success" | "error" | "info";
 
 interface AlertContextProps {
   showAlert: (message: string, type: AlertType) => void;
