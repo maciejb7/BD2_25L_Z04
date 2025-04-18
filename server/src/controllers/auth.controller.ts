@@ -290,6 +290,11 @@ export class AuthController {
         logger.error("Wygasły refresh token.", {
           service: "refresh",
         });
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          sameSite: "strict",
+          secure: false,
+        });
         res
           .status(error.statusCode)
           .json({ message: "Twoja sesja wygasła. Zaloguj się ponownie." });
