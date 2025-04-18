@@ -43,16 +43,23 @@ api.interceptors.response.use(
   },
   async (error: AxiosError<ErrorResponse>) => {
     if (error.response?.status == 401) {
+      // Save current request to retry it after refreshing the token
       const originalRequest = error.config as InternalAxiosRequestConfig;
 
       try {
+        // Refresh the token
         const response = await refresh();
         const accessToken = response.accessToken;
         localStorage.setItem("accessToken", accessToken);
         originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
+
+        // Retry the original request with the new access token
         return api(originalRequest);
       } catch (refreshError: any) {
+        // Remove the access token from local storage if refresh fails
         localStorage.removeItem("accessToken");
+
+        // Emit logout event to notify AuthHandler to log out the user
         getAuthObserver().emitLogout(refreshError.message);
         return Promise.reject(refreshError);
       }
