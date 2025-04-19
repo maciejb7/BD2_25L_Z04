@@ -15,6 +15,7 @@ export const login = async (data: LoginFormData): Promise<AuthResponse> => {
     localStorage.setItem("user", JSON.stringify(response.data.user));
     return response.data;
   } catch (error: unknown) {
+    console.error(error);
     throw handleApiError(error, "Wystąpił błąd logowania. Spróbuj ponownie.");
   }
 };

@@ -13,6 +13,7 @@ function RegisterForm() {
     email: "",
     password: "",
     gender: null,
+    birthDate: "",
   });
 
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -40,6 +41,11 @@ function RegisterForm() {
 
     if (registerFormData.gender === null) {
       showAlert("Wybierz swoją płeć!", "error");
+      return;
+    }
+
+    if (!registerFormData.birthDate) {
+      showAlert("Podaj datę urodzenia!", "error");
       return;
     }
 
@@ -129,6 +135,25 @@ function RegisterForm() {
             value={registerFormData?.email}
             onChange={handleChange}
             required
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div className="w-full">
+          <label
+            htmlFor="birthDate"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Data urodzenia
+          </label>
+          <input
+            type="date"
+            id="birthDate"
+            name="birthDate"
+            value={registerFormData?.birthDate}
+            onChange={handleChange}
+            required
+            max={new Date().toISOString().split("T")[0]} // Maksymalna data to dzisiaj
             className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
           />
         </div>

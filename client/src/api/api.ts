@@ -42,7 +42,10 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<ErrorResponse>) => {
-    if (error.response?.status == 401) {
+    if (
+      error.response?.status == 401 &&
+      error.response?.data.message === "Brak autoryzacji."
+    ) {
       // Save current request to retry it after refreshing the token
       const originalRequest = error.config as InternalAxiosRequestConfig;
 
