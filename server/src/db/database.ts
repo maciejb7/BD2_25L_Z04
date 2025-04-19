@@ -6,6 +6,11 @@ import { MatchType } from "./models/match_type";
 import { UserMatchPreference } from "./models/user_match_preference";
 import { UserLike } from "./models/user_like";
 import { UserMatch } from "./models/user_match";
+import { MusicGenre } from "./models/music_genre";
+import { MusicArtist } from "./models/music_artist";
+import { MusicAlbum } from "./models/music_album";
+import { MusicTrack } from "./models/music_track";
+import { UserMusic } from "./models/user_music";
 
 const models = [
   User,
@@ -14,6 +19,11 @@ const models = [
   UserMatchPreference,
   UserLike,
   UserMatch,
+  MusicGenre,
+  MusicArtist,
+  MusicAlbum,
+  MusicTrack,
+  UserMusic,
 ];
 
 export const database = new Sequelize({
