@@ -1,8 +1,8 @@
-import PublicRouter from "./routes/PublicRouter";
 import { AlertProvider } from "./contexts/AlertContext";
 import Alert from "./components/common/Alert";
 import { BrowserRouter } from "react-router-dom";
 import AuthHandler from "./components/auth/AuthHandler";
+import RouterController from "./routes/RouterController";
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
       <Alert />
       <BrowserRouter>
         <AuthHandler />
-        <PublicRouter />
+        <RouterController />
       </BrowserRouter>
     </AlertProvider>
   );

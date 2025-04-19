@@ -56,9 +56,6 @@ api.interceptors.response.use(
         // Retry the original request with the new access token
         return api(originalRequest);
       } catch (refreshError: any) {
-        // Remove the access token from local storage if refresh fails
-        localStorage.removeItem("accessToken");
-
         // Emit logout event to notify AuthHandler to log out the user
         getAuthObserver().emitLogout(refreshError.message);
         return Promise.reject(refreshError);

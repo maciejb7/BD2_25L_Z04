@@ -87,7 +87,7 @@ export class AuthController {
       // Put refresh token in http-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure: false,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
@@ -166,6 +166,7 @@ export class AuthController {
       // Put refresh token in http-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
+        sameSite: "lax",
         secure: false,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
@@ -222,7 +223,7 @@ export class AuthController {
       // Clear refresh token cookie
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure: false,
       });
       logger.info(`Użytkownik ${userNickname} wylogował się pomyślnie.`, {
@@ -292,7 +293,7 @@ export class AuthController {
         });
         res.clearCookie("refreshToken", {
           httpOnly: true,
-          sameSite: "strict",
+          sameSite: "lax",
           secure: false,
         });
         res

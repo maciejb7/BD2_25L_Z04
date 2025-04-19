@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { LoginFormData } from "../../types/auth.types";
 import { login } from "../../api/api.auth";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAlert } from "../../contexts/AlertContext";
+import { getAuthObserver } from "../../utils/AuthObserver";
 
 function LoginForm() {
   const [loginFormData, setLoginFormData] = useState<LoginFormData>({
     nicknameOrEmail: "",
     password: "",
   });
-
-  const navigate = useNavigate();
 
   const { showAlert } = useAlert();
 
@@ -24,8 +23,7 @@ function LoginForm() {
 
     try {
       const response = await login(loginFormData);
-      showAlert(response?.message, "success");
-      navigate("/");
+      getAuthObserver().emitLogin(response.message, "success");
     } catch (error: any) {
       showAlert(error.message, "error");
     }

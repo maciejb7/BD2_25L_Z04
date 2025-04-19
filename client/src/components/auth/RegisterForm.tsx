@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { RegisterFormData } from "../../types/auth.types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { register } from "../../api/api.auth";
 import { useAlert } from "../../contexts/AlertContext";
+import { getAuthObserver } from "../../utils/AuthObserver";
 
 function RegisterForm() {
   const [registerFormData, setRegisterFormData] = useState<RegisterFormData>({
@@ -15,8 +16,6 @@ function RegisterForm() {
   });
 
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-
-  const navigate = useNavigate();
 
   const { showAlert } = useAlert();
 
@@ -46,8 +45,7 @@ function RegisterForm() {
 
     try {
       const response = await register(registerFormData);
-      showAlert(response?.message, "success");
-      navigate("/");
+      getAuthObserver().emitLogin(response.message, "success");
     } catch (error: any) {
       showAlert(error.message, "error");
     }
