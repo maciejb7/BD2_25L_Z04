@@ -48,7 +48,9 @@ export class AuthController {
         throw new UserAlreadyExistsError(
           "Użytkownik o podanym nicku już istnieje.",
           409,
-          nickname,
+          {
+            nickname: nickname,
+          },
         );
       }
 
@@ -60,7 +62,9 @@ export class AuthController {
         throw new UserAlreadyExistsError(
           "Użytkownik o podanym adresie email już istnieje.",
           409,
-          email,
+          {
+            email: email,
+          },
         );
       }
 
@@ -110,7 +114,7 @@ export class AuthController {
         res.status(error.statusCode).json({ message: error.message });
       } else if (error instanceof UserAlreadyExistsError) {
         logger.error(`Nieudana próba rejestracji - ${error.message}`, {
-          nickOrEmail: error.loggerMessage,
+          ...error.metaData,
           service: "register",
         });
         res.status(error.statusCode).json({ message: error.message });
@@ -142,21 +146,17 @@ export class AuthController {
       });
 
       if (!user) {
-        throw new UserNotFoundError(
-          "Nieprawidłowy login lub hasło.",
-          401,
-          nicknameOrEmail,
-        );
+        throw new UserNotFoundError("Nieprawidłowy login lub hasło.", 401, {
+          nicknameOrEmail: nicknameOrEmail,
+        });
       }
 
       // Check if password is correct
       const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
-        throw new InvalidPasswordError(
-          "Nieprawidłowy login lub hasło.",
-          401,
-          nicknameOrEmail,
-        );
+        throw new InvalidPasswordError("Nieprawidłowy login lub hasło.", 401, {
+          nicknameOrEmail: nicknameOrEmail,
+        });
       }
 
       // Generate tokens
@@ -189,13 +189,13 @@ export class AuthController {
         res.status(error.statusCode).json({ message: error.message });
       } else if (error instanceof UserNotFoundError) {
         logger.error(`Nieudana próba logowania - Nie znaleziono użytkownika.`, {
-          nickOrEmail: error.loggerMessage,
+          ...error.metaData,
           service: "login",
         });
         res.status(error.statusCode).json({ message: error.message });
       } else if (error instanceof InvalidPasswordError) {
         logger.error(`Nieudana próba logowania - Nieprawidłowe hasło.`, {
-          nickOrEmail: error.loggerMessage,
+          ...error.metaData,
           service: "login",
         });
         res.status(error.statusCode).json({ message: error.message });
