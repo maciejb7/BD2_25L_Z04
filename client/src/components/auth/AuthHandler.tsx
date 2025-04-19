@@ -12,8 +12,21 @@ function AuthHandler() {
   const { showAlert } = useAlert();
 
   useEffect(() => {
+    const loginUnsubscribe = getAuthObserver().onLogin(
+      (message?: string, type?: AlertType) => {
+        if (message) {
+          if (!type) type = "error";
+          showAlert(message, type);
+        }
+
+        setTimeout(() => {
+          navigate("/");
+        }, 0);
+      },
+    );
+
     // Register to listen for logout events
-    const unsubscribe = getAuthObserver().onLogout(
+    const logoutUnsubscribe = getAuthObserver().onLogout(
       (message?: string, type?: AlertType) => {
         // Show an alert and go to the login page
         if (message) {
@@ -21,13 +34,15 @@ function AuthHandler() {
           showAlert(message, type);
         }
 
-        navigate("/login");
+        setTimeout(() => {
+          navigate("/login");
+        }, 0);
       },
     );
 
-    // Cleanup function to unsubscribe from the logout event
     return () => {
-      unsubscribe();
+      loginUnsubscribe();
+      logoutUnsubscribe();
     };
   }, [navigate, showAlert]);
 
