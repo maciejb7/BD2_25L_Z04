@@ -4,6 +4,7 @@ import {
   Column,
   DataType,
   ForeignKey,
+  PrimaryKey,
 } from "sequelize-typescript";
 import { User } from "./user";
 
@@ -11,29 +12,26 @@ import { User } from "./user";
   tableName: "sessions",
 })
 export class Session extends Model {
+  @PrimaryKey
   @Column({
-    primaryKey: true,
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
   })
-  declare sessionId: string;
+  sessionId!: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
   })
-  declare refreshToken: string;
+  refreshToken!: string;
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
   })
-  declare expiresAt: Date;
+  expiresAt!: Date;
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
-    allowNull: false,
   })
-  declare userId: string;
+  userId!: string;
 }

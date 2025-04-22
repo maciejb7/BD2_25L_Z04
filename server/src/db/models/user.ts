@@ -1,4 +1,11 @@
-import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
+import {
+  DataType,
+  Table,
+  Model,
+  Column,
+  HasMany,
+  PrimaryKey,
+} from "sequelize-typescript";
 import { Session } from "./session";
 import { UserMatchPreference } from "./user_match_preference";
 import { UserLike } from "./user_like";
@@ -17,100 +24,88 @@ export enum Role {
   tableName: "users",
 })
 export class User extends Model {
+  @PrimaryKey
   @Column({
-    primaryKey: true,
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
   })
-  declare userId: string;
+  userId!: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     unique: true,
     validate: {
       len: [3, 20],
     },
   })
-  declare nickname: string;
+  nickname!: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     validate: {
       len: [2, 20],
     },
   })
-  declare name: string;
+  name!: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     validate: {
       len: [2, 50],
     },
   })
-  declare surname: string;
-
-  @Column({
-    type: DataType.DATEONLY,
-    allowNull: true,
-  })
-  declare birthdate: Date;
+  surname!: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     unique: true,
     validate: {
       isEmail: true,
     },
   })
-  declare email: string;
+  email!: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
   })
-  declare password: string;
+  password!: string;
 
   @Column({
     type: DataType.ENUM(...Object.values(Gender)),
-    allowNull: false,
   })
-  declare gender: Gender;
+  gender!: Gender;
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
   })
-  declare birthDate: Date;
+  birthDate!: Date;
 
   @Column({
     type: DataType.ENUM(...Object.values(Role)),
-    allowNull: false,
     defaultValue: Role.USER,
   })
-  declare role: Role;
+  role!: Role;
 
   @Column({
     type: DataType.BOOLEAN,
-    allowNull: false,
     defaultValue: true,
   })
   declare isActive: boolean;
 
-  @HasMany(() => Session)
-  declare sessions: Session[];
+  @HasMany(() => Session, {
+    onDelete: "CASCADE",
+    foreignKey: "userId",
+  })
+  sessions!: Session[];
 
   @HasMany(() => UserMatchPreference)
-  declare matchPreferences: UserMatchPreference[];
+  matchPreferences!: UserMatchPreference[];
 
   @HasMany(() => UserLike, { foreignKey: "likerId" })
-  declare givenLikes: UserLike[];
+  givenLikes!: UserLike[];
 
   @HasMany(() => UserLike, { foreignKey: "likeeId" })
-  declare receivedLikes: UserLike[];
+  receivedLikes!: UserLike[];
 
   public toJSON(): object {
     const userData = this.get({ plain: true });
