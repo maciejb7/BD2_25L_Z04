@@ -4,7 +4,11 @@ import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.get("/all", UserHobbyController.getAll);
+router.get(
+  "/all",
+  AuthMiddleware.authenticateUser(),
+  UserHobbyController.getAll,
+);
 router.get(
   "/hobbys/user/:userId",
   AuthMiddleware.authenticateUser(),
