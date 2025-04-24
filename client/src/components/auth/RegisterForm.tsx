@@ -58,7 +58,7 @@ function RegisterForm() {
   };
 
   return (
-    <div className="flex justify-center items-center mt-8 h-[calc(100vh-100px)]">
+    <div className="flex justify-center items-center mt-2 h-[calc(100vh-100px)]">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col justify-center items-center bg-white w-full max-w-md mx-auto p-5 rounded-lg shadow-md space-y-3 overflow-auto max-h-full"

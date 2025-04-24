@@ -29,7 +29,7 @@ export class User extends Model {
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
   })
-  userId!: string;
+  declare userId: string;
 
   @Column({
     type: DataType.STRING,
@@ -38,7 +38,7 @@ export class User extends Model {
       len: [3, 20],
     },
   })
-  nickname!: string;
+  declare nickname: string;
 
   @Column({
     type: DataType.STRING,
@@ -46,7 +46,7 @@ export class User extends Model {
       len: [2, 20],
     },
   })
-  name!: string;
+  declare name: string;
 
   @Column({
     type: DataType.STRING,
@@ -54,7 +54,7 @@ export class User extends Model {
       len: [2, 50],
     },
   })
-  surname!: string;
+  declare surname: string;
 
   @Column({
     type: DataType.STRING,
@@ -63,28 +63,28 @@ export class User extends Model {
       isEmail: true,
     },
   })
-  email!: string;
+  declare email: string;
 
   @Column({
     type: DataType.STRING,
   })
-  password!: string;
+  declare password: string;
 
   @Column({
     type: DataType.ENUM(...Object.values(Gender)),
   })
-  gender!: Gender;
+  declare gender: Gender;
 
   @Column({
     type: DataType.DATE,
   })
-  birthDate!: Date;
+  declare birthDate: Date;
 
   @Column({
     type: DataType.ENUM(...Object.values(Role)),
     defaultValue: Role.USER,
   })
-  role!: Role;
+  declare role: Role;
 
   @Column({
     type: DataType.BOOLEAN,
@@ -96,16 +96,16 @@ export class User extends Model {
     onDelete: "CASCADE",
     foreignKey: "userId",
   })
-  sessions!: Session[];
+  declare sessions: Session[];
 
   @HasMany(() => UserMatchPreference)
-  matchPreferences!: UserMatchPreference[];
+  declare matchPreferences: UserMatchPreference[];
 
   @HasMany(() => UserLike, { foreignKey: "likerId" })
-  givenLikes!: UserLike[];
+  declare givenLikes: UserLike[];
 
   @HasMany(() => UserLike, { foreignKey: "likeeId" })
-  receivedLikes!: UserLike[];
+  declare receivedLikes: UserLike[];
 
   public toJSON(): object {
     const userData = this.get({ plain: true });

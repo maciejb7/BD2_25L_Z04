@@ -17,21 +17,21 @@ export class Session extends Model {
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
   })
-  sessionId!: string;
+  declare sessionId: string;
 
   @Column({
     type: DataType.STRING,
   })
-  refreshToken!: string;
+  declare refreshToken: string;
 
   @Column({
     type: DataType.DATE,
   })
-  expiresAt!: Date;
+  declare expiresAt: Date;
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
   })
-  userId!: string;
+  declare userId: string;
 }

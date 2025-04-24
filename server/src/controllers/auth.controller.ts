@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 import logger from "../logger";
 import { TokenService } from "../services/token.service";
 import { ValidationService } from "../services/validation.service";
-import { Op } from "sequelize";
 import {
   FieldValidationError,
   InvalidPasswordError,
@@ -13,7 +12,10 @@ import {
   UserAlreadyExistsError,
   UserNotFoundError,
   ExpiredRefreshTokenError,
+  NoPermissionsError,
 } from "../errors/errors";
+import AuthService from "../services/auth.service";
+import { Session } from "../db/models/session";
 
 /**
  * Controller for handling user authentication.
@@ -134,30 +136,7 @@ export class AuthController {
       const nicknameOrEmail = req.body.nicknameOrEmail?.trim() ?? "";
       const password = req.body.password?.trim() ?? "";
 
-      // Form fields validation
-      ValidationService.isStringFieldValid(nicknameOrEmail, "Login");
-      ValidationService.isStringFieldValid(password, "Hasło");
-
-      // Find user by nickname or email
-      const user = await User.findOne({
-        where: {
-          [Op.or]: [{ nickname: nicknameOrEmail }, { email: nicknameOrEmail }],
-        },
-      });
-
-      if (!user) {
-        throw new UserNotFoundError("Nieprawidłowy login lub hasło.", 401, {
-          nicknameOrEmail: nicknameOrEmail,
-        });
-      }
-
-      // Check if password is correct
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
-      if (!isPasswordCorrect) {
-        throw new InvalidPasswordError("Nieprawidłowy login lub hasło.", 401, {
-          nicknameOrEmail: nicknameOrEmail,
-        });
-      }
+      const user = await AuthService.loginUser(nicknameOrEmail, password);
 
       // Generate tokens
       const accessToken = TokenService.generateAccessToken(user);
@@ -284,21 +263,21 @@ export class AuthController {
         accessToken: accessToken,
       });
     } catch (error) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      });
       if (error instanceof InvalidRefreshTokenError) {
         logger.error("Nieprawidłowy refresh token.", {
           service: "refresh",
         });
         res
           .status(error.statusCode)
-          .json({ message: "Nie jesteś zalogowany." });
+          .json({ message: "Twoja sesja wygasła. Zaloguj się ponownie." });
       } else if (error instanceof ExpiredRefreshTokenError) {
         logger.error("Wygasły refresh token.", {
           service: "refresh",
-        });
-        res.clearCookie("refreshToken", {
-          httpOnly: true,
-          sameSite: "lax",
-          secure: false,
         });
         res
           .status(error.statusCode)
@@ -317,6 +296,122 @@ export class AuthController {
             "Wystąpił błąd podczas odświeżania tokena dostępu. Spróbuj ponownie.",
           );
       }
+    }
+  }
+
+  static async deleteAccount(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+      const userNickname = req.user?.userNickname;
+      const nicknameOrEmail = req.body.nicknameOrEmail.trim() ?? "";
+      const password = req.body.password.trim() ?? "";
+
+      const userToDelete = await AuthService.loginUser(
+        nicknameOrEmail,
+        password,
+      );
+
+      if (
+        userId !== userToDelete.userId ||
+        userNickname !== userToDelete.nickname
+      )
+        throw new NoPermissionsError(
+          "Nie masz uprawnień do usunięcia konta innego użytkownika.",
+          403,
+          {
+            userId: userId,
+            userNickname: userNickname,
+            userToDeleteId: userToDelete.id,
+            userToDeleteNickname: userToDelete.nickname,
+          },
+        );
+
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      });
+
+      await userToDelete.destroy();
+      logger.info(
+        `Użytkownik ${userNickname} (${userId}) usunął swoje konto.`,
+        { service: "delete-account-user" },
+      );
+      res.status(200).json({ message: "Usuwanie konta zakończone sukcesem." });
+    } catch (error) {
+      if (error instanceof FieldValidationError) {
+        logger.error(
+          `Nieudana próba usunięcia konta przez użytkownika - ${error.message}`,
+          { service: "delete-account-user" },
+        );
+        res.status(error.statusCode).json({ message: error.message });
+      } else if (error instanceof UserNotFoundError) {
+        logger.error(
+          `Nieudana próba usunięcia konta przez użytkownika - ${error.message}`,
+          { ...error.metaData, service: "delete-account-user" },
+        );
+        res.status(error.statusCode).json({ message: error.message });
+      } else if (error instanceof InvalidPasswordError) {
+        logger.error(
+          `Nieudana próba usunięcia konta przez użytkownika - ${error.message}`,
+          { ...error.metaData, service: "delete-account-user" },
+        );
+        res.status(error.statusCode).json({ message: error.message });
+      } else if (error instanceof NoPermissionsError) {
+        logger.error(
+          `Nieautoryzowana próba usunięcia konta przez użytkownika - ${error.message}`,
+          { ...error.metaData, service: "delete-account-user" },
+        );
+        res.status(error.statusCode).json({ message: error.message });
+      } else {
+        logger.error("Wystąpił nieznany błąd podczas usuwania konta", error, {
+          service: "delete-account-user",
+        });
+        res.status(500).json({
+          message: "Wystąpił błąd podczas usuwania konta. Spróbuj ponownie.",
+        });
+      }
+    }
+  }
+
+  static async logoutFromAllDevices(req: Request, res: Response) {
+    try {
+      const userId = req.user?.userId;
+
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+      });
+
+      const deletedSessionsAmount = await Session.destroy({
+        where: { userId: userId },
+      });
+
+      if (deletedSessionsAmount === 0) {
+        throw new NoRefreshTokenError("Brak dostępnych sesji.", 401);
+      }
+
+      logger.info(
+        `Użytkownik ${req.user?.userNickname} (${userId}) wylogował się ze wszystkich urządzeń.`,
+      );
+
+      res
+        .status(200)
+        .json({ message: "Pomyślnie wylogowano ze wszystkich urządzeń." });
+    } catch (error) {
+      if (error instanceof NoRefreshTokenError) {
+        res.status(error.statusCode).json({ message: error.message });
+      }
+      logger.error(
+        "Wystąpił nieznany błąd podczas wylogowywania ze wszystkich urządzeń",
+        error,
+        { service: "logout-from-all-devices" },
+      );
+      res.status(500).json({
+        message:
+          "Wystąpił błąd poczas wylogowywania ze wszystkich urządzeń. Spróbuj ponownie.",
+      });
     }
   }
 }
