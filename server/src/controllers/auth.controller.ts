@@ -27,14 +27,17 @@ export class AuthController {
       const email = req.body.email?.trim() ?? "";
       const password = req.body.password?.trim() ?? "";
       const gender = req.body.gender?.trim() ?? "";
+      const birthDate = req.body.birthDate?.trim() ?? "";
 
       // Form fields validation
-      ValidationService.isStringFieldValid(nickname, "Nick", 3, 20);
-      ValidationService.isStringFieldValid(name, "Imię", 2, 50);
-      ValidationService.isStringFieldValid(surname, "Nazwisko", 2, 50);
+      ValidationService.isStringFieldValid(nickname, '"Nick"', 3, 20);
+      ValidationService.isStringFieldValid(name, '"Imię"', 2, 50);
+      ValidationService.isStringFieldValid(surname, '"Nazwisko"', 2, 50);
       ValidationService.isEmailValid(email);
-      ValidationService.doesStringFieldMatchesEnum(gender, Gender, "Płeć");
+      ValidationService.doesStringFieldMatchesEnum(gender, Gender, '"Płeć"');
       ValidationService.isPasswordValid(password);
+      const parsedBirthDay = ValidationService.isDateValid(birthDate);
+      ValidationService.isBirthDateValid(parsedBirthDay, 13, 105);
 
       // Check if user already exists
       const existingUserByNickname = await User.findOne({
@@ -71,6 +74,7 @@ export class AuthController {
         email: email,
         gender: gender,
         password: hashedPassword,
+        birthDate: parsedBirthDay.toJSDate(),
       });
 
       // Generate tokens
@@ -87,7 +91,7 @@ export class AuthController {
       // Put refresh token in http-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure: false,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
@@ -166,6 +170,7 @@ export class AuthController {
       // Put refresh token in http-only cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
+        sameSite: "lax",
         secure: false,
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
@@ -222,7 +227,7 @@ export class AuthController {
       // Clear refresh token cookie
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "strict",
+        sameSite: "lax",
         secure: false,
       });
       logger.info(`Użytkownik ${userNickname} wylogował się pomyślnie.`, {
@@ -289,6 +294,11 @@ export class AuthController {
       } else if (error instanceof ExpiredRefreshTokenError) {
         logger.error("Wygasły refresh token.", {
           service: "refresh",
+        });
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: false,
         });
         res
           .status(error.statusCode)

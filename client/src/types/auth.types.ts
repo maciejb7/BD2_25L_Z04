@@ -12,6 +12,12 @@ export interface RegisterFormData {
   email: string;
   password: string;
   gender: "male" | "female" | null;
+  birthDate: string;
+}
+
+export interface RefreshResponse {
+  message: string;
+  accessToken: string;
 }
 
 export interface AuthResponse {

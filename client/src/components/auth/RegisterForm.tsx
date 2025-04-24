@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { RegisterFormData } from "../../types/auth.types";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { register } from "../../api/api.auth";
 import { useAlert } from "../../contexts/AlertContext";
+import { getAuthObserver } from "../../utils/AuthObserver";
 
 function RegisterForm() {
   const [registerFormData, setRegisterFormData] = useState<RegisterFormData>({
@@ -12,11 +13,10 @@ function RegisterForm() {
     email: "",
     password: "",
     gender: null,
+    birthDate: "",
   });
 
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-
-  const navigate = useNavigate();
 
   const { showAlert } = useAlert();
 
@@ -44,10 +44,14 @@ function RegisterForm() {
       return;
     }
 
+    if (!registerFormData.birthDate) {
+      showAlert("Podaj datę urodzenia!", "error");
+      return;
+    }
+
     try {
       const response = await register(registerFormData);
-      showAlert(response?.message, "success");
-      navigate("/");
+      getAuthObserver().emitLogin(response.message, "success");
     } catch (error: any) {
       showAlert(error.message, "error");
     }
@@ -131,6 +135,25 @@ function RegisterForm() {
             value={registerFormData?.email}
             onChange={handleChange}
             required
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div className="w-full">
+          <label
+            htmlFor="birthDate"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Data urodzenia
+          </label>
+          <input
+            type="date"
+            id="birthDate"
+            name="birthDate"
+            value={registerFormData?.birthDate}
+            onChange={handleChange}
+            required
+            max={new Date().toISOString().split("T")[0]} // Maksymalna data to dzisiaj
             className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
           />
         </div>

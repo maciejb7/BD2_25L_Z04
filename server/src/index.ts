@@ -12,6 +12,8 @@ import { MatchPreferenceService } from "./services/match-preference.service";
 import questionRouter from "./routers/question.router";
 import hobbyRouter from "./routers/hobby.router";
 import { HobbyService } from "./services/hobby.service";
+import musicRouter from "./routers/music.router";
+import locationRouter from "./routers/location.router";
 
 const startServer = async () => {
   try {
@@ -54,6 +56,8 @@ const addRouters = (app: express.Application) => {
   app.use("/api/interactions", userInteractionRouter);
   app.use("/api/questions", questionRouter);
   app.use("/api/hobbies", hobbyRouter);
+  app.use("/api/music", musicRouter);
+  app.use("/api/location", locationRouter);
 };
 
 startServer();

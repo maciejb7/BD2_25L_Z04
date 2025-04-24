@@ -1,5 +1,11 @@
-import axios from "axios";
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { ErrorResponse } from "../types/general.types";
+import { refresh } from "./api.auth";
+import { getAuthObserver } from "../utils/AuthObserver";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -18,15 +24,46 @@ const api = axios.create({
 
 // Add a request interceptor to include the access token in the headers
 api.interceptors.request.use(
-  (config) => {
+  (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
-
     return config;
   },
-  (error) => {
+  (error: AxiosError): Promise<AxiosError> => {
+    return Promise.reject(error);
+  },
+);
+
+// Add a response interceptor to refresh access token if error 401 occurs
+api.interceptors.response.use(
+  (response: AxiosResponse): AxiosResponse => {
+    return response;
+  },
+  async (error: AxiosError<ErrorResponse>) => {
+    if (
+      error.response?.status == 401 &&
+      error.response?.data.message === "Brak autoryzacji."
+    ) {
+      // Save current request to retry it after refreshing the token
+      const originalRequest = error.config as InternalAxiosRequestConfig;
+
+      try {
+        // Refresh the token
+        const response = await refresh();
+        const accessToken = response.accessToken;
+        localStorage.setItem("accessToken", accessToken);
+        originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
+
+        // Retry the original request with the new access token
+        return api(originalRequest);
+      } catch (refreshError: any) {
+        // Emit logout event to notify AuthHandler to log out the user
+        getAuthObserver().emitLogout(refreshError.message);
+        return Promise.reject(refreshError);
+      }
+    }
     return Promise.reject(error);
   },
 );

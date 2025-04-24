@@ -1,5 +1,6 @@
 import { EnumLike, z } from "zod";
 import { FieldValidationError } from "../errors/errors";
+import { DateTime } from "luxon";
 
 /**
  * Service for validating user input.
@@ -118,6 +119,67 @@ export class ValidationService {
     if (!validationResult.success) {
       throw new FieldValidationError(
         validationResult.error.errors[0].message,
+        400,
+      );
+    }
+  }
+
+  static isDateValid(date: string): DateTime {
+    const dateSchema = z
+      .string()
+      .nonempty({
+        message: "Data nie może być pusta.",
+      })
+      .regex(/^\d{4}-\d{2}-\d{2}$/, {
+        message: "Data musi być w formacie YYYY-MM-DD.",
+      });
+
+    const formatValidation = dateSchema.safeParse(date);
+    if (!formatValidation.success) {
+      throw new FieldValidationError(
+        formatValidation.error.errors[0].message,
+        400,
+      );
+    }
+
+    const parsedDate = DateTime.fromISO(date);
+
+    if (!parsedDate.isValid) {
+      throw new FieldValidationError(
+        `Nieprawidłowa data: ${parsedDate.invalidExplanation || "Format daty jest niepoprawny."}`,
+        400,
+      );
+    }
+
+    return parsedDate;
+  }
+
+  static isBirthDateValid(
+    birthDate: DateTime,
+    yearsMin: number,
+    yearsMax: number,
+  ): void {
+    const today = DateTime.now();
+    const oldestDate = today.minus({ years: yearsMax });
+    const youngestDate = today.minus({ years: yearsMin });
+
+    if (birthDate > today) {
+      throw new FieldValidationError(
+        "Data urodzenia nie może być w przyszłości.",
+        400,
+      );
+    }
+
+    if (birthDate <= oldestDate) {
+      throw new FieldValidationError(
+        `Nie możesz mieć więcej niż ${yearsMax} lat.`,
+        400,
+      );
+    }
+
+    if (birthDate >= youngestDate) {
+      throw new FieldValidationError(
+        `Musisz mieć co najmniej ${yearsMin} lat.`,
         400,
       );
     }
