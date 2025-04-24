@@ -52,18 +52,21 @@ export class QuestionController {
       const { userId, questionId, answer } = req.body;
       if (!userId || !questionId || !answer) {
         res.status(400).json({ error: "Given Answer is missing data" });
+        return;
       }
       const questionExists = questions.find((q) => q.id === questionId);
       if (!questionExists) {
         res
           .status(404)
           .json({ error: `There is no question with id: ${questionId}` });
+        return;
       }
       try {
         const user = await User.findByPk(userId);
       } catch (error) {
         console.error(`There is no user with id: ${userId}`, error);
         res.status(500).json({ error: `There is no user with id: ${userId}` });
+        return;
       }
       const saved = await saveAnswer(userId, questionId, answer);
       res.json(saved);
