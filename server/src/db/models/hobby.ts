@@ -1,11 +1,55 @@
-export type Hobby = {
-  id: number;
-  hobby_category_id: number;
-  hobby_name: string;
-  hobby_description: string;
-};
+import {
+  DataType,
+  Table,
+  Model,
+  Column,
+  ForeignKey,
+  BelongsTo,
+  HasMany,
+} from "sequelize-typescript";
+import { HobbyCategory } from "./hobby_category";
+import { UserHobby } from "./user_hobby";
 
-export const hobbys: Hobby[] = [
+@Table({
+  tableName: "hobbies",
+})
+export class Hobby extends Model {
+  @Column({
+    primaryKey: true,
+    type: DataType.INTEGER,
+    autoIncrement: true,
+  })
+  declare id: number;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+  })
+  declare hobby_name: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  declare hobby_description: string;
+
+  @ForeignKey(() => HobbyCategory)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+    field: "hobby_category_id",
+  })
+  declare hobby_category_id: number;
+
+  @BelongsTo(() => HobbyCategory)
+  declare category: HobbyCategory;
+
+  @HasMany(() => UserHobby)
+  declare userHobbies: UserHobby[];
+}
+
+// Initial hobbies
+export const hobbies = [
   {
     id: 1,
     hobby_category_id: 1,
@@ -51,7 +95,7 @@ export const hobbys: Hobby[] = [
   {
     id: 8,
     hobby_category_id: 4,
-    hobby_name: "Ziwiedzanie muzeów",
+    hobby_name: "Zwiedzanie muzeów",
     hobby_description: "Dla miłośników sztuki i historii.",
   },
   {

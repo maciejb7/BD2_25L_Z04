@@ -6,6 +6,9 @@ import { MatchType } from "./models/match_type";
 import { UserMatchPreference } from "./models/user_match_preference";
 import { UserLike } from "./models/user_like";
 import { UserMatch } from "./models/user_match";
+import { HobbyCategory } from "./models/hobby_category";
+import { Hobby } from "./models/hobby";
+import { UserHobby } from "./models/user_hobby";
 import { MusicGenre } from "./models/music_genre";
 import { MusicArtist } from "./models/music_artist";
 import { MusicAlbum } from "./models/music_album";
@@ -20,6 +23,9 @@ const models = [
   UserMatchPreference,
   UserLike,
   UserMatch,
+  HobbyCategory,
+  Hobby,
+  UserHobby,
   MusicGenre,
   MusicArtist,
   MusicAlbum,
