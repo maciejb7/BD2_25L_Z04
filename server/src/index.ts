@@ -18,7 +18,8 @@ import locationRouter from "./routers/location.router";
 const startServer = async () => {
   try {
     await database.authenticate();
-    await database.sync({ force: false });
+
+    await database.sync({ alter: true });
     logger.info("Połączono z bazą danych.");
 
     await MatchPreferenceService.initializeMatchTypes();
