@@ -13,6 +13,7 @@ import questionRouter from "./routers/question.router";
 import hobbyRouter from "./routers/hobby.router";
 import userHobbyRouter from "./routers/userHobby.router";
 import musicRouter from "./routers/music.router";
+import locationRouter from "./routers/location.router";
 
 const startServer = async () => {
   try {
@@ -54,6 +55,7 @@ const addRouters = (app: express.Application) => {
   app.use("/api/hobby", hobbyRouter);
   app.use("/api/userHobby", userHobbyRouter);
   app.use("/api/music", musicRouter);
+  app.use("/api/location", locationRouter);
 };
 
 startServer();
