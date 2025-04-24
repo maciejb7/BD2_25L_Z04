@@ -1,7 +1,8 @@
-import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
+import { DataType, Table, Model, Column, HasMany, HasOne } from "sequelize-typescript";
 import { Session } from "./session";
 import { UserMatchPreference } from "./user_match_preference";
 import { UserLike } from "./user_like";
+import { UserLocation } from "./user_location";
 
 export enum Gender {
   M = "male",
@@ -111,6 +112,9 @@ export class User extends Model {
 
   @HasMany(() => UserLike, { foreignKey: "likeeId" })
   declare receivedLikes: UserLike[];
+
+  @HasOne(() => UserLocation, { foreignKey: "user_id" })
+  declare location: UserLocation;
 
   public toJSON(): object {
     const userData = this.get({ plain: true });
