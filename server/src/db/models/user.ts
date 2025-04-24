@@ -54,12 +54,6 @@ export class User extends Model {
   declare surname: string;
 
   @Column({
-    type: DataType.DATEONLY,
-    allowNull: true,
-  })
-  declare birthdate: Date;
-
-  @Column({
     type: DataType.STRING,
     allowNull: false,
     unique: true,
