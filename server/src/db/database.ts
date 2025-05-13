@@ -6,7 +6,6 @@ import { MatchType } from "./models/match_type";
 import { UserMatchPreference } from "./models/user_match_preference";
 import { UserLike } from "./models/user_like";
 import { UserMatch } from "./models/user_match";
-
 const models = [
   User,
   Session,
