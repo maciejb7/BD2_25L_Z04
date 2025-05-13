@@ -15,7 +15,6 @@ import { MusicAlbum } from "./models/music_album";
 import { MusicTrack } from "./models/music_track";
 import { UserMusic } from "./models/user_music";
 import { UserLocation } from "./models/user_location";
-
 const models = [
   User,
   Session,

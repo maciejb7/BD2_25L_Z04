@@ -15,7 +15,7 @@ export class AuthMiddleware {
       const authHeader = req.headers.authorization;
 
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).send("Brak autoryzacji.");
+        res.status(401).send({ message: "Brak autoryzacji." });
         return;
       }
 
@@ -35,7 +35,7 @@ export class AuthMiddleware {
 
         next();
       } catch {
-        res.status(401).send("Brak autoryzacji.");
+        res.status(401).send({ message: "Brak autoryzacji." });
       }
     };
   }
@@ -48,12 +48,12 @@ export class AuthMiddleware {
   static authorizeRole(role: string) {
     return async (req: Request, res: Response, next: NextFunction) => {
       if (!req.user) {
-        res.status(401).send("Brak autoryzacji.");
+        res.status(401).send({ message: "Brak autoryzacji." });
         return;
       }
 
       if (req.user.userRole !== role) {
-        res.status(403).send("Brak uprawnień.");
+        res.status(403).send({ message: "Brak uprawnień." });
         return;
       }
 

@@ -1,4 +1,12 @@
-import { DataType, Table, Model, Column, HasMany, HasOne } from "sequelize-typescript";
+import {
+  DataType,
+  Table,
+  Model,
+  Column,
+  HasMany,
+  PrimaryKey,
+  HasOne
+} from "sequelize-typescript";
 import { Session } from "./session";
 import { UserMatchPreference } from "./user_match_preference";
 import { UserLike } from "./user_like";
@@ -18,8 +26,8 @@ export enum Role {
   tableName: "users",
 })
 export class User extends Model {
+  @PrimaryKey
   @Column({
-    primaryKey: true,
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
   })
@@ -27,7 +35,6 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     unique: true,
     validate: {
       len: [3, 20],
@@ -37,7 +44,6 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     validate: {
       len: [2, 20],
     },
@@ -46,7 +52,6 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     validate: {
       len: [2, 50],
     },
@@ -55,7 +60,6 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     unique: true,
     validate: {
       isEmail: true,
@@ -65,37 +69,35 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
   })
   declare password: string;
 
   @Column({
     type: DataType.ENUM(...Object.values(Gender)),
-    allowNull: false,
   })
   declare gender: Gender;
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
   })
   declare birthDate: Date;
 
   @Column({
     type: DataType.ENUM(...Object.values(Role)),
-    allowNull: false,
     defaultValue: Role.USER,
   })
   declare role: Role;
 
   @Column({
     type: DataType.BOOLEAN,
-    allowNull: false,
     defaultValue: true,
   })
   declare isActive: boolean;
 
-  @HasMany(() => Session)
+  @HasMany(() => Session, {
+    onDelete: "CASCADE",
+    foreignKey: "userId",
+  })
   declare sessions: Session[];
 
   @HasMany(() => UserMatchPreference)

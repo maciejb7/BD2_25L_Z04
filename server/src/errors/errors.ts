@@ -1,10 +1,19 @@
+/**
+ * Basic class for all API errors.
+ * Gives possibility to add a status code and meta data to the error,
+ * which can be used with response or logger.
+ */
 export class APIError extends Error {
   statusCode: number;
-  loggerMessage: string;
-  constructor(message: string, statusCode: number, loggerMessage = "") {
+  metaData: Record<string, unknown>;
+  constructor(
+    message: string,
+    statusCode: number,
+    metaData: Record<string, unknown> = {},
+  ) {
     super(message);
     this.statusCode = statusCode;
-    this.loggerMessage = loggerMessage;
+    this.metaData = metaData;
   }
 }
 
@@ -21,3 +30,5 @@ export class NoRefreshTokenError extends APIError {}
 export class InvalidRefreshTokenError extends APIError {}
 
 export class ExpiredRefreshTokenError extends APIError {}
+
+export class NoPermissionsError extends APIError {}

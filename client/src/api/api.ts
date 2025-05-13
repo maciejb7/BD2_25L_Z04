@@ -42,6 +42,8 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError<ErrorResponse>) => {
+    console.log(error);
+
     if (
       error.response?.status == 401 &&
       error.response?.data.message === "Brak autoryzacji."
@@ -54,13 +56,14 @@ api.interceptors.response.use(
         const response = await refresh();
         const accessToken = response.accessToken;
         localStorage.setItem("accessToken", accessToken);
+
         originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
 
         // Retry the original request with the new access token
         return api(originalRequest);
       } catch (refreshError: any) {
         // Emit logout event to notify AuthHandler to log out the user
-        getAuthObserver().emitLogout(refreshError.message);
+        getAuthObserver().emitLogout(refreshError.message, "info");
         return Promise.reject(refreshError);
       }
     }

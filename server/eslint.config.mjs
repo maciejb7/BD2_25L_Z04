@@ -19,7 +19,6 @@ export default [
       // Prettier config: force 2-space indentation (via tabWidth) and fix line endings.
       "prettier/prettier": ["error", { endOfLine: "auto", tabWidth: 2 }],
       // ESLint indent rule: ensure 2-space indentation.
-      indent: ["error", 2],
     },
   },
 ];

@@ -24,7 +24,7 @@ export class TokenService {
       { userId: user.userId, userNickname: user.nickname, userRole: user.role },
       config.ACCESS_TOKEN_SECRET as string,
       {
-        expiresIn: "15m",
+        expiresIn: "1m",
       },
     );
   }

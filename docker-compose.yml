@@ -53,6 +53,8 @@ services:
     restart: unless-stopped
     depends_on:
       - server
+    environment:
+      VITE_API_URL: ${VITE_API_URL}
     ports:
       - "5173:5173"
     volumes:
