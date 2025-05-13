@@ -58,187 +58,208 @@ function RegisterForm() {
   };
 
   return (
-    <div className="flex justify-center items-center mt-2 h-[calc(100vh-100px)]">
+    <div className="w-full px-3 mt-20 mb-5 sm:mt-0 sm:px-0 py-3">
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col justify-center items-center bg-white w-full max-w-md mx-auto p-5 rounded-lg shadow-md space-y-3 overflow-auto max-h-full"
+        className="flex flex-col justify-center items-center bg-white w-full max-w-md mx-auto p-3 sm:p-5 rounded-lg shadow-md"
       >
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">
+        <h1 className="text-lg sm:text-xl font-bold text-center text-gray-800 mb-2 w-full">
           Rejestracja
         </h1>
 
-        <div className="w-full">
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Imię
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={registerFormData?.name}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <div className="mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Imię
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={registerFormData?.name}
+                onChange={handleChange}
+                required
+                autoComplete="given-name"
+                placeholder="Twoje imię"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-        <div className="w-full">
-          <label
-            htmlFor="surname"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Nazwisko
-          </label>
-          <input
-            type="text"
-            id="surname"
-            name="surname"
-            value={registerFormData?.surname}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+            <div className="mb-2">
+              <label
+                htmlFor="surname"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Nazwisko
+              </label>
+              <input
+                type="text"
+                id="surname"
+                name="surname"
+                value={registerFormData?.surname}
+                onChange={handleChange}
+                required
+                autoComplete="family-name"
+                placeholder="Twoje nazwisko"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-        <div className="w-full">
-          <label
-            htmlFor="nickname"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Nick
-          </label>
-          <input
-            type="text"
-            id="nickname"
-            name="nickname"
-            value={registerFormData?.nickname}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
+            <div className="mb-2">
+              <label
+                htmlFor="nickname"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Nick
+              </label>
+              <input
+                type="text"
+                id="nickname"
+                name="nickname"
+                value={registerFormData?.nickname}
+                onChange={handleChange}
+                required
+                autoComplete="username"
+                placeholder="Twój nick"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-        <div className="w-full">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={registerFormData?.email}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="w-full">
-          <label
-            htmlFor="birthDate"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Data urodzenia
-          </label>
-          <input
-            type="date"
-            id="birthDate"
-            name="birthDate"
-            value={registerFormData?.birthDate}
-            onChange={handleChange}
-            required
-            max={new Date().toISOString().split("T")[0]} // Maksymalna data to dzisiaj
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="w-full">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Hasło
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={registerFormData?.password}
-            onChange={handleChange}
-            required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="w-full">
-          <label
-            htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Powtórz Hasło
-          </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="flex items-center space-x-6">
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="gender-male"
-              name="gender"
-              value="male"
-              checked={registerFormData?.gender === "male"}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-            />
-            <label
-              htmlFor="gender-male"
-              className="ml-2 block text-sm text-gray-700"
-            >
-              Mężczyzna
-            </label>
+            <div className="mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={registerFormData?.email}
+                onChange={handleChange}
+                required
+                autoComplete="email"
+                placeholder="adres@email.com"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="gender-female"
-              name="gender"
-              value="female"
-              checked={registerFormData?.gender === "female"}
-              onChange={handleChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-            />
-            <label
-              htmlFor="gender-female"
-              className="ml-2 block text-sm text-gray-700"
-            >
-              Kobieta
-            </label>
+
+          <div>
+            <div className="mb-2">
+              <label
+                htmlFor="birthDate"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Data urodzenia
+              </label>
+              <input
+                type="date"
+                id="birthDate"
+                name="birthDate"
+                value={registerFormData?.birthDate}
+                onChange={handleChange}
+                required
+                max={new Date().toISOString().split("T")[0]}
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Hasło
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={registerFormData?.password}
+                onChange={handleChange}
+                required
+                placeholder="••••••••"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="mb-2">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Powtórz Hasło
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Płeć
+              </label>
+              <div className="flex space-x-4">
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="gender-male"
+                    name="gender"
+                    value="male"
+                    checked={registerFormData?.gender === "male"}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="gender-male"
+                    className="ml-1.5 block text-sm text-gray-700"
+                  >
+                    Mężczyzna
+                  </label>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    type="radio"
+                    id="gender-female"
+                    name="gender"
+                    value="female"
+                    checked={registerFormData?.gender === "female"}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <label
+                    htmlFor="gender-female"
+                    className="ml-1.5 block text-sm text-gray-700"
+                  >
+                    Kobieta
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+          className="w-full mt-2 bg-blue-600 text-white py-2 px-3 text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
         >
           Zarejestruj się
         </button>
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-xs sm:text-sm text-gray-600 pt-1 mt-1">
           Masz już konto?{" "}
           <Link
             to="/login"

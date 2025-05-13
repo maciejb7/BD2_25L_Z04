@@ -37,7 +37,7 @@ const infoContent = [
 
 function HomePage() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col text-center">
       <TopBar options={topBarOptions} />
       <MainBackground>
         {/* Main Section */}

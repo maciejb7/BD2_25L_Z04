@@ -32,18 +32,18 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex justify-center items-center mt-8 h-[calc(100vh-100px)]">
+    <div className="w-full px-4 py-6 sm:px-0">
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col justify-center items-center bg-white w-full max-w-md mx-auto p-5 rounded-lg shadow-md space-y-8 overflow-auto max-h-full"
+        className="flex flex-col justify-center items-center bg-white w-full max-w-sm mx-auto p-4 sm:p-6 rounded-lg shadow-md space-y-6 sm:space-y-8"
       >
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-800">
           Logowanie
         </h1>
 
         <div className="w-full">
           <label
-            htmlFor="name"
+            htmlFor="nicknameOrEmail"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             Login
@@ -55,7 +55,9 @@ function LoginForm() {
             value={loginFormData.nicknameOrEmail}
             onChange={handleChange}
             required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            autoComplete="username"
+            className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Login lub email"
           />
         </div>
 
@@ -73,18 +75,20 @@ function LoginForm() {
             value={loginFormData.password}
             onChange={handleChange}
             required
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            autoComplete="current-password"
+            className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+            placeholder="••••••••"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+          className="w-full bg-blue-600 text-white py-3 px-4 text-base rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
         >
           Zaloguj się
         </button>
 
-        <p className="text-center text-sm text-gray-600">
+        <p className="text-center text-sm text-gray-600 pt-2">
           Nie masz konta?{" "}
           <Link
             to="/register"

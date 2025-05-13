@@ -8,7 +8,7 @@ interface MainBackgroundProps {
 function MainBackground({ children }: MainBackgroundProps) {
   return (
     <div
-      className="w-full h-full bg-fixed bg-cover bg-center"
+      className="w-full h-min-screen bg-fixed bg-cover bg-center"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="backdrop-blur-sm bg-white/50 h-full">{children}</div>
