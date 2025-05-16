@@ -64,6 +64,9 @@ function ConfirmModal({
     } catch (error: any) {
       setConfirmFormData({ nicknameOrEmail: "", password: "" });
       showAlert(error.message, "error");
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      dialog.close();
     } finally {
       setIsLoading(false);
     }
