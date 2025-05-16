@@ -24,7 +24,7 @@ export class TokenService {
       { userId: user.userId, userNickname: user.nickname, userRole: user.role },
       config.ACCESS_TOKEN_SECRET as string,
       {
-        expiresIn: "1m",
+        expiresIn: "15m",
       },
     );
   }
@@ -100,7 +100,7 @@ export class TokenService {
     });
 
     if (destroyCounter === 0) {
-      throw new InvalidRefreshTokenError("", 401);
+      throw new InvalidRefreshTokenError("Nie znaleziono refresh tokena.", 401);
     }
   }
 
@@ -109,8 +109,15 @@ export class TokenService {
    * @param userId user id to delete refresh tokens
    */
   static async revokeAllSessions(userId: string): Promise<void> {
-    await Session.destroy({
+    const destroyCount = await Session.destroy({
       where: { userId: userId },
     });
+
+    if (destroyCount === 0) {
+      throw new InvalidRefreshTokenError(
+        "Nie znaleziono refresh tokenów.",
+        404,
+      );
+    }
   }
 }
