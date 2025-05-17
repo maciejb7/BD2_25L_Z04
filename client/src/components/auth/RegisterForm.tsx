@@ -6,6 +6,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import { getAuthObserver } from "../../utils/AuthObserver";
 
 function RegisterForm() {
+  const [isLoading, setIsLoading] = useState(false);
   const [registerFormData, setRegisterFormData] = useState<RegisterFormData>({
     name: "",
     surname: "",
@@ -33,19 +34,23 @@ function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     if (registerFormData.password !== confirmPassword) {
       showAlert("Hasła nie są takie same!", "error");
+      setIsLoading(false);
       return;
     }
 
     if (registerFormData.gender === null) {
       showAlert("Wybierz swoją płeć!", "error");
+      setIsLoading(false);
       return;
     }
 
     if (!registerFormData.birthDate) {
       showAlert("Podaj datę urodzenia!", "error");
+      setIsLoading(false);
       return;
     }
 
@@ -54,6 +59,8 @@ function RegisterForm() {
       getAuthObserver().emitLogin(response.message, "success");
     } catch (error: any) {
       showAlert(error.message, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,6 +90,7 @@ function RegisterForm() {
                 value={registerFormData?.name}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 autoComplete="given-name"
                 placeholder="Twoje imię"
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
@@ -103,6 +111,7 @@ function RegisterForm() {
                 value={registerFormData?.surname}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 autoComplete="family-name"
                 placeholder="Twoje nazwisko"
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
@@ -123,6 +132,7 @@ function RegisterForm() {
                 value={registerFormData?.nickname}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 autoComplete="username"
                 placeholder="Twój nick"
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
@@ -143,6 +153,7 @@ function RegisterForm() {
                 value={registerFormData?.email}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 autoComplete="email"
                 placeholder="adres@email.com"
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
@@ -165,6 +176,7 @@ function RegisterForm() {
                 value={registerFormData?.birthDate}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 max={new Date().toISOString().split("T")[0]}
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
@@ -184,6 +196,7 @@ function RegisterForm() {
                 value={registerFormData?.password}
                 onChange={handleChange}
                 required
+                disabled={isLoading}
                 placeholder="••••••••"
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
@@ -203,6 +216,7 @@ function RegisterForm() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                disabled={isLoading}
                 placeholder="••••••••"
                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
               />
@@ -221,6 +235,7 @@ function RegisterForm() {
                     value="male"
                     checked={registerFormData?.gender === "male"}
                     onChange={handleChange}
+                    disabled={isLoading}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <label
@@ -238,6 +253,7 @@ function RegisterForm() {
                     value="female"
                     checked={registerFormData?.gender === "female"}
                     onChange={handleChange}
+                    disabled={isLoading}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <label
@@ -255,15 +271,16 @@ function RegisterForm() {
         <button
           type="submit"
           className="w-full mt-2 bg-blue-600 text-white py-2 px-3 text-sm rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
+          disabled={isLoading}
         >
-          Zarejestruj się
+          {isLoading ? "Rejestrowanie..." : "Zarejestruj się"}
         </button>
 
         <p className="text-center text-xs sm:text-sm text-gray-600 pt-1 mt-1">
           Masz już konto?{" "}
           <Link
             to="/login"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="ml-2 font-medium text-blue-600 hover:text-blue-500"
           >
             Zaloguj się!
           </Link>
