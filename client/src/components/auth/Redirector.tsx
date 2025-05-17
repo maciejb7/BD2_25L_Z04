@@ -4,9 +4,9 @@ import { getAuthObserver } from "../../utils/AuthObserver";
 import { AlertType, useAlert } from "../../contexts/AlertContext";
 
 /**
- * AuthHandler component listens for authentication events and navigates the user accordingly.
+ * Redirector components redirects the user to the appropriate page based on login, logoaut and timeout and shows an alert.
  */
-function AuthHandler() {
+function Redicretor() {
   const navigate = useNavigate();
   const { showAlert } = useAlert();
 
@@ -62,4 +62,4 @@ function AuthHandler() {
   return null;
 }
 
-export default AuthHandler;
+export default Redicretor;

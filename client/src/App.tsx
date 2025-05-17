@@ -1,15 +1,15 @@
 import { AlertProvider } from "./contexts/AlertContext";
 import Alert from "./components/common/Alert";
 import { BrowserRouter } from "react-router-dom";
-import AuthHandler from "./components/auth/AuthHandler";
 import RouterController from "./routes/RouterController";
+import Redicretor from "./components/auth/Redirector";
 
 function App() {
   return (
     <AlertProvider>
       <Alert />
       <BrowserRouter>
-        <AuthHandler />
+        <Redicretor />
         <RouterController />
       </BrowserRouter>
     </AlertProvider>
