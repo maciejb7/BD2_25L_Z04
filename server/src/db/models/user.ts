@@ -5,7 +5,7 @@ import {
   Column,
   HasMany,
   PrimaryKey,
-  HasOne
+  HasOne,
 } from "sequelize-typescript";
 import { Session } from "./session";
 import { UserMatchPreference } from "./user_match_preference";
@@ -121,6 +121,7 @@ export class User extends Model {
     delete userData.matchPreferences;
     delete userData.givenLikes;
     delete userData.receivedLikes;
+    delete userData.location;
 
     return userData;
   }

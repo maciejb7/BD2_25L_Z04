@@ -5,10 +5,14 @@ import PublicRouter from "./PublicRouter";
 import { getAuthObserver } from "../utils/AuthObserver";
 
 function RouterController() {
-  const [authenticated, setAuthenticated] = useState(isAuthenticated());
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    setAuthenticated(isAuthenticated());
+    const checkAuth = async () => {
+      const result = await isAuthenticated();
+      setAuthenticated(result);
+    };
+    checkAuth();
 
     const loginUnsubscribe = getAuthObserver().onLogin(() => {
       setAuthenticated(true);
@@ -17,6 +21,7 @@ function RouterController() {
     const logoutUnsubscribe = getAuthObserver().onLogout(() => {
       setAuthenticated(false);
     });
+
     return () => {
       loginUnsubscribe();
       logoutUnsubscribe();

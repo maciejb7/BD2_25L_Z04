@@ -14,6 +14,4 @@ export interface User {
   email: string;
   gender: string;
   role: string;
-  createdAt: string;
-  updatedAt: string;
 }

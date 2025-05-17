@@ -14,6 +14,9 @@ import hobbyRouter from "./routers/hobby.router";
 import { HobbyService } from "./services/hobby.service";
 import musicRouter from "./routers/music.router";
 import locationRouter from "./routers/location.router";
+import path from "path";
+import fs from "fs";
+import userRouter from "./routers/user.router";
 
 const startServer = async () => {
   try {
@@ -21,6 +24,8 @@ const startServer = async () => {
 
     await database.sync({ alter: true });
     logger.info("Połączono z bazą danych.");
+
+    initializeUploadsDirectory();
 
     await MatchPreferenceService.initializeMatchTypes();
     logger.info("Zainicjalizowano typy dopasowań.");
@@ -52,6 +57,7 @@ const startServer = async () => {
 
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
+  app.use("/api/user", userRouter);
   app.use("/api/match-preferences", matchPreferenceRouter);
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/interactions", userInteractionRouter);
@@ -59,6 +65,35 @@ const addRouters = (app: express.Application) => {
   app.use("/api/hobbies", hobbyRouter);
   app.use("/api/music", musicRouter);
   app.use("/api/location", locationRouter);
+};
+
+/**
+ * Initializes the uploads directory and its subdirectories if they do not exist.
+ */
+const initializeUploadsDirectory = () => {
+  const uploadsPath = path.join(__dirname, "..", "uploads");
+  const avatarsPath = path.join(uploadsPath, "avatars");
+
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath);
+    logger.info("Utworzono katalog z uploadami, ponieważ nie istniał.", {
+      service: "uploads",
+    });
+  }
+
+  if (!fs.existsSync(avatarsPath)) {
+    fs.mkdirSync(avatarsPath);
+    logger.info(
+      "Utworzono katalog z awatarami użytkowników, ponieważ nie istniał.",
+      {
+        service: "uploads",
+      },
+    );
+  }
+
+  logger.info("Foldery uploadów wczytane pomyślnie.", {
+    service: "uploads",
+  });
 };
 
 startServer();

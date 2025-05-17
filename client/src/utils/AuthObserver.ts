@@ -5,7 +5,7 @@ type LogoutCallback = (message?: string, type?: AlertType) => void;
 type TimeoutCallback = (message?: string, type?: AlertType) => void;
 
 /**
- * AuthObserver is a singleton class that allows components to subscribe to logout events.
+ * AuthObserver is a singleton class that allows components to subscribe and react to login, logout and timeout events.
  */
 class AuthObserver {
   private loginListeners: Set<LoginCallback> = new Set();

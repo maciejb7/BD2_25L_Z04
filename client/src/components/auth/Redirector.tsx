@@ -39,6 +39,7 @@ function Redicretor() {
       },
     );
 
+    // Show an alert and navigate to main page on timeout.
     const timeoutUnsubscribe = getAuthObserver().onTimeout(
       (message?: string, type?: AlertType) => {
         if (message) {
