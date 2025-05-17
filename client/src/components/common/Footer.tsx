@@ -6,7 +6,7 @@ function Footer() {
     <footer className="bottom-0 w-full bg-white shadow-md z-10">
       <div className="max-w-7xl mx-auto px-6 py-4 flex flex-row items-center justify-center text-gray-600 text-sm sm:text-base font-medium gap-2">
         <span>&copy; 2025</span>
-        <Logo size="sm" shadow />
+        <Logo size="sm" />
         <span>by</span>
         <Link
           key="https://github.com/maciejb7/BD2_25L_Z04"

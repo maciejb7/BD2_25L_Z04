@@ -11,7 +11,7 @@ export const getUserFromStorage = (): User | null => {
   const userString = localStorage.getItem("user");
   let user;
   try {
-    user = userString ? JSON.parse(userString) : null;
+    user = userString ? JSON.parse(userString).user : null;
   } catch {
     return null;
   }
@@ -20,13 +20,22 @@ export const getUserFromStorage = (): User | null => {
 };
 
 /**
- * Gets user from local storage or API if not found.
+ * Checks if user has all required properties.
+ * @param user
+ * @returns true if user is valid, false otherwise
+ */
+export const isUserValid = (user: User): boolean => {
+  return !!(user && user.name && user.surname && user.nickname && user.userId);
+};
+
+/**
+ * Gets user from local storage or API if not found or corrupted.
  * @returns user object
  */
 export const getUser = async (): Promise<User> => {
   let user = getUserFromStorage();
 
-  if (!user) {
+  if (!user || !isUserValid(user)) {
     user = await getUserFromAPI();
     localStorage.setItem("user", JSON.stringify(user));
   }

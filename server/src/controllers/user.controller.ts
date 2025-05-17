@@ -31,12 +31,16 @@ export class UserController {
     const avatarsPath = path.join(__dirname, "..", "..", "uploads", "avatars");
     const userId = req.user?.userId;
 
-    const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
+    let avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
 
-    if (!fs.existsSync(avatarFilePath)) {
-      res.status(404).json({ message: "Użytkownik nie posiada avatara." });
-      return;
-    }
+    if (!fs.existsSync(avatarFilePath))
+      avatarFilePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "uploads",
+        "defaultAvatar.jpg",
+      );
 
     res.sendFile(avatarFilePath);
   }

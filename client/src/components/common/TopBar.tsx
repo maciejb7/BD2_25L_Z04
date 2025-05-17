@@ -19,7 +19,7 @@ function TopBar({ options }: TopBarProps) {
       {/* TopBar Content */}
       <div className="flex flex-row items-center justify-between">
         {/* Right Side */}
-        <Logo size="md" shadow />
+        <Logo size="md" />
         {/* Left Side */}
         <div className="hidden sm:flex justify-end gap-4">
           {options.map((option) => (
