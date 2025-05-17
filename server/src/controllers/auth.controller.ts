@@ -278,13 +278,6 @@ export class AuthController {
 
     // Check if refresh token exists
     if (!refreshToken) {
-      logger.error(
-        "Nie udana próba odświeżenia tokena - brak refresh tokena.",
-        {
-          service: "refresh",
-        },
-      );
-
       res.status(401).json({ message: "Nie jesteś zalogowany." });
       return;
     }
@@ -302,16 +295,10 @@ export class AuthController {
         secure: false,
       });
       if (error instanceof InvalidRefreshTokenError) {
-        logger.error("Nieprawidłowy refresh token.", {
-          service: "refresh",
-        });
         res
           .status(error.statusCode)
           .json({ message: "Twoja sesja wygasła. Zaloguj się ponownie." });
       } else if (error instanceof ExpiredRefreshTokenError) {
-        logger.error("Wygasły refresh token.", {
-          service: "refresh",
-        });
         res
           .status(error.statusCode)
           .json({ message: "Twoja sesja wygasła. Zaloguj się ponownie." });

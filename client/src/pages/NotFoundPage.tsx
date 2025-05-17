@@ -1,17 +1,20 @@
 import Footer from "../components/common/Footer";
 import MainBackground from "../components/common/MainBackground";
 import TopBar from "../components/common/TopBar";
-import { isAuthenticated } from "../utils/AuthInfo";
+import { isUserAuthenticatedByStorage } from "../utils/userAuthentication";
 
 const topBarOptions = [
-  { name: isAuthenticated() ? "DashBoard" : "Strona Główna", link: "/" },
+  {
+    name: isUserAuthenticatedByStorage() ? "DashBoard" : "Strona Główna",
+    link: "/",
+  },
 ];
 
 function NotFoundPage() {
   return (
     <div>
       <TopBar options={topBarOptions} />
-      <MainBackground>
+      <MainBackground blur={`${isUserAuthenticatedByStorage() ? "80" : "50"}`}>
         <div className="flex flex-col items-center justify-center h-screen">
           <div className="text-center px-6 py-12">
             <h1 className="text-4xl sm:text-6xl font-bold text-blue-600 mb-4">

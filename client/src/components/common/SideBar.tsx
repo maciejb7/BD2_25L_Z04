@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getUserFromStorage } from "../../utils/AuthInfo";
+import { getUserFromStorage } from "../../utils/userAuthentication";
 import { getUserFromAPI } from "../../api/api.user";
 import { Link } from "react-router-dom";
 
