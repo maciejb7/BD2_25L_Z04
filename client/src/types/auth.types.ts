@@ -25,3 +25,7 @@ export interface AuthResponse {
   accessToken: string;
   user: User;
 }
+
+export interface UserResponse {
+  user: User;
+}

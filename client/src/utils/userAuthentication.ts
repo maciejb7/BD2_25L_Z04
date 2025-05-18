@@ -34,10 +34,12 @@ export const isUserValid = (user: User): boolean => {
  */
 export const getUser = async (): Promise<User> => {
   let user = getUserFromStorage();
+  console.log("User from storage: ", user);
 
   if (!user || !isUserValid(user)) {
     user = await getUserFromAPI();
     localStorage.setItem("user", JSON.stringify(user));
+    console.log("User from API: ", user);
   }
 
   return user;

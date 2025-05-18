@@ -13,9 +13,9 @@ export interface SideBarOption {
 }
 
 interface UserSideBarInfo {
-  name: string;
-  surname: string;
-  nickname: string;
+  name?: string;
+  surname?: string;
+  nickname?: string;
 }
 
 export interface SideBarOptions {
@@ -23,22 +23,23 @@ export interface SideBarOptions {
 }
 
 function SideBar({ options }: SideBarOptions) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isUserLoading, setIsUserLoading] = useState(true);
   const [userInfo, setUserInfo] = useState<UserSideBarInfo>({
     name: "",
     surname: "",
     nickname: "",
   });
+  const [isOpen, setIsOpen] = useState(false);
   const [avatar, setAvatar] = useState<string>("");
 
   useEffect(() => {
+    console.log(isUserLoading);
     const fetchUser = async () => {
       const currentUser = await getUser();
-      setUserInfo({
-        name: currentUser.name ?? "",
-        surname: currentUser.surname ?? "",
-        nickname: currentUser.nickname ?? "",
-      });
+      const { name, surname, nickname } = currentUser;
+      console.log(name, surname, nickname);
+      setUserInfo({ name: name, surname: surname, nickname: nickname });
+      setIsUserLoading(false);
     };
     fetchUser();
   }, []);
@@ -92,16 +93,18 @@ function SideBar({ options }: SideBarOptions) {
               <img
                 src={avatar}
                 alt="Avatar"
-                className="w-16 h-16 rounded-full border-2 border-blue-500"
+                className="w-16 h-16 sm:w-28 sm:h-28 rounded-full border-2"
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-gray-300" />
             )}
-            <span className="text-sm font-semibold text-gray-600">
-              {userInfo.name} {userInfo.surname}
+            <span className="text-sm font-semibold text-gray-600 mt-2">
+              {isUserLoading
+                ? "Ładowanie..."
+                : `${userInfo.name} ${userInfo.surname}`}
             </span>
-            <span className="text-lg font-semibold transition-opacity duration-300">
-              {userInfo.nickname}
+            <span className="text-md font-semibold transition-opacity duration-300">
+              {isUserLoading ? "Ładowanie..." : `${userInfo.nickname}`}
             </span>
           </div>
         )}
