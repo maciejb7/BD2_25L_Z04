@@ -10,6 +10,11 @@ export interface ConfirmFormData {
   password: string;
 }
 
+export interface ResetPasswordFormData {
+  oldPassword: string;
+  newPassword: string;
+}
+
 export interface RegisterFormData {
   nickname: string;
   name: string;
@@ -28,9 +33,5 @@ export interface RefreshResponse {
 export interface AuthResponse {
   message: string;
   accessToken: string;
-  user: User;
-}
-
-export interface UserResponse {
   user: User;
 }

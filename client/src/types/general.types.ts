@@ -6,6 +6,10 @@ export interface ErrorResponse {
   message: string;
 }
 
+export interface UserResponse {
+  user: User;
+}
+
 export interface User {
   userId: string;
   nickname: string;
@@ -14,4 +18,6 @@ export interface User {
   email: string;
   gender: string;
   role: string;
+  birthDate: string;
+  createdAt: string;
 }

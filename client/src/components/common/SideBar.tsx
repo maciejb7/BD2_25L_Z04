@@ -33,11 +33,9 @@ function SideBar({ options }: SideBarOptions) {
   const [avatar, setAvatar] = useState<string>("");
 
   useEffect(() => {
-    console.log(isUserLoading);
     const fetchUser = async () => {
       const currentUser = await getUser();
       const { name, surname, nickname } = currentUser;
-      console.log(name, surname, nickname);
       setUserInfo({ name: name, surname: surname, nickname: nickname });
       setIsUserLoading(false);
     };
@@ -75,13 +73,21 @@ function SideBar({ options }: SideBarOptions) {
         >
           {isOpen ? (
             <>
-              <button onClick={() => setIsOpen(false)} className="ml-2 text-xl">
+              <button
+                title="Zwiń Menu"
+                onClick={() => setIsOpen(false)}
+                className="ml-2 text-xl"
+              >
                 ✕
               </button>
               <Logo size="sm" />
             </>
           ) : (
-            <button onClick={() => setIsOpen(true)} className="text-xl">
+            <button
+              title="Rozwiń Menu"
+              onClick={() => setIsOpen(true)}
+              className="text-xl"
+            >
               ☰
             </button>
           )}
@@ -116,6 +122,7 @@ function SideBar({ options }: SideBarOptions) {
               <Link
                 key={option.link}
                 to={option.link}
+                title={option.name}
                 className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md transition-colors ${
                   option.active
                     ? "bg-blue-100 text-blue-600 font-semibold"
@@ -137,6 +144,7 @@ function SideBar({ options }: SideBarOptions) {
               <button
                 key={option.name}
                 onClick={option.onClick}
+                title={option.name}
                 className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md text-left transition-colors text-gray-700 hover:bg-gray-100 w-full`}
               >
                 <i

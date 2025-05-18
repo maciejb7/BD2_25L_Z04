@@ -16,4 +16,10 @@ userRouter.get(
   UserController.getUserAvatar,
 );
 
+userRouter.post(
+  "/change-password",
+  AuthMiddleware.authenticateUser(),
+  UserController.changeUserPassword,
+);
+
 export default userRouter;

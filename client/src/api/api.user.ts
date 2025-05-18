@@ -1,6 +1,6 @@
-import { User } from "../types";
-import { UserResponse } from "../types/auth.types";
-import api from "./api";
+import { ResetPasswordFormData } from "../types/auth.types";
+import { CommonResponse, User, UserResponse } from "../types/general.types";
+import api, { handleApiError } from "./api";
 
 export const getUserFromAPI = async (): Promise<User> => {
   const response = await api.get<UserResponse>("/api/user");
@@ -15,4 +15,21 @@ export const getUserAvatar = async (): Promise<string> => {
     withCredentials: true,
   });
   return URL.createObjectURL(response.data);
+};
+
+export const changePassword = async (
+  data: ResetPasswordFormData,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/change-password",
+      data,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd zmiany hasła. Spróbuj ponownie.",
+    );
+  }
 };

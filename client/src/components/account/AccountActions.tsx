@@ -6,18 +6,36 @@ import {
 } from "../../api/api.auth";
 import { getAuthObserver } from "../../utils/AuthObserver";
 import ConfirmModal from "../auth/ConfirmModal";
+import PasswordModal from "./PasswordModal";
+import { changePassword } from "../../api/api.user";
 
 function AccountActions() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAccountDeleteModalOpen, setIsAccountDeleteModalOpen] =
+    useState(false);
+  const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] =
+    useState(false);
   return (
     <div>
       <ConfirmModal
         apiCall={deleteAccount}
         modalTitle={"Potwierdź usunięcie konta"}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAccountDeleteModalOpen}
+        onClose={() => setIsAccountDeleteModalOpen(false)}
+      />
+      <PasswordModal
+        apiCall={changePassword}
+        modalTitle={"Zmień hasło"}
+        isOpen={isPasswordChangeModalOpen}
+        onClose={() => setIsPasswordChangeModalOpen(false)}
       />
       <div className="flex flex-col sm:flex-row items-center justify-between gap-5 p-4">
+        <button
+          className="flex flex-row items-center justify-center space-x-2 w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          onClick={() => setIsPasswordChangeModalOpen(true)}
+        >
+          <i className="fas fa-key"></i>
+          <span>Zmień hasło</span>
+        </button>
         <button
           className="flex flex-row items-center justify-center space-x-2 w-full bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300"
           onClick={async () => {
@@ -40,7 +58,7 @@ function AccountActions() {
         </button>
         <button
           className="flex flex-row items-center justify-center space-x-2 w-full bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsAccountDeleteModalOpen(true)}
         >
           <i className="fas fa-user-slash"></i>
           <span>Usuń konto</span>

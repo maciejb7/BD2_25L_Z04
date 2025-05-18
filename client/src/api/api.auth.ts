@@ -7,6 +7,7 @@ import {
   RegisterFormData,
 } from "../types/auth.types";
 import { CommonResponse } from "../types/general.types";
+import { getAuthObserver } from "../utils/AuthObserver";
 
 export const login = async (data: LoginFormData): Promise<AuthResponse> => {
   try {
@@ -65,6 +66,7 @@ export const deleteAccount = async (
     );
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(

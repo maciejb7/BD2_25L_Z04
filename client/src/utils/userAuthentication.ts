@@ -25,7 +25,18 @@ export const getUserFromStorage = (): User | null => {
  * @returns true if user is valid, false otherwise
  */
 export const isUserValid = (user: User): boolean => {
-  return !!(user && user.name && user.surname && user.nickname && user.userId);
+  return !!(
+    user &&
+    user.name &&
+    user.surname &&
+    user.nickname &&
+    user.userId &&
+    user.email &&
+    user.birthDate &&
+    user.createdAt &&
+    user.gender &&
+    user.role
+  );
 };
 
 /**
@@ -34,12 +45,9 @@ export const isUserValid = (user: User): boolean => {
  */
 export const getUser = async (): Promise<User> => {
   let user = getUserFromStorage();
-  console.log("User from storage: ", user);
-
   if (!user || !isUserValid(user)) {
     user = await getUserFromAPI();
     localStorage.setItem("user", JSON.stringify(user));
-    console.log("User from API: ", user);
   }
 
   return user;

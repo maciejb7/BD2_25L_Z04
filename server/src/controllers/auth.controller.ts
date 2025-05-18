@@ -338,7 +338,7 @@ export class AuthController {
         },
       );
       res.status(400).json({
-        message: "Nieprawidłowy nick. Spróbuj ponownie.",
+        message: "Nieprawidłowy login lub hasło.",
       });
       return;
     }

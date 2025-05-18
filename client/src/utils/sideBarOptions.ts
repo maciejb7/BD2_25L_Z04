@@ -14,7 +14,7 @@ const options: SideBarOption[] = [
   { name: "Dashboard", icon: "fas fa-home", link: "/dashboard" },
   {
     name: "Konto",
-    icon: "fas fa-user-cog",
+    icon: "fas fa-user",
     link: "/account-settings",
   },
   { name: "Wyloguj", icon: "fas fa-sign-out-alt", onClick: logoutSideBar },
