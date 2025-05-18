@@ -5,6 +5,11 @@ export interface LoginFormData {
   password: string;
 }
 
+export interface ConfirmFormData {
+  nickname: string;
+  password: string;
+}
+
 export interface RegisterFormData {
   nickname: string;
   name: string;

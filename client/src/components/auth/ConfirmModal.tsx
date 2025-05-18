@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { ConfirmFormData } from "../../api/api.auth";
+import { ConfirmFormData } from "../../types/auth.types";
 
 interface ConfirmModalDataProps {
   apiCall: (data: ConfirmFormData) => Promise<any>;
@@ -16,7 +16,7 @@ function ConfirmModal({
   onClose,
 }: ConfirmModalDataProps) {
   const [confirmFormData, setConfirmFormData] = useState<ConfirmFormData>({
-    nicknameOrEmail: "",
+    nickname: "",
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -62,7 +62,7 @@ function ConfirmModal({
     try {
       await apiCall(confirmFormData);
     } catch (error: any) {
-      setConfirmFormData({ nicknameOrEmail: "", password: "" });
+      setConfirmFormData({ nickname: "", password: "" });
       showAlert(error.message, "error");
       const dialog = dialogRef.current;
       if (!dialog) return;
@@ -83,7 +83,10 @@ function ConfirmModal({
           <button
             type="button"
             className="absolute right-0 top-0 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 z-10"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => {
+              setConfirmFormData({ nickname: "", password: "" });
+              dialogRef.current?.close();
+            }}
           >
             ✕
           </button>
@@ -91,16 +94,16 @@ function ConfirmModal({
 
         <div className="w-full">
           <label
-            htmlFor="nicknameOrEmail"
+            htmlFor="nickname"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Login
+            Twój Nick
           </label>
           <input
             type="text"
-            id="nicknameOrEmail"
-            name="nicknameOrEmail"
-            value={confirmFormData.nicknameOrEmail}
+            id="nickname"
+            name="nickname"
+            value={confirmFormData.nickname}
             onChange={handleChange}
             required
             disabled={isLoading}
@@ -130,7 +133,10 @@ function ConfirmModal({
         <div className="flex space-x-3 pt-2">
           <button
             type="button"
-            onClick={() => dialogRef.current?.close()}
+            onClick={() => {
+              setConfirmFormData({ nickname: "", password: "" });
+              dialogRef.current?.close();
+            }}
             disabled={isLoading}
             className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300"
           >

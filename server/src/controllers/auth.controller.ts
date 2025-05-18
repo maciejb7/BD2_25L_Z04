@@ -325,13 +325,28 @@ export class AuthController {
    */
   static async deleteAccount(req: Request, res: Response) {
     const userId = req.user?.userId ?? "";
-    const userNickname = req.user?.userNickname ?? "";
-    const password = req.body.password.trim() ?? "";
+    const nickname = req.user?.userNickname ?? "";
+    const nicknameFromForm = req.body.nickname.trim() ?? "";
+    const passwordFromForm = req.body.password.trim() ?? "";
+
+    if (nickname !== nicknameFromForm) {
+      logger.error(
+        `Nieudana próba usunięcia konta przez użytkownika ${nickname} - podano inny nick.`,
+        {
+          service: "delete-account-user",
+          nickname: nickname,
+        },
+      );
+      res.status(400).json({
+        message: "Nieprawidłowy nick. Spróbuj ponownie.",
+      });
+      return;
+    }
 
     try {
       const userToDelete = await AuthService.authenticateUser(
-        userNickname,
-        password,
+        nicknameFromForm,
+        passwordFromForm,
       );
 
       res.clearCookie("refreshToken", {
@@ -341,9 +356,9 @@ export class AuthController {
       });
 
       await userToDelete.destroy();
-      logger.info(`Użytkownik ${userNickname} usunął swoje konto.`, {
+      logger.info(`Użytkownik ${nickname} usunął swoje konto.`, {
         service: "delete-account-user",
-        nickname: userNickname,
+        nickname: nickname,
         userId: userId,
       });
       res.status(200).json({ message: "Usuwanie konta zakończone sukcesem." });
@@ -351,7 +366,7 @@ export class AuthController {
       if (error instanceof FieldValidationError) {
         logger.error(
           `Błąd walidacji podczasu usuwania konta - ${error.message}`,
-          { service: "delete-account-user", nickname: userNickname },
+          { service: "delete-account-user", nickname: nickname },
         );
         res.status(error.statusCode).json({ message: error.message });
       } else if (error instanceof UserNotFoundError) {

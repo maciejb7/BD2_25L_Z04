@@ -1,12 +1,12 @@
 import api, { handleApiError } from "./api";
 import {
   AuthResponse,
+  ConfirmFormData,
   LoginFormData,
   RefreshResponse,
   RegisterFormData,
 } from "../types/auth.types";
 import { CommonResponse } from "../types/general.types";
-import { getAuthObserver } from "../utils/AuthObserver";
 
 export const login = async (data: LoginFormData): Promise<AuthResponse> => {
   try {
@@ -55,8 +55,6 @@ export const logout = async (): Promise<CommonResponse> => {
   }
 };
 
-export type ConfirmFormData = LoginFormData;
-
 export const deleteAccount = async (
   data: ConfirmFormData,
 ): Promise<CommonResponse> => {
@@ -67,10 +65,8 @@ export const deleteAccount = async (
     );
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
-    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
-    console.log(error);
     throw handleApiError(
       error,
       "Wystąpił błąd podczas usuwania konta. Spróbuj ponownie.",
@@ -85,7 +81,6 @@ export const logoutFromAllDevices = async (): Promise<CommonResponse> => {
     );
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
-    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error);
