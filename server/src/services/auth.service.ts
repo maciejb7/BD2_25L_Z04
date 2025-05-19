@@ -1,8 +1,12 @@
 import { Op } from "sequelize";
 import { User } from "../db/models/user";
-import { ValidationService } from "./validation.service";
 import bcrypt from "bcrypt";
-import { InvalidPasswordError, UserNotFoundError } from "../errors/errors";
+import {
+  InvalidPasswordError,
+  UserAlreadyExistsError,
+  UserNotFoundError,
+} from "../errors/errors";
+import { loginValidator } from "../utils/validators";
 
 class AuthService {
   /**
@@ -17,8 +21,8 @@ class AuthService {
     nicknameOrEmail: string,
     password: string,
   ): Promise<User> {
-    ValidationService.isStringFieldValid(nicknameOrEmail, "Login");
-    ValidationService.isStringFieldValid(password, "Hasło");
+    loginValidator.nicknameOrEmail(nicknameOrEmail);
+    loginValidator.password(password);
 
     const user = await User.findOne({
       where: {
@@ -42,6 +46,34 @@ class AuthService {
     }
 
     return user;
+  }
+
+  static async isNicknameTaken(nickname: string): Promise<void> {
+    const existingUserByNickname = await User.findOne({
+      where: { nickname: nickname },
+    });
+
+    if (existingUserByNickname) {
+      throw new UserAlreadyExistsError(
+        "Użytkownik o podanym nicku już istnieje.",
+        409,
+        { nickname: nickname },
+      );
+    }
+  }
+
+  static async isEmailTaken(email: string): Promise<void> {
+    const existingUserByEmail = await User.findOne({
+      where: { email: email },
+    });
+
+    if (existingUserByEmail) {
+      throw new UserAlreadyExistsError(
+        "Użytkownik o podanym adresie email już istnieje.",
+        409,
+        { email: email },
+      );
+    }
   }
 }
 

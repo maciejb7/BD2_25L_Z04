@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Gender, User } from "../db/models/user";
+import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import logger from "../logger";
 import { TokenService } from "../services/token.service";
@@ -12,6 +12,7 @@ import {
   ExpiredRefreshTokenError,
 } from "../errors/errors";
 import AuthService from "../services/auth.service";
+import { userValidator } from "../utils/validators";
 
 /**
  * Controller for handling user authentication.
@@ -21,63 +22,23 @@ export class AuthController {
    * Registers a new user and logs them in.
    */
   static async register(req: Request, res: Response): Promise<void> {
-    const nickname = req.body.nickname?.trim() ?? "";
-    const email = req.body.email?.trim() ?? "";
-    const name = req.body.name?.trim() ?? "";
-    const surname = req.body.surname?.trim() ?? "";
-    const password = req.body.password?.trim() ?? "";
-    const gender = req.body.gender?.trim() ?? "";
-    const birthDate = req.body.birthDate?.trim() ?? "";
+    const nickname: string = req.body.nickname?.trim() ?? "";
+    const email: string = req.body.email?.trim() ?? "";
+    const name: string = req.body.name?.trim() ?? "";
+    const surname: string = req.body.surname?.trim() ?? "";
+    const password: string = req.body.password?.trim() ?? "";
+    const gender: string = req.body.gender?.trim() ?? "";
+    const birthDate: string = req.body.birthDate?.trim() ?? "";
 
     try {
-      // Form fields validation
-      ValidationService.isStringFieldValid(nickname, '"Nick"', 3, 20);
-      ValidationService.isStringFieldValid(name, '"Imię"', 2, 50);
-      ValidationService.isStringFieldValid(surname, '"Nazwisko"', 2, 50);
-      ValidationService.isEmailValid(email);
-      ValidationService.doesStringFieldMatchesEnum(gender, Gender, '"Płeć"');
-      ValidationService.isPasswordValid(password);
-      const parsedBirthDay = ValidationService.isDateValid(birthDate);
-      ValidationService.isBirthDateValid(parsedBirthDay, 13, 105);
-
-      // Check if user already exists
-      const existingUserByNickname = await User.findOne({
-        where: { nickname: nickname },
-      });
-
-      if (existingUserByNickname) {
-        logger.error(
-          "Nieudana próba rejestracji - Użytkownik o podanym nicku już istnieje.",
-          {
-            service: "register",
-            nickname: nickname,
-          },
-        );
-
-        res.status(409).json({
-          message: "Użytkownik o podanym nicku już istnieje.",
-        });
-        return;
-      }
-
-      const existingUserByEmail = await User.findOne({
-        where: { email: email },
-      });
-
-      if (existingUserByEmail) {
-        logger.error(
-          "Nieudana próba rejestracji - Użytkownik o podanym adresie email już istnieje.",
-          {
-            service: "register",
-            email: email,
-          },
-        );
-
-        res.status(409).json({
-          message: "Użytkownik o podanym adresie email już istnieje.",
-        });
-        return;
-      }
+      // Validate user data
+      await userValidator.nickname(nickname);
+      await userValidator.email(email);
+      userValidator.name(name);
+      userValidator.surname(surname);
+      userValidator.password(password);
+      userValidator.gender(gender);
+      userValidator.birthDate(birthDate);
 
       // Hash password and create user
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -89,7 +50,7 @@ export class AuthController {
         email: email,
         gender: gender,
         password: hashedPassword,
-        birthDate: parsedBirthDay.toJSDate(),
+        birthDate: ValidationService.formatToDateTime(birthDate).toJSDate(),
       });
 
       // Generate tokens
@@ -119,7 +80,15 @@ export class AuthController {
         user: createdUser.toJSON(),
       });
     } catch (error) {
-      if (error instanceof FieldValidationError) {
+      if (error instanceof UserNotFoundError) {
+        logger.error(`Nieudana próba rejestracji - ${error.message}.`, {
+          ...error.metaData,
+          service: "register",
+        });
+        res.status(409).json({
+          message: "Użytkownik o podanym adresie email już istnieje.",
+        });
+      } else if (error instanceof FieldValidationError) {
         logger.error(`Błąd walidacji podczas rejestracji - ${error.message}`, {
           service: "register",
           nickname: nickname,
@@ -143,8 +112,8 @@ export class AuthController {
    * Logs in a user.
    */
   static async login(req: Request, res: Response): Promise<void> {
-    const nicknameOrEmail = req.body.nicknameOrEmail?.trim() ?? "";
-    const password = req.body.password?.trim() ?? "";
+    const nicknameOrEmail: string = req.body.nicknameOrEmail?.trim() ?? "";
+    const password: string = req.body.password?.trim() ?? "";
 
     try {
       const user = await AuthService.authenticateUser(
@@ -211,8 +180,8 @@ export class AuthController {
    * Use only with authenticateUser middleware.
    */
   static async logout(req: Request, res: Response): Promise<void> {
-    const userNickname = req.user?.userNickname ?? "";
-    const refreshToken = req.cookies.refreshToken ?? "";
+    const userNickname: string = req.user?.userNickname ?? "";
+    const refreshToken: string = req.cookies.refreshToken ?? "";
 
     // Check if refresh token exists
     if (!refreshToken) {
@@ -274,7 +243,7 @@ export class AuthController {
    * Refreshes the access token using the refresh token.
    */
   static async refresh(req: Request, res: Response): Promise<void> {
-    const refreshToken = req.cookies.refreshToken ?? "";
+    const refreshToken: string = req.cookies.refreshToken ?? "";
 
     // Check if refresh token exists
     if (!refreshToken) {
@@ -324,10 +293,10 @@ export class AuthController {
    * Use only with authenticateUser middleware.
    */
   static async deleteAccount(req: Request, res: Response) {
-    const userId = req.user?.userId ?? "";
-    const nickname = req.user?.userNickname ?? "";
-    const nicknameFromForm = req.body.nickname.trim() ?? "";
-    const passwordFromForm = req.body.password.trim() ?? "";
+    const userId: string = req.user?.userId ?? "";
+    const nickname: string = req.user?.userNickname ?? "";
+    const nicknameFromForm: string = req.body.nickname.trim() ?? "";
+    const passwordFromForm: string = req.body.password.trim() ?? "";
 
     if (nickname !== nicknameFromForm) {
       logger.error(
@@ -398,8 +367,8 @@ export class AuthController {
    * Use only with authenticateUser middleware.
    */
   static async logoutFromAllDevices(req: Request, res: Response) {
-    const userId = req.user?.userId ?? "";
-    const nickname = req.user?.userNickname ?? "";
+    const userId: string = req.user?.userId ?? "";
+    const nickname: string = req.user?.userNickname ?? "";
 
     try {
       res.clearCookie("refreshToken", {

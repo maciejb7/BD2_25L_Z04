@@ -11,6 +11,7 @@ import {
   UserNotFoundError,
 } from "../errors/errors";
 import logger from "../logger";
+import { userValidator } from "../utils/validators";
 
 export class UserController {
   /**
@@ -55,6 +56,73 @@ export class UserController {
   }
 
   /**
+   * Changes a field of informations of the currently authenticated user.
+   * Use only with "authenticateUser" middleware.
+   */
+  static async changeUserInfoField(req: Request, res: Response): Promise<void> {
+    const userId = req.user?.userId;
+    const name = req.body.name.trim() ?? "";
+    let value = req.body.value.trim() ?? "";
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      res.status(404).json({ message: "Nie znaleziono użytkownika." });
+      return;
+    }
+
+    try {
+      if (!userValidator[name]) {
+        res.status(400).json({ message: "Nieprawidłowe pole do zmiany." });
+        return;
+      }
+
+      if (name === "password") {
+        res.status(400).json({
+          message: "Nie można zmienić hasła w ten sposób. Użyj innej metody.",
+        });
+        return;
+      }
+
+      await userValidator[name](value);
+
+      if (name === "birthDate") {
+        value = ValidationService.formatToDateTime(value).toJSDate();
+      }
+
+      await user.update({ [name]: value });
+      await user.save();
+      res.status(200).json({
+        message: `Zmiana dokonana pomyślnie.`,
+      });
+    } catch (error) {
+      if (error instanceof FieldValidationError) {
+        logger.error(
+          `Błąd walidacji podczas zmiany pola ${name} - ${error.message}`,
+          {
+            service: "user-change-info",
+            userId: userId,
+          },
+        );
+        res.status(error.statusCode).json({
+          message: error.message,
+        });
+        return;
+      } else {
+        logger.error(`Nieudana próba zmiany pola `, error, {
+          service: "user-change-info",
+          userId: userId,
+        });
+        res.status(500).json({
+          message:
+            "Wystąpił nieznany błąd podczas zmiany pola. Skontaktuj się z administratorem.",
+        });
+        return;
+      }
+    }
+  }
+
+  /**
    * Changes password of the currently authenticated user.
    * Use only with "authenticateUser" middleware.
    */
@@ -65,7 +133,7 @@ export class UserController {
     try {
       const user = await AuthService.authenticateUser(nickname, oldPassword);
 
-      ValidationService.isPasswordValid(newPassword);
+      userValidator.password(newPassword);
 
       const isPasswordTheSame = await bcrypt.compare(
         newPassword,

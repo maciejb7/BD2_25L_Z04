@@ -132,12 +132,12 @@ export class ValidationService {
   }
 
   /**
-   *  Validates a date.
-   * @param date The date to validate.
-   * @returns The parsed date as a DateTime object.
+   * Validates a date string in the format YYYY-MM-DD and converts it to a DateTime object.
+   * @param date The date string to validate and convert.
+   * @returns The DateTime object representing the date.
    * @throws FieldValidationError if the validation fails.
    */
-  static isDateValid(date: string): DateTime {
+  static formatToDateTime(date: string): DateTime {
     const dateSchema = z
       .string()
       .nonempty({
@@ -147,38 +147,41 @@ export class ValidationService {
         message: "Data musi być w formacie YYYY-MM-DD.",
       });
 
-    const formatValidation = dateSchema.safeParse(date);
-    if (!formatValidation.success) {
+    const dateValidationResult = dateSchema.safeParse(date);
+    if (!dateValidationResult.success) {
       throw new FieldValidationError(
-        formatValidation.error.errors[0].message,
+        dateValidationResult.error.errors[0].message,
         400,
       );
     }
 
-    const parsedDate = DateTime.fromISO(date);
+    const convertedDate = DateTime.fromISO(date);
 
-    if (!parsedDate.isValid) {
+    if (!convertedDate.isValid) {
       throw new FieldValidationError(
-        `Nieprawidłowa data: ${parsedDate.invalidExplanation || "Format daty jest niepoprawny."}`,
+        `Nieprawidłowa data: ${convertedDate.invalidExplanation || "Format daty jest niepoprawny."}`,
         400,
       );
     }
 
-    return parsedDate;
+    return convertedDate;
   }
 
   /**
-   * Validates a birth date.
+   * Validates a birth date and checks if it falls within a specified age range.
    * @param birthDate The birth date to validate.
    * @param yearsMin The minimum age.
    * @param yearsMax The maximum age.
    * @throws FieldValidationError if the validation fails.
    */
   static isBirthDateValid(
-    birthDate: DateTime,
-    yearsMin: number,
-    yearsMax: number,
+    birthDate: string | DateTime,
+    yearsMin = 13,
+    yearsMax = 105,
   ): void {
+    if (typeof birthDate === "string")
+      birthDate = this.formatToDateTime(birthDate);
+
     const today = DateTime.now();
     const oldestDate = today.minus({ years: yearsMax });
     const youngestDate = today.minus({ years: yearsMin });
