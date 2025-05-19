@@ -37,7 +37,6 @@ export class AuthController {
       userValidator.name(name);
       userValidator.surname(surname);
       userValidator.password(password);
-      userValidator.gender(gender);
       userValidator.birthDate(birthDate);
 
       // Hash password and create user

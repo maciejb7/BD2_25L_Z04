@@ -27,7 +27,6 @@ function LoginForm() {
       const response = await login(loginFormData);
       getAuthObserver().emitLogin(response.message, "success");
     } catch (error: any) {
-      console.log(error);
       setLoginFormData({ nicknameOrEmail: "", password: "" });
       showAlert(error.message, "error");
     } finally {

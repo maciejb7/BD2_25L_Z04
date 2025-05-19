@@ -17,6 +17,12 @@ userRouter.get(
 );
 
 userRouter.post(
+  "/change-info",
+  AuthMiddleware.authenticateUser(),
+  UserController.changeUserInfoField,
+);
+
+userRouter.post(
   "/change-password",
   AuthMiddleware.authenticateUser(),
   UserController.changeUserPassword,

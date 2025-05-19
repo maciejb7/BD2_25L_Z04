@@ -52,9 +52,11 @@ export class ValidationService {
     fieldName: string,
     minLength = 1,
     maxLength = 500,
+    forbiddenNumbers = false,
+    forbiddenSpecialChars = false,
   ): void {
     const capitalizedFieldName = this.capitalizeFirstLetter(fieldName);
-    const fieldSchema = z
+    let fieldSchema = z
       .string()
       .nonempty({
         message: `${capitalizedFieldName} nie może być puste.`,
@@ -68,6 +70,21 @@ export class ValidationService {
       .max(maxLength, {
         message: `${capitalizedFieldName} nie może mieć więcej niż ${maxLength} znaków.`,
       });
+
+    if (forbiddenNumbers) {
+      fieldSchema = fieldSchema.regex(/^[^\d]*$/, {
+        message: `${capitalizedFieldName} nie może zawierać cyfr.`,
+      });
+    }
+
+    if (forbiddenSpecialChars) {
+      fieldSchema = fieldSchema.regex(
+        /^[^!@#$%^&*()_\-+={}[\]:;"'<>,.?/~`|\\]*$/,
+        {
+          message: `${capitalizedFieldName} nie może zawierać znaków specjalnych.`,
+        },
+      );
+    }
 
     const validationResult = fieldSchema.safeParse(value);
 

@@ -18,10 +18,10 @@ export const userValidator: Record<
     ValidationService.isPasswordValid(value);
   },
   name: (value: string) => {
-    ValidationService.isStringFieldValid(value, "Imię", 2, 50);
+    ValidationService.isStringFieldValid(value, "Imię", 2, 50, true, true);
   },
   surname: (value: string) => {
-    ValidationService.isStringFieldValid(value, "Nazwisko", 2, 50);
+    ValidationService.isStringFieldValid(value, "Nazwisko", 2, 50, true, true);
   },
   gender: (value: string) => {
     ValidationService.doesStringFieldMatchesEnum(value, Gender, "Płeć");

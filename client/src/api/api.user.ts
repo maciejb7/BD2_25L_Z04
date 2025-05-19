@@ -17,6 +17,24 @@ export const getUserAvatar = async (): Promise<string> => {
   return URL.createObjectURL(response.data);
 };
 
+export const changeUserInfoField = async (
+  name: string,
+  value: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>("/api/user/change-info", {
+      name: name,
+      value: value,
+    });
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd zmiany danych użytkownika. Spróbuj ponownie.",
+    );
+  }
+};
+
 export const changePassword = async (
   data: ResetPasswordFormData,
 ): Promise<CommonResponse> => {

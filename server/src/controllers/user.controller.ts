@@ -84,6 +84,11 @@ export class UserController {
         return;
       }
 
+      if (name === "gender") {
+        if (value === "Mężczyzna") value = "male";
+        if (value === "Kobieta") value = "female";
+      }
+
       await userValidator[name](value);
 
       if (name === "birthDate") {
