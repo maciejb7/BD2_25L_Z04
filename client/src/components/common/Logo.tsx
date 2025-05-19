@@ -11,11 +11,9 @@ const sizeMap = {
   xxl: "text-8xl",
 };
 
-function Logo({ size = "md", shadow = false }: LogoProps) {
+function Logo({ size = "md" }: LogoProps) {
   return (
-    <div
-      className={`font-bold tracking-tight ${sizeMap[size]} text-blue-600 ${shadow ? "drop-shadow-sm" : ""}`}
-    >
+    <div className={`font-bold tracking-tight ${sizeMap[size]} text-blue-600`}>
       ClingClang
     </div>
   );

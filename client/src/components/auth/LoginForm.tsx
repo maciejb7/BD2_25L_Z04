@@ -6,6 +6,7 @@ import { useAlert } from "../../contexts/AlertContext";
 import { getAuthObserver } from "../../utils/AuthObserver";
 
 function LoginForm() {
+  const [isLoading, setIsLoading] = useState(false);
   const [loginFormData, setLoginFormData] = useState<LoginFormData>({
     nicknameOrEmail: "",
     password: "",
@@ -20,14 +21,16 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
       const response = await login(loginFormData);
       getAuthObserver().emitLogin(response.message, "success");
     } catch (error: any) {
-      console.log(error);
       setLoginFormData({ nicknameOrEmail: "", password: "" });
       showAlert(error.message, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,6 +58,7 @@ function LoginForm() {
             value={loginFormData.nicknameOrEmail}
             onChange={handleChange}
             required
+            disabled={isLoading}
             autoComplete="username"
             className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             placeholder="Login lub email"
@@ -75,6 +79,7 @@ function LoginForm() {
             value={loginFormData.password}
             onChange={handleChange}
             required
+            disabled={isLoading}
             autoComplete="current-password"
             className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
             placeholder="••••••••"
@@ -84,15 +89,16 @@ function LoginForm() {
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-3 px-4 text-base rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 font-medium"
+          disabled={isLoading}
         >
-          Zaloguj się
+          {isLoading ? "Logowanie..." : "Zaloguj się"}
         </button>
 
         <p className="text-center text-sm text-gray-600 pt-2">
-          Nie masz konta?{" "}
+          Nie masz konta?
           <Link
             to="/register"
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="ml-2 font-medium text-blue-600 hover:text-blue-500"
           >
             Zarejestruj się!
           </Link>

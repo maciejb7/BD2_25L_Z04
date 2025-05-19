@@ -4,14 +4,14 @@ import { getAuthObserver } from "../../utils/AuthObserver";
 import { AlertType, useAlert } from "../../contexts/AlertContext";
 
 /**
- * AuthHandler component listens for authentication events and handles logout.
- * @returns null
+ * Redirector components redirects the user to the appropriate page based on login, logoaut and timeout and shows an alert.
  */
-function AuthHandler() {
+function Redicretor() {
   const navigate = useNavigate();
   const { showAlert } = useAlert();
 
   useEffect(() => {
+    // Show an alert and navigate to dashboard on successful login.
     const loginUnsubscribe = getAuthObserver().onLogin(
       (message?: string, type?: AlertType) => {
         if (message) {
@@ -25,10 +25,9 @@ function AuthHandler() {
       },
     );
 
-    // Register to listen for logout events
+    // Show an alert and navigate to login on successful logout.
     const logoutUnsubscribe = getAuthObserver().onLogout(
       (message?: string, type?: AlertType) => {
-        // Show an alert and go to the login page
         if (message) {
           if (!type) type = "error";
           showAlert(message, type);
@@ -40,13 +39,28 @@ function AuthHandler() {
       },
     );
 
+    // Show an alert and navigate to main page on timeout.
+    const timeoutUnsubscribe = getAuthObserver().onTimeout(
+      (message?: string, type?: AlertType) => {
+        if (message) {
+          if (!type) type = "error";
+          showAlert(message, type);
+        }
+
+        setTimeout(() => {
+          navigate("/");
+        }, 0);
+      },
+    );
+
     return () => {
       loginUnsubscribe();
       logoutUnsubscribe();
+      timeoutUnsubscribe();
     };
   }, [navigate, showAlert]);
 
   return null;
 }
 
-export default AuthHandler;
+export default Redicretor;

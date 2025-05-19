@@ -5,6 +5,16 @@ export interface LoginFormData {
   password: string;
 }
 
+export interface ConfirmFormData {
+  nickname: string;
+  password: string;
+}
+
+export interface ResetPasswordFormData {
+  oldPassword: string;
+  newPassword: string;
+}
+
 export interface RegisterFormData {
   nickname: string;
   name: string;

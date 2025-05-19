@@ -1,24 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { ConfirmFormData } from "../../types/auth.types";
+import { ResetPasswordFormData } from "../../types/auth.types";
 
-interface ConfirmModalDataProps {
-  apiCall: (data: ConfirmFormData) => Promise<any>;
+interface PasswordModalProps {
+  apiCall: (data: ResetPasswordFormData) => Promise<any>;
   modalTitle: string;
   isOpen: boolean;
   onClose: () => void;
 }
 
-function ConfirmModal({
+function PasswordModal({
   apiCall,
   modalTitle,
   isOpen,
   onClose,
-}: ConfirmModalDataProps) {
-  const [confirmFormData, setConfirmFormData] = useState<ConfirmFormData>({
-    nickname: "",
-    password: "",
-  });
+}: PasswordModalProps) {
+  const [passwordFormData, setPasswordFormData] =
+    useState<ResetPasswordFormData>({
+      oldPassword: "",
+      newPassword: "",
+    });
+  const [passwordConfirmation, setPasswordConfirmation] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { showAlert } = useAlert();
@@ -50,24 +52,49 @@ function ConfirmModal({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setConfirmFormData(
-      (prev) => ({ ...prev, [name]: value }) as ConfirmFormData,
+    setPasswordFormData(
+      (prev) => ({ ...prev, [name]: value }) as ResetPasswordFormData,
     );
+  };
+
+  const clearForm = () => {
+    setPasswordFormData({
+      oldPassword: "",
+      newPassword: "",
+    });
+    setPasswordConfirmation("");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    let errorMessage = "";
+
+    if (passwordFormData.oldPassword === passwordFormData.newPassword) {
+      errorMessage = "Nowe hasło nie może być takie samo jak stare.";
+    } else if (passwordFormData.newPassword !== passwordConfirmation) {
+      errorMessage = "Nowe hasło i potwierdzenie hasła muszą być takie same.";
+    }
+
+    if (errorMessage) {
+      showAlert(errorMessage, "error");
+      setIsLoading(false);
+      clearForm();
+      dialog.close();
+      return;
+    }
 
     try {
-      await apiCall(confirmFormData);
+      const response = await apiCall(passwordFormData);
+      showAlert(response.message, "success");
     } catch (error: any) {
-      setConfirmFormData({ nickname: "", password: "" });
       showAlert(error.message, "error");
-      const dialog = dialogRef.current;
-      if (!dialog) return;
-      dialog.close();
     } finally {
+      clearForm();
+      dialog.close();
       setIsLoading(false);
     }
   };
@@ -84,7 +111,7 @@ function ConfirmModal({
             type="button"
             className="absolute right-0 top-0 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 z-10"
             onClick={() => {
-              setConfirmFormData({ nickname: "", password: "" });
+              clearForm();
               dialogRef.current?.close();
             }}
           >
@@ -94,16 +121,16 @@ function ConfirmModal({
 
         <div className="w-full">
           <label
-            htmlFor="nickname"
+            htmlFor="oldPassword"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Twój Nick
+            Stare Hasło
           </label>
           <input
-            type="text"
-            id="nickname"
-            name="nickname"
-            value={confirmFormData.nickname}
+            type="password"
+            id="oldPassword"
+            name="oldPassword"
+            value={passwordFormData.oldPassword}
             onChange={handleChange}
             required
             disabled={isLoading}
@@ -113,17 +140,33 @@ function ConfirmModal({
 
         <div className="w-full">
           <label
-            htmlFor="password"
+            htmlFor="newPassword"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            Hasło
+            Nowe Hasło
           </label>
           <input
             type="password"
-            id="password"
-            name="password"
-            value={confirmFormData.password}
+            id="newPassword"
+            name="newPassword"
+            value={passwordFormData.newPassword}
             onChange={handleChange}
+            required
+            disabled={isLoading}
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Potwierdź Nowe Hasło
+          </label>
+          <input
+            type="password"
+            id="passwordConfirmation"
+            name="passwordConfirmation"
+            value={passwordConfirmation}
+            onChange={(e) => setPasswordConfirmation(e.target.value)}
             required
             disabled={isLoading}
             className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -134,7 +177,7 @@ function ConfirmModal({
           <button
             type="button"
             onClick={() => {
-              setConfirmFormData({ nickname: "", password: "" });
+              clearForm();
               dialogRef.current?.close();
             }}
             disabled={isLoading}
@@ -147,7 +190,7 @@ function ConfirmModal({
             disabled={isLoading}
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
           >
-            {isLoading ? "Przetwarzanie..." : "Potwierdź"}
+            {isLoading ? "Przetwarzanie..." : "Zmień Hasło"}
           </button>
         </div>
       </form>
@@ -155,4 +198,4 @@ function ConfirmModal({
   );
 }
 
-export default ConfirmModal;
+export default PasswordModal;

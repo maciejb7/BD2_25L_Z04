@@ -7,24 +7,33 @@ import { DateTime } from "luxon";
  */
 export class ValidationService {
   /**
+   * Capitalizes the first letter of a string.
+   * @param string The string to capitalize.
+   * @returns The capitalized string.
+   */
+  static capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  /**
    * Validates a string field that must match an enum.
    * @param value The value to validate.
    * @param enumObj The enum object to match the given value.
    * @param fieldName The name of the field.
    * @throws FieldValidationError if the validation fails.
-   * @returns void
    */
   static doesStringFieldMatchesEnum(
     value: string,
     enumObj: EnumLike,
     fieldName: string,
   ): void {
+    const capitalizedFieldName = this.capitalizeFirstLetter(fieldName);
     const enumSchema = z.nativeEnum(enumObj);
     const validationResult = enumSchema.safeParse(value);
 
     if (!validationResult.success) {
       throw new FieldValidationError(
-        `Pole ${fieldName} musi być jednym z: ${Object.values(enumObj).join(", ")}.`,
+        `${capitalizedFieldName} musi być jednym z: ${Object.values(enumObj).join(", ")}.`,
         400,
       );
     }
@@ -37,28 +46,45 @@ export class ValidationService {
    * @param minLength The minimum length of the field.
    * @param maxLength The maximum length of the field.
    * @throws FieldValidationError if the validation fails.
-   * @returns void
    */
   static isStringFieldValid(
     value: string,
     fieldName: string,
     minLength = 1,
     maxLength = 500,
+    forbiddenNumbers = false,
+    forbiddenSpecialChars = false,
   ): void {
-    const fieldSchema = z
+    const capitalizedFieldName = this.capitalizeFirstLetter(fieldName);
+    let fieldSchema = z
       .string()
       .nonempty({
-        message: `Pole ${fieldName} nie może być puste.`,
+        message: `${capitalizedFieldName} nie może być puste.`,
       })
       .min(minLength, {
-        message: `Pole ${fieldName} musi mieć co najmniej ${minLength} znaków.`,
+        message: `${capitalizedFieldName} musi mieć co najmniej ${minLength} znaków.`,
       })
       .regex(/^\S*$/, {
-        message: `Pole ${fieldName} nie może zawierać spacji.`,
+        message: `${capitalizedFieldName} nie może zawierać spacji.`,
       })
       .max(maxLength, {
-        message: `Pole ${fieldName} nie może mieć więcej niż ${maxLength} znaków.`,
+        message: `${capitalizedFieldName} nie może mieć więcej niż ${maxLength} znaków.`,
       });
+
+    if (forbiddenNumbers) {
+      fieldSchema = fieldSchema.regex(/^[^\d]*$/, {
+        message: `${capitalizedFieldName} nie może zawierać cyfr.`,
+      });
+    }
+
+    if (forbiddenSpecialChars) {
+      fieldSchema = fieldSchema.regex(
+        /^[^!@#$%^&*()_\-+={}[\]:;"'<>,.?/~`|\\]*$/,
+        {
+          message: `${capitalizedFieldName} nie może zawierać znaków specjalnych.`,
+        },
+      );
+    }
 
     const validationResult = fieldSchema.safeParse(value);
 
@@ -73,7 +99,6 @@ export class ValidationService {
    * Validates an email.
    * @param email The email to validate.
    * @throws FieldValidationError if the validation fails.
-   * @returns void
    */
   static isEmailValid(email: string): void {
     const emailSchema = z
@@ -96,7 +121,6 @@ export class ValidationService {
    * Validates a password.
    * @param password The password to validate.
    * @throws FieldValidationError if the validation fails.
-   * @returns void
    */
   static isPasswordValid(password: string): void {
     const passwordSchema = z
@@ -124,7 +148,13 @@ export class ValidationService {
     }
   }
 
-  static isDateValid(date: string): DateTime {
+  /**
+   * Validates a date string in the format YYYY-MM-DD and converts it to a DateTime object.
+   * @param date The date string to validate and convert.
+   * @returns The DateTime object representing the date.
+   * @throws FieldValidationError if the validation fails.
+   */
+  static formatToDateTime(date: string): DateTime {
     const dateSchema = z
       .string()
       .nonempty({
@@ -134,31 +164,41 @@ export class ValidationService {
         message: "Data musi być w formacie YYYY-MM-DD.",
       });
 
-    const formatValidation = dateSchema.safeParse(date);
-    if (!formatValidation.success) {
+    const dateValidationResult = dateSchema.safeParse(date);
+    if (!dateValidationResult.success) {
       throw new FieldValidationError(
-        formatValidation.error.errors[0].message,
+        dateValidationResult.error.errors[0].message,
         400,
       );
     }
 
-    const parsedDate = DateTime.fromISO(date);
+    const convertedDate = DateTime.fromISO(date);
 
-    if (!parsedDate.isValid) {
+    if (!convertedDate.isValid) {
       throw new FieldValidationError(
-        `Nieprawidłowa data: ${parsedDate.invalidExplanation || "Format daty jest niepoprawny."}`,
+        `Nieprawidłowa data: ${convertedDate.invalidExplanation || "Format daty jest niepoprawny."}`,
         400,
       );
     }
 
-    return parsedDate;
+    return convertedDate;
   }
 
+  /**
+   * Validates a birth date and checks if it falls within a specified age range.
+   * @param birthDate The birth date to validate.
+   * @param yearsMin The minimum age.
+   * @param yearsMax The maximum age.
+   * @throws FieldValidationError if the validation fails.
+   */
   static isBirthDateValid(
-    birthDate: DateTime,
-    yearsMin: number,
-    yearsMax: number,
+    birthDate: string | DateTime,
+    yearsMin = 13,
+    yearsMax = 105,
   ): void {
+    if (typeof birthDate === "string")
+      birthDate = this.formatToDateTime(birthDate);
+
     const today = DateTime.now();
     const oldestDate = today.minus({ years: yearsMax });
     const youngestDate = today.minus({ years: yearsMin });

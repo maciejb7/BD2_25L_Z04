@@ -17,12 +17,13 @@ if (!API_URL) {
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Add a request interceptor to include the access token in the headers
+// Add a request interceptor to include the access token in the headers.
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const accessToken = localStorage.getItem("accessToken");
@@ -36,13 +37,33 @@ api.interceptors.request.use(
   },
 );
 
-// Add a response interceptor to refresh access token if error 401 occurs
+// Add a response interceptor to refresh access token if error 401 occurs.
 api.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => {
     return response;
   },
   async (error: AxiosError<ErrorResponse>) => {
-    console.log(error);
+    if (error.code == "ERR_NETWORK") {
+      const errorMessage = "Serwer nie odpowiada. Spróbuj ponownie później.";
+
+      getAuthObserver().emitTimeout(errorMessage, "error");
+
+      const timeoutError = new AxiosError(
+        errorMessage,
+        "ERR_NETWORK",
+        error.config,
+        error.request,
+        {
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: {},
+          config: error.config || {},
+          data: { message: errorMessage } as ErrorResponse,
+        } as AxiosResponse,
+      );
+
+      return Promise.reject(timeoutError);
+    }
 
     if (
       error.response?.status == 401 &&

@@ -40,6 +40,7 @@ services:
     volumes:
       - ./server/src:/app/src
       - ./server/logs:/app/logs
+      - ./server/uploads:/app/uploads
     networks:
       - app-network
     command: npm run dev
