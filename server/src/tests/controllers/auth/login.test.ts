@@ -1,16 +1,7 @@
 import request from "supertest";
-import { createUser } from "../../utils/authUtils";
-
+import { createUser } from "../../utils/userHelpers";
 import { User } from "../../../db/models/user";
 import { getApp } from "../../setup";
-
-beforeAll(async () => {
-  await User.destroy({ where: {}, cascade: true });
-});
-
-afterEach(async () => {
-  await User.destroy({ where: {}, cascade: true });
-});
 
 describe("POST /api/auth/login", () => {
   it("should login successfully with valid credentials by nickname", async () => {
@@ -31,6 +22,7 @@ describe("POST /api/auth/login", () => {
     );
     expect(response.body.user).toHaveProperty("nickname", "Janusz");
     expect(response.body.user).toHaveProperty("email", "janusz1990@gmail.com");
+    await User.destroy({ where: { nickname: "Janusz" } });
   });
 
   it("should login successfully with valid credentials by email", async () => {
@@ -53,6 +45,7 @@ describe("POST /api/auth/login", () => {
     );
     expect(response.body.user).toHaveProperty("nickname", "Janusz");
     expect(response.body.user).toHaveProperty("email", "janusz1990@gmail.com");
+    await User.destroy({ where: { nickname: "Janusz" } });
   });
 
   it("should return 401 for invalid credentials (wrong password)", async () => {
@@ -69,6 +62,7 @@ describe("POST /api/auth/login", () => {
       "message",
       "Nieprawidłowy login lub hasło.",
     );
+    await User.destroy({ where: { nickname: "Janusz" } });
   });
 
   it("should return 401 for invalid credentials (user not found)", async () => {
