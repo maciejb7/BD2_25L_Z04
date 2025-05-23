@@ -10,6 +10,7 @@ export const config = {
   SERVER_PORT: process.env.SERVER_PORT,
   LOGS_DB_CONSOLE: process.env.LOGS_DB_CONSOLE,
   LOGS_WINSTON_CONSOLE: process.env.LOGS_WINSTON_CONSOLE,
+  TEST_MODE: process.env.TEST_MODE === "true",
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
   CLIENT_URL: process.env.CLIENT_URL,
 };

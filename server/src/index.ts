@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Express } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { database } from "./db/database";
@@ -18,41 +18,50 @@ import path from "path";
 import fs from "fs";
 import userRouter from "./routers/user.router";
 
-const startServer = async () => {
+export const connectToDatabase = async () => {
   try {
     await database.authenticate();
-
-    await database.sync({ alter: true });
+    await database.sync({ force: config.TEST_MODE });
     logger.info("Połączono z bazą danych.");
-
-    initializeUploadsDirectory();
-
-    await MatchPreferenceService.initializeMatchTypes();
-    logger.info("Zainicjalizowano typy dopasowań.");
-
-    await HobbyService.initializeHobbyData();
-    logger.info("Zainicjalizowano dane hobby.");
-
-    const app = express();
-    const appPort = config.SERVER_PORT;
-
-    app.use(express.json());
-    app.use(
-      cors({
-        origin: config.CLIENT_URL,
-        credentials: true,
-      }),
-    );
-    app.use(cookieParser());
-    addRouters(app);
-
-    app.listen(appPort, () => {
-      logger.info(`Uruchomiono serwer na porcie ${appPort}.`);
-    });
   } catch (error) {
     logger.error("Błąd podczas łączenia z bazą danych: ", error);
     process.exit(1);
   }
+};
+
+export const startExpress = async (): Promise<Express> => {
+  const app = express();
+
+  initializeUploadsDirectory();
+
+  await MatchPreferenceService.initializeMatchTypes();
+  logger.info("Zainicjalizowano typy dopasowań.");
+
+  await HobbyService.initializeHobbyData();
+  logger.info("Zainicjalizowano dane hobby.");
+
+  const appPort = config.SERVER_PORT;
+
+  app.use(express.json());
+  app.use(
+    cors({
+      origin: config.CLIENT_URL,
+      credentials: true,
+    }),
+  );
+  app.use(cookieParser());
+  addRouters(app);
+
+  app.listen(appPort, () => {
+    logger.info(`Uruchomiono serwer na porcie ${appPort}.`);
+  });
+
+  return app;
+};
+
+const startServer = async () => {
+  await connectToDatabase();
+  await startExpress();
 };
 
 const addRouters = (app: express.Application) => {
@@ -96,4 +105,4 @@ const initializeUploadsDirectory = () => {
   });
 };
 
-startServer();
+if (!config.TEST_MODE) startServer();
