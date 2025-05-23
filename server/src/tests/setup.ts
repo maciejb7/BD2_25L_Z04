@@ -1,9 +1,9 @@
-import { connectToDatabase, startExpress } from "..";
-import { Express } from "express";
+import { connectToDatabase, initializeExpress } from "..";
 
-export let app: Express;
-
-beforeAll(async () => {
+export default async () => {
   await connectToDatabase();
-  app = await startExpress();
-});
+};
+
+export const getApp = async () => {
+  return await initializeExpress();
+};
