@@ -29,18 +29,8 @@ export const connectToDatabase = async () => {
   }
 };
 
-export const startExpress = async (): Promise<Express> => {
+export const initializeExpress = async (): Promise<Express> => {
   const app = express();
-
-  initializeUploadsDirectory();
-
-  await MatchPreferenceService.initializeMatchTypes();
-  logger.info("Zainicjalizowano typy dopasowań.");
-
-  await HobbyService.initializeHobbyData();
-  logger.info("Zainicjalizowano dane hobby.");
-
-  const appPort = config.SERVER_PORT;
 
   app.use(express.json());
   app.use(
@@ -52,16 +42,31 @@ export const startExpress = async (): Promise<Express> => {
   app.use(cookieParser());
   addRouters(app);
 
+  return app;
+};
+
+const onStart = async () => {
+  initializeUploadsDirectory();
+
+  await MatchPreferenceService.initializeMatchTypes();
+  logger.info("Zainicjalizowano typy dopasowań.");
+
+  await HobbyService.initializeHobbyData();
+  logger.info("Zainicjalizowano dane hobby.");
+};
+
+const startExpress = (app: Express) => {
+  const appPort = config.SERVER_PORT;
   app.listen(appPort, () => {
     logger.info(`Uruchomiono serwer na porcie ${appPort}.`);
   });
-
-  return app;
 };
 
 const startServer = async () => {
   await connectToDatabase();
-  await startExpress();
+  const app = await initializeExpress();
+  await onStart();
+  startExpress(app);
 };
 
 const addRouters = (app: express.Application) => {
