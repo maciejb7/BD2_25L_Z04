@@ -9,10 +9,6 @@ services:
       POSTGRES_PASSWORD: test_pass
     ports:
       - "5433:5432"
-    volumes:
-      - ./server/src:/app/src
-      - ./server/logs:/app/logs
-      - ./server/uploads:/app/uploads
     networks:
       - test-network
   test-server:
@@ -28,12 +24,18 @@ services:
       DB_USER: test_user
       DB_PASSWORD: test_pass
       DB_HOST: test-db
-      SERVER_PORT: 3000
+      SERVER_PORT: ${SERVER_PORT}
       LOGS_DB_CONSOLE: false
       LOGS_WINSTON_CONSOLE: false
       TEST_MODE: true
       ACCESS_TOKEN_SECRET: "test_secret"
       CLIENT_URL: "http://localhost"
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    volumes:
+      - ./server/src:/app/src
+      - ./server/logs:/app/logs
+      - ./server/uploads:/app/uploads
     networks:
       - test-network
     command: npm run test
