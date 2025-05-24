@@ -1,4 +1,4 @@
-import MainBackground from "../components/common/MainBackground";
+import Background from "../components/common/Background";
 import SideBar from "../components/common/SideBar";
 import { getOptions } from "../utils/sideBarOptions";
 
@@ -6,9 +6,9 @@ function DashboardPage() {
   return (
     <div className="flex flex-col items-center justify-center">
       <SideBar options={getOptions("Dashboard")} />
-      <MainBackground blur="80">
+      <Background blur="lg">
         <div className="ml-12 sm:ml-16"></div>
-      </MainBackground>
+      </Background>
     </div>
   );
 }

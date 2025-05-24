@@ -1,10 +1,13 @@
 import { Link } from "react-router-dom";
 import Logo from "./Logo";
 
+/**
+ * Footer component that displays the copyright information and a link to the GitHub repository.
+ */
 function Footer() {
   return (
-    <footer className="bottom-0 w-full bg-white shadow-md z-10">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex flex-row items-center justify-center text-gray-600 text-sm sm:text-base font-medium gap-2">
+    <footer className="absolute bottom-0 w-full bg-white shadow-md z-10">
+      <div className="px-6 py-4 flex flex-row items-center justify-center text-gray-600 text-sm sm:text-base font-medium gap-2">
         <span>&copy; 2025</span>
         <Logo size="sm" />
         <span>by</span>

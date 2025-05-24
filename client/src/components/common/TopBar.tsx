@@ -15,13 +15,11 @@ function TopBar({ options }: TopBarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="z-10 w-full bg-white shadow-md px-6 py-3 fixed top-0 left-0">
-      {/* TopBar Content */}
+    <nav className="absolute z-10 w-full bg-white shadow-lg px-6 py-3 fixed top-0 left-0">
       <div className="flex flex-row items-center justify-between">
-        {/* Right Side */}
         <Logo size="md" />
-        {/* Left Side */}
-        <div className="hidden sm:flex justify-end gap-4">
+        {/* Desktop Version */}
+        <div className="hidden sm:flex justify-end space-x-5">
           {options.map((option) => (
             <Link
               key={option.link}
@@ -32,7 +30,7 @@ function TopBar({ options }: TopBarProps) {
             </Link>
           ))}
         </div>
-        {/* Button for mobile menu */}
+        {/* Mobile Version */}
         <button
           className="sm:hidden text-gray-700 text-2xl"
           onClick={() => setIsOpen(!isOpen)}
@@ -40,15 +38,13 @@ function TopBar({ options }: TopBarProps) {
           ☰
         </button>
       </div>
-
-      {/* Menu for mobile */}
       {isOpen && (
         <div className="sm:hidden absolute top-full right-0 w-max bg-white rounded-b-md shadow-lg p-2 z-20">
           {options.map((option) => (
             <Link
               key={option.link}
               to={option.link}
-              className="block text-right text-gray-700 font-semibold px-4 py-2 rounded hover:bg-gradient-to-br hover:from-blue-500 hover:to-indigo-600 hover:text-white transition-all duration-300"
+              className="block text-center text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gradient-to-br hover:from-blue-500 hover:to-indigo-600 hover:text-white transition-all duration-300"
               onClick={() => setIsOpen(false)}
             >
               {option.name}
