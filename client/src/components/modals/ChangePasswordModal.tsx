@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 import { ResetPasswordFormData } from "../../types/auth.types";
+import FormField from "../inputs/FormField";
 
 interface PasswordModalProps {
   apiCall: (data: ResetPasswordFormData) => Promise<any>;
@@ -119,59 +120,38 @@ function PasswordModal({
           </button>
         </div>
 
-        <div className="w-full">
-          <label
-            htmlFor="oldPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Stare Hasło
-          </label>
-          <input
-            type="password"
-            id="oldPassword"
-            name="oldPassword"
-            value={passwordFormData.oldPassword}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <FormField
+          label="Stare Hasło"
+          type="password"
+          name="oldPassword"
+          value={passwordFormData.oldPassword}
+          onChange={handleChange}
+          required
+          disabled={isLoading}
+          placeholder="••••••••••••••••"
+        />
 
-        <div className="w-full">
-          <label
-            htmlFor="newPassword"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Nowe Hasło
-          </label>
-          <input
-            type="password"
-            id="newPassword"
-            name="newPassword"
-            value={passwordFormData.newPassword}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <FormField
+          label="Nowe Hasło"
+          type="password"
+          name="newPassword"
+          value={passwordFormData.newPassword}
+          onChange={handleChange}
+          required
+          disabled={isLoading}
+          placeholder="••••••••••••••••"
+        />
 
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Potwierdź Nowe Hasło
-          </label>
-          <input
-            type="password"
-            id="passwordConfirmation"
-            name="passwordConfirmation"
-            value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)}
-            required
-            disabled={isLoading}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <FormField
+          label="Potwierdź Nowe Hasło"
+          type="password"
+          name="passwordConfirmation"
+          value={passwordConfirmation}
+          onChange={(e) => setPasswordConfirmation(e.target.value)}
+          required
+          disabled={isLoading}
+          placeholder="••••••••••••••••"
+        />
 
         <div className="flex space-x-3 pt-2">
           <button

@@ -86,6 +86,7 @@ export const logoutFromAllDevices = async (): Promise<CommonResponse> => {
     );
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error);

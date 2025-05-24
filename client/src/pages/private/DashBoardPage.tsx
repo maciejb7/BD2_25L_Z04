@@ -5,8 +5,8 @@ import { getSideBarOptions } from "../../constants/sideBarOptions";
 function DashboardPage() {
   return (
     <div className="flex flex-col items-center justify-center">
-      <SideBar options={getSideBarOptions("Dashboard")} />
       <Background blur="lg">
+        <SideBar options={getSideBarOptions("Dashboard")} />
         <div className="ml-12 sm:ml-16"></div>
       </Background>
     </div>
