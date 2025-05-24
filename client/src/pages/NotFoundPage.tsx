@@ -2,20 +2,14 @@ import Footer from "../components/common/Footer";
 import Background from "../components/common/Background";
 import TopBar from "../components/common/TopBar";
 import { isUserAuthenticatedByStorage } from "../utils/userAuthentication";
-
-const topBarOptions = [
-  {
-    name: isUserAuthenticatedByStorage() ? "DashBoard" : "Strona Główna",
-    link: "/",
-  },
-];
+import { getTopBarOptions } from "../constants/topBarOptions";
 
 function NotFoundPage() {
   return (
     <div>
-      <TopBar options={topBarOptions} />
-      <Background blur={`${isUserAuthenticatedByStorage() ? "80" : "50"}`}>
-        <div className="flex flex-col items-center justify-center h-screen">
+      <Background blur={`${isUserAuthenticatedByStorage() ? "lg" : "md"}`}>
+        <TopBar options={getTopBarOptions(["Strona Główna"])} />
+        <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="text-center px-6 py-12">
             <h1 className="text-4xl sm:text-6xl font-bold text-blue-600 mb-4">
               404

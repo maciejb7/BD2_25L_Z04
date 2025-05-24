@@ -41,16 +41,18 @@ function TopBar({ options }: TopBarProps) {
       </div>
       {isOpen && (
         <div className="sm:hidden absolute top-full right-0 w-max bg-white rounded-b-md shadow-lg p-2 z-20">
-          {options.map((option) => (
-            <Link
-              key={option.link}
-              to={option.link}
-              className="block text-center text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gradient-to-br hover:from-blue-500 hover:to-indigo-600 hover:text-white transition-all duration-300"
-              onClick={() => setIsOpen(false)}
-            >
-              {option.name}
-            </Link>
-          ))}
+          {options.map((option) =>
+            option.visible ? (
+              <Link
+                key={option.link}
+                to={option.link}
+                className="block text-center text-gray-700 font-semibold px-4 py-2 rounded-md hover:bg-gradient-to-br hover:from-blue-500 hover:to-indigo-600 hover:text-white transition-all duration-300"
+                onClick={() => setIsOpen(false)}
+              >
+                {option.name}
+              </Link>
+            ) : null,
+          )}
         </div>
       )}
     </nav>

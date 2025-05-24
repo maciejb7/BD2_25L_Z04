@@ -1,15 +1,14 @@
 import { Link } from "react-router-dom";
-import Logo from "../components/common/Logo";
-import Background from "../components/common/Background";
-import TopBar from "../components/common/TopBar";
-import InfoParagraph from "../components/home/InfoParagraph";
-import Footer from "../components/common/Footer";
-import { mainPageContent, mainPageInfoContent } from "../utils/statics";
-
-const topBarOptions = [
-  { name: "Rejestracja", link: "/register" },
-  { name: "Logowanie", link: "/login" },
-];
+import Logo from "../../components/common/Logo";
+import Background from "../../components/common/Background";
+import TopBar from "../../components/common/TopBar";
+import InfoParagraph from "../../components/home/InfoParagraph";
+import Footer from "../../components/common/Footer";
+import {
+  mainPageContent,
+  mainPageInfoContent,
+} from "../../constants/mainPageOptions";
+import { getTopBarOptions } from "../../constants/topBarOptions";
 
 /**
  * HomePage for unauthenticated users.
@@ -19,7 +18,7 @@ function HomePage() {
   return (
     <div className="flex flex-col text-center">
       <Background>
-        <TopBar options={topBarOptions} />
+        <TopBar options={getTopBarOptions(["Logowanie", "Rejestracja"])} />
         <div className="flex flex-col items-center justify-center h-screen pl-6 pr-6">
           <Logo size="xl" />
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-6 text-white drop-shadow-xl">

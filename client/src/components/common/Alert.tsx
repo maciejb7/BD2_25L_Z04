@@ -27,7 +27,7 @@ function Alert() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-4">
       <div
-        className={`flex items-center w-full max-w-xl p-4 rounded-lg shadow-lg border-l-4 ${alertStyles}`}
+        className={`flex items-center justify-center w-full max-w-xl p-4 rounded-lg shadow-lg border-l-4 ${alertStyles}`}
       >
         <div className="text-sm">{alertInfo.message}</div>
         <button

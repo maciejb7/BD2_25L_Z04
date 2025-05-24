@@ -14,6 +14,7 @@ export const login = async (data: LoginFormData): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>("/api/auth/login", data);
     localStorage.setItem("accessToken", response.data.accessToken);
     localStorage.setItem("user", JSON.stringify(response.data.user));
+    getAuthObserver().emitLogin(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd logowania. Spróbuj ponownie.");
@@ -27,6 +28,7 @@ export const register = async (
     const response = await api.post<AuthResponse>("/api/auth/register", data);
     localStorage.setItem("accessToken", response.data.accessToken);
     localStorage.setItem("user", JSON.stringify(response.data.user));
+    getAuthObserver().emitLogin(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd rejestracji. Spróbuj ponownie.");
@@ -50,6 +52,7 @@ export const logout = async (): Promise<CommonResponse> => {
     const response = await api.delete("/api/auth/logout");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd wylogowania. Spróbuj ponownie.");
