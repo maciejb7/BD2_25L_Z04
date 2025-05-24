@@ -1,16 +1,15 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Logo from "./Logo";
-
-interface TopBarOption {
-  name: string;
-  link: string;
-}
+import { TopBarOption } from "../../constants/topBarOptions";
 
 interface TopBarProps {
   options: TopBarOption[];
 }
 
+/**
+ * TopBar component for navigation in public pages.
+ */
 function TopBar({ options }: TopBarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -20,15 +19,17 @@ function TopBar({ options }: TopBarProps) {
         <Logo size="md" />
         {/* Desktop Version */}
         <div className="hidden sm:flex justify-end space-x-5">
-          {options.map((option) => (
-            <Link
-              key={option.link}
-              to={option.link}
-              className="px-5 py-2 text-gray-700 font-semibold rounded-md hover:bg-gradient-to-br hover:from-blue-500 hover:to-indigo-600 hover:text-white transition-all duration-300"
-            >
-              {option.name}
-            </Link>
-          ))}
+          {options.map((option) =>
+            option.visible ? (
+              <Link
+                key={option.link}
+                to={option.link}
+                className="px-5 py-2 text-gray-700 font-semibold rounded-md hover:bg-gradient-to-br hover:from-blue-500 hover:to-indigo-600 hover:text-white transition-all duration-300"
+              >
+                {option.name}
+              </Link>
+            ) : null,
+          )}
         </div>
         {/* Mobile Version */}
         <button
