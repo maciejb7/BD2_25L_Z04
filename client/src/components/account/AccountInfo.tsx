@@ -4,6 +4,7 @@ import { getUserAvatar } from "../../api/api.user";
 import { getUser, getUserFromStorage } from "../../utils/userAuthentication";
 import AccountField from "./AccountField";
 import { formatDate } from "../../utils/dateFormatter";
+import Avatar from "../common/Avatar";
 
 /**
  * AccountInfo component displays user information and allows editing it (avatar, name, surname, nickname, email).
@@ -57,23 +58,8 @@ function AccountInfo() {
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 mt-5">
-      <div className="relative w-20 h-20 sm:w-32 sm:h-32 md:w-60 md:h-60">
-        {avatar ? (
-          <img
-            src={avatar}
-            alt="Avatar"
-            className="w-full h-full rounded-full border-2 object-cover"
-          />
-        ) : (
-          <div className="w-full h-full rounded-full bg-gray-300" />
-        )}
-        <button
-          className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 md:bottom-3 md:right-3 
-               p-1 sm:p-1.5 md:p-2 bg-blue-500 text-white rounded-full shadow hover:bg-blue-600 transition"
-          title="Zmień avatar"
-        >
-          <i className="fas fa-pen text-xs sm:text-sm md:text-base"></i>
-        </button>
+      <div className="relative">
+        <Avatar src={avatar} size="large" editable={true} />
       </div>
 
       <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 mt-1">

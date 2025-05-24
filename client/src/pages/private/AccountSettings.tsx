@@ -6,8 +6,8 @@ import { getSideBarOptions } from "../../constants/sideBarOptions";
 function AccountSettings() {
   return (
     <div className="relative min-h-screen flex">
-      <SideBar options={getSideBarOptions("Konto")} />
       <Background blur="lg">
+        <SideBar options={getSideBarOptions("Konto")} />
         <div className="ml-12 sm:ml-16">
           <AccountSettingsWrapper />
         </div>

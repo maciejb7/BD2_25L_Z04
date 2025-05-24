@@ -35,7 +35,7 @@ function HomePage() {
             {mainPageContent.buttonText}
           </Link>
         </div>
-        <div className="flex flex-col items-center justify-center text-center w-full bg-white/70 backdrop-blur-md py-16 px-6 gap-16">
+        <div className="flex flex-col items-center justify-center text-center w-full bg-white/70 backdrop-blur-md py-16 px-6 gap-2">
           {mainPageInfoContent.map((paragraph, index) => (
             <InfoParagraph
               key={index}

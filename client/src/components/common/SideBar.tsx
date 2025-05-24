@@ -4,6 +4,7 @@ import { getUser } from "../../utils/userAuthentication";
 import Logo from "./Logo";
 import { getUserAvatar } from "../../api/api.user";
 import { SideBarOption } from "../../constants/sideBarOptions";
+import Avatar from "./Avatar";
 
 interface UserSideBarInfo {
   name?: string;
@@ -94,17 +95,7 @@ function SideBar({ options }: SideBarOptions) {
         {/* User Info and Avatar */}
         {isOpen && (
           <div className="flex flex-col items-center py-4 border-b">
-            {avatar ? (
-              <img
-                src={avatar}
-                alt="Avatar"
-                className="w-16 h-16 sm:w-28 sm:h-28 rounded-full border-2 border-blue-500 object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 sm:w-28 sm:h-28 rounded-full bg-gray-200 border-2 border-blue-500 flex items-center justify-center text-gray-500">
-                <i className="fas fa-user text-4xl sm:text-7xl"></i>
-              </div>
-            )}
+            <Avatar src={avatar} />
             <span className="text-base sm:text-lg text-gray-600 font-semibold mt-2">
               {isLoading
                 ? "Ładowanie..."
