@@ -37,7 +37,7 @@ function Avatar({
       {src ? (
         <img
           src={src}
-          alt="User Avatar"
+          alt="Avatar Użytkownika"
           className="w-full h-full object-cover rounded-full border-2 border-blue-500"
         />
       ) : (

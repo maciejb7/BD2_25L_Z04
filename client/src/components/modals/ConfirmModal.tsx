@@ -13,7 +13,7 @@ interface ConfirmModalDataProps {
 
 /**
  * ConfirmModal component for confirming actions that require user authentication by nickname and password.
- * It is used for actions like deleting account etc.
+ * It is used for actions like deleting account etc
  */
 function ConfirmModal({
   apiCall,

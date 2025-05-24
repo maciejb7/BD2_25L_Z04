@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user.controller";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { FileMiddleware } from "../middlewares/file.middleware";
 
 const userRouter = Router();
 
@@ -14,6 +15,16 @@ userRouter.get(
   "/avatar",
   AuthMiddleware.authenticateUser(),
   UserController.getUserAvatar,
+);
+
+userRouter.post(
+  "/avatar/upload",
+  AuthMiddleware.authenticateUser(),
+  FileMiddleware.uploadSingleFile({
+    formField: "avatar",
+    allowedMimeTypes: ["image/jpeg"],
+  }),
+  UserController.uploadUserAvatar,
 );
 
 userRouter.post(

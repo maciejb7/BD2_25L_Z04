@@ -32,3 +32,5 @@ export class InvalidRefreshTokenError extends APIError {}
 export class ExpiredRefreshTokenError extends APIError {}
 
 export class NoPermissionsError extends APIError {}
+
+export class FileUploadError extends APIError {}

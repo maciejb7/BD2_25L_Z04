@@ -7,11 +7,15 @@ import { ValidationService } from "../services/validation.service";
 import bcrypt from "bcrypt";
 import {
   FieldValidationError,
+  FileUploadError,
   InvalidPasswordError,
   UserNotFoundError,
 } from "../errors/errors";
 import logger from "../logger";
 import { userValidator } from "../utils/validators";
+import { FileService } from "../services/file.service";
+
+const avatarsPath = path.join(__dirname, "..", "..", "uploads", "avatars");
 
 export class UserController {
   /**
@@ -38,21 +42,72 @@ export class UserController {
    * Use only with "authenticateUser" middleware.
    */
   static async getUserAvatar(req: Request, res: Response): Promise<void> {
-    const avatarsPath = path.join(__dirname, "..", "..", "uploads", "avatars");
     const userId = req.user?.userId;
 
-    let avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
+    const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
 
-    if (!fs.existsSync(avatarFilePath))
-      avatarFilePath = path.join(
-        __dirname,
-        "..",
-        "..",
-        "uploads",
-        "defaultAvatar.jpg",
-      );
+    if (!fs.existsSync(avatarFilePath)) {
+      res.status(404).json({
+        message: "Nie znaleziono awatara użytkownika.",
+      });
+      return;
+    }
 
     res.sendFile(avatarFilePath);
+  }
+
+  /**
+   * Uploads a new avatar for the currently authenticated user.
+   * Use only with "authenticateUser" and "uploadSingleFile" middlewares.
+   */
+  static async uploadUserAvatar(req: Request, res: Response): Promise<void> {
+    const userId = req.user?.userId;
+    const userNickname = req.user?.userNickname;
+    const avatarFile = req.file!;
+
+    try {
+      await FileService.hasImageCorrectSize(
+        avatarFile,
+        128,
+        128,
+        1024,
+        1024,
+        true,
+      );
+
+      const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
+
+      await fs.promises.mkdir(avatarsPath, { recursive: true });
+      await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
+
+      logger.info(`Pomyślnie przesłano awatar użytkownika ${userNickname}.`, {
+        service: "user-upload-avatar",
+        nickname: userNickname,
+      });
+
+      res.status(200).json({
+        message: "Awatar zaktualizowany pomyślnie.",
+      });
+    } catch (error) {
+      if (error instanceof FileUploadError) {
+        logger.error(`Błąd przesyłania awatara - ${error.message}`, {
+          service: "user-upload-avatar",
+          nickname: userNickname,
+        });
+        res.status(error.statusCode).json({ message: error.message });
+        return;
+      }
+
+      logger.error(`Nieudana próba przesłania awatara`, error, {
+        service: "user-upload-avatar",
+        nickname: userNickname,
+      });
+      res.status(500).json({
+        message:
+          "Wystąpił nieznany błąd podczas przesyłania awatara. Skontaktuj się z administratorem.",
+      });
+      return;
+    }
   }
 
   /**

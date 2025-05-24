@@ -14,7 +14,29 @@ export const getUserAvatar = async (): Promise<string> => {
     responseType: "blob",
     withCredentials: true,
   });
+  if (response.status !== 200) return "";
   return URL.createObjectURL(response.data);
+};
+
+export const uploadUserAvatar = async (file: File): Promise<CommonResponse> => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/avatar/upload",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas przesyłania awatara. Spróbuj ponownie.",
+    );
+  }
 };
 
 export const changeUserInfoField = async (

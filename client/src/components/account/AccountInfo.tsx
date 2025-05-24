@@ -5,12 +5,14 @@ import { getUser, getUserFromStorage } from "../../utils/userAuthentication";
 import AccountField from "./AccountField";
 import { formatDate } from "../../utils/dateFormatter";
 import Avatar from "../common/Avatar";
+import AvatarCropModal from "../modals/CropAvatarModal";
 
 /**
  * AccountInfo component displays user information and allows editing it (avatar, name, surname, nickname, email).
  */
 function AccountInfo() {
   const [isLoading, setIsLoading] = useState(true);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string>("");
   const [userInfo, setUserInfo] = useState<User>(
     getUserFromStorage() ?? {
@@ -56,10 +58,37 @@ function AccountInfo() {
       [fieldName]: newValue,
     }));
 
+  const handleAvatarChangeClick = () => {
+    document.getElementById("avatarInput")?.click();
+  };
+
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || file.type !== "image/jpeg") return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center gap-4 mt-5">
       <div className="relative">
-        <Avatar src={avatar} size="large" editable={true} />
+        <Avatar
+          src={avatar}
+          size="large"
+          editable={true}
+          onEditClick={handleAvatarChangeClick}
+        />
+        <input
+          type="file"
+          id="avatarInput"
+          accept="image/jpeg"
+          onChange={handleAvatarFileChange}
+          className="hidden"
+        />
       </div>
 
       <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 mt-1">
@@ -127,6 +156,17 @@ function AccountInfo() {
           editable={false}
         />
       </div>
+
+      {cropImageSrc && (
+        <AvatarCropModal
+          imageSrc={cropImageSrc}
+          onClose={() => setCropImageSrc(null)}
+          onSave={(updatedUrl) => {
+            setAvatar(updatedUrl);
+            setCropImageSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 }
