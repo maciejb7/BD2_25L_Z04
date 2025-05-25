@@ -294,8 +294,8 @@ export class AuthController {
   static async deleteAccount(req: Request, res: Response) {
     const userId: string = req.user?.userId ?? "";
     const nickname: string = req.user?.userNickname ?? "";
-    const nicknameFromForm: string = req.body.nickname.trim() ?? "";
-    const passwordFromForm: string = req.body.password.trim() ?? "";
+    const nicknameFromForm: string = req.body.nickname?.trim() ?? "";
+    const passwordFromForm: string = req.body.password?.trim() ?? "";
 
     if (nickname !== nicknameFromForm) {
       logger.error(
