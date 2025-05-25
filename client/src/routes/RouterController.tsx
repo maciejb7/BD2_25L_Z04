@@ -2,15 +2,10 @@ import { useEffect, useState } from "react";
 import PrivateRouter from "./PrivateRouter";
 import PublicRouter from "./PublicRouter";
 import { getAuthObserver } from "../utils/AuthObserver";
-import {
-  isUserAuthenticated,
-  isUserAuthenticatedByStorage,
-} from "../utils/userAuthentication";
+import { isUserAuthenticated } from "../utils/userAuthentication";
 
 function RouterController() {
-  const [authenticated, setAuthenticated] = useState(
-    isUserAuthenticatedByStorage(),
-  );
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {

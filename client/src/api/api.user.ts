@@ -1,5 +1,6 @@
-import { ResetPasswordFormData } from "../types/auth.types";
-import { CommonResponse, User, UserResponse } from "../types/general.types";
+import { User } from "../types/others";
+import { ResetPasswordFormData } from "../types/requests";
+import { CommonResponse, UserResponse } from "../types/responses";
 import api, { handleApiError } from "./api";
 
 export const getUserFromAPI = async (): Promise<User> => {
@@ -14,7 +15,46 @@ export const getUserAvatar = async (): Promise<string> => {
     responseType: "blob",
     withCredentials: true,
   });
+  if (response.status !== 200) return "";
   return URL.createObjectURL(response.data);
+};
+
+export const uploadUserAvatar = async (file: File): Promise<CommonResponse> => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/avatar/upload",
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas przesyłania zdjęcia profilowego. Spróbuj ponownie.",
+    );
+  }
+};
+
+export const deleteUserAvatar = async (): Promise<CommonResponse> => {
+  try {
+    const response = await api.delete<CommonResponse>(
+      "/api/user/avatar/delete",
+      {
+        withCredentials: true,
+      },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas usuwania zdjęcia profilowego. Spróbuj ponownie.",
+    );
+  }
 };
 
 export const changeUserInfoField = async (

@@ -1,19 +1,22 @@
 import api, { handleApiError } from "./api";
+import { getAuthObserver } from "../utils/AuthObserver";
 import {
-  AuthResponse,
   ConfirmFormData,
   LoginFormData,
-  RefreshResponse,
   RegisterFormData,
-} from "../types/auth.types";
-import { CommonResponse } from "../types/general.types";
-import { getAuthObserver } from "../utils/AuthObserver";
+} from "../types/requests";
+import {
+  AuthResponse,
+  CommonResponse,
+  RefreshResponse,
+} from "../types/responses";
 
 export const login = async (data: LoginFormData): Promise<AuthResponse> => {
   try {
     const response = await api.post<AuthResponse>("/api/auth/login", data);
     localStorage.setItem("accessToken", response.data.accessToken);
     localStorage.setItem("user", JSON.stringify(response.data.user));
+    getAuthObserver().emitLogin(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd logowania. Spróbuj ponownie.");
@@ -27,6 +30,7 @@ export const register = async (
     const response = await api.post<AuthResponse>("/api/auth/register", data);
     localStorage.setItem("accessToken", response.data.accessToken);
     localStorage.setItem("user", JSON.stringify(response.data.user));
+    getAuthObserver().emitLogin(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd rejestracji. Spróbuj ponownie.");
@@ -50,6 +54,7 @@ export const logout = async (): Promise<CommonResponse> => {
     const response = await api.delete("/api/auth/logout");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd wylogowania. Spróbuj ponownie.");
@@ -83,6 +88,7 @@ export const logoutFromAllDevices = async (): Promise<CommonResponse> => {
     );
     localStorage.removeItem("accessToken");
     localStorage.removeItem("user");
+    getAuthObserver().emitLogout(response.data.message, "success");
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error);

@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
-import HomePage from "../pages/HomePage";
-import LoginPage from "../pages/LoginPage";
-import RegisterPage from "../pages/RegisterPage";
+import HomePage from "../pages/public/HomePage";
+import LoginPage from "../pages/public/LoginPage";
+import RegisterPage from "../pages/public/RegisterPage";
 import NotFoundPage from "../pages/NotFoundPage";
 
 function PublicRouter() {

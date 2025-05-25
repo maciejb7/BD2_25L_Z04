@@ -3,14 +3,8 @@ import { Link } from "react-router-dom";
 import { getUser } from "../../utils/userAuthentication";
 import Logo from "./Logo";
 import { getUserAvatar } from "../../api/api.user";
-
-export interface SideBarOption {
-  name: string;
-  icon: string;
-  link?: string;
-  onClick?: () => void;
-  active?: boolean;
-}
+import { SideBarOption } from "../../constants/sideBarOptions";
+import Avatar from "./Avatar";
 
 interface UserSideBarInfo {
   name?: string;
@@ -22,26 +16,31 @@ export interface SideBarOptions {
   options: SideBarOption[];
 }
 
+/**
+ * SideBar component for navigation in private pages.
+ */
 function SideBar({ options }: SideBarOptions) {
-  const [isUserLoading, setIsUserLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserSideBarInfo>({
     name: "",
     surname: "",
     nickname: "",
   });
-  const [isOpen, setIsOpen] = useState(false);
   const [avatar, setAvatar] = useState<string>("");
 
+  // Load user informations (name etc.) to the sidbebar top.
   useEffect(() => {
     const fetchUser = async () => {
       const currentUser = await getUser();
       const { name, surname, nickname } = currentUser;
-      setUserInfo({ name: name, surname: surname, nickname: nickname });
-      setIsUserLoading(false);
+      setUserInfo({ name, surname, nickname });
+      setIsLoading(false);
     };
     fetchUser();
   }, []);
 
+  // Load user avatar to the sidebar top.
   useEffect(() => {
     const fetchAvatar = async () => {
       const avatarUrl = await getUserAvatar();
@@ -55,15 +54,14 @@ function SideBar({ options }: SideBarOptions) {
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-30 z-30"
+          className="fixed inset-0 bg-black bg-opacity-30 z-20"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-40
-        transition-[width] duration-300 ease-in-out
+        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-30
         ${isOpen ? "w-56 sm:w-64" : "w-12 sm:w-16"}`}
       >
         {/* Header */}
@@ -71,6 +69,7 @@ function SideBar({ options }: SideBarOptions) {
           className={`flex items-center p-4 border-b 
           ${isOpen ? "justify-between" : "justify-center"}`}
         >
+          {/* Logo and Toggle Button */}
           {isOpen ? (
             <>
               <button
@@ -93,37 +92,30 @@ function SideBar({ options }: SideBarOptions) {
           )}
         </div>
 
+        {/* User Info and Avatar */}
         {isOpen && (
-          <div className="flex flex-col items-center py-4 border-b transition-opacity duration-300">
-            {avatar ? (
-              <img
-                src={avatar}
-                alt="Avatar"
-                className="w-16 h-16 sm:w-28 sm:h-28 rounded-full border-2"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-300" />
-            )}
-            <span className="text-sm font-semibold text-gray-600 mt-2">
-              {isUserLoading
+          <div className="flex flex-col items-center py-4 border-b">
+            <Avatar src={avatar} />
+            <span className="text-base sm:text-lg text-gray-600 font-semibold mt-2">
+              {isLoading
                 ? "Ładowanie..."
                 : `${userInfo.name} ${userInfo.surname}`}
             </span>
-            <span className="text-md font-semibold transition-opacity duration-300">
-              {isUserLoading ? "Ładowanie..." : `${userInfo.nickname}`}
+            <span className="text-sm sm:text-base font-semibold mt-1">
+              {isLoading ? "Ładowanie..." : `${userInfo.nickname}`}
             </span>
           </div>
         )}
 
         {/* Options */}
-        <nav className={`flex flex-col mt-4 px-2`}>
+        <nav className={`flex flex-col justify-center mt-4 px-2`}>
           {options.map((option) =>
             option.link ? (
               <Link
                 key={option.link}
                 to={option.link}
                 title={option.name}
-                className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md transition-colors ${
+                className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md ${
                   option.active
                     ? "bg-blue-100 text-blue-600 font-semibold"
                     : "text-gray-700 hover:bg-gray-100"
@@ -132,31 +124,23 @@ function SideBar({ options }: SideBarOptions) {
                 <i
                   className={`${option.icon} ${
                     isOpen ? "text-base sm:text-lg" : "text-sm sm:text-base"
-                  } transition-all duration-200`}
+                  }`}
                 ></i>
-                {isOpen && (
-                  <span className="transition-opacity duration-300">
-                    {option.name}
-                  </span>
-                )}
+                {isOpen && <span>{option.name}</span>}
               </Link>
             ) : (
               <button
                 key={option.name}
                 onClick={option.onClick}
                 title={option.name}
-                className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md text-left transition-colors text-gray-700 hover:bg-gray-100 w-full`}
+                className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md text-left text-gray-700 hover:bg-gray-100`}
               >
                 <i
                   className={`${option.icon} ${
                     isOpen ? "text-base sm:text-lg" : "text-sm sm:text-base"
-                  } transition-all duration-200`}
+                  }`}
                 ></i>
-                {isOpen && (
-                  <span className="transition-opacity duration-300">
-                    {option.name}
-                  </span>
-                )}
+                {isOpen && <span>{option.name}</span>}
               </button>
             ),
           )}

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { ConfirmFormData } from "../../types/auth.types";
+import { ConfirmFormData } from "../../types/requests";
+import FormField from "../inputs/FormField";
+import { getUser } from "../../utils/userAuthentication";
 
 interface ConfirmModalDataProps {
   apiCall: (data: ConfirmFormData) => Promise<any>;
@@ -9,6 +11,10 @@ interface ConfirmModalDataProps {
   onClose: () => void;
 }
 
+/**
+ * ConfirmModal component for confirming actions that require user authentication by nickname and password.
+ * It is used for actions like deleting account etc
+ */
 function ConfirmModal({
   apiCall,
   modalTitle,
@@ -20,6 +26,9 @@ function ConfirmModal({
     password: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [placeHolder, setPlaceHolder] = useState({
+    nickname: "",
+  });
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { showAlert } = useAlert();
 
@@ -47,6 +56,16 @@ function ConfirmModal({
       dialog.removeEventListener("close", handleDialogClose);
     };
   }, [onClose]);
+
+  useEffect(() => {
+    const fetchPlaceholder = async () => {
+      const { nickname } = await getUser();
+      setPlaceHolder({
+        nickname,
+      });
+    };
+    fetchPlaceholder();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -92,43 +111,26 @@ function ConfirmModal({
           </button>
         </div>
 
-        <div className="w-full">
-          <label
-            htmlFor="nickname"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Twój Nick
-          </label>
-          <input
-            type="text"
-            id="nickname"
-            name="nickname"
-            value={confirmFormData.nickname}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <FormField
+          label="Twój Nick"
+          name="nickname"
+          value={confirmFormData.nickname}
+          onChange={handleChange}
+          required
+          disabled={isLoading}
+          placeholder={placeHolder.nickname}
+        />
 
-        <div className="w-full">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Hasło
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={confirmFormData.password}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <FormField
+          label="Hasło"
+          type="password"
+          name="password"
+          value={confirmFormData.password}
+          onChange={handleChange}
+          required
+          disabled={isLoading}
+          placeholder="••••••••••••••••"
+        />
 
         <div className="flex space-x-3 pt-2">
           <button

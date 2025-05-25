@@ -1,6 +1,6 @@
 import { refresh } from "../api/api.auth";
 import { getUserFromAPI } from "../api/api.user";
-import { User } from "../types/general.types";
+import { User } from "../types/others";
 import { getAuthObserver } from "./AuthObserver";
 
 /**
@@ -30,7 +30,6 @@ export const isUserValid = (user: User): boolean => {
     user.name &&
     user.surname &&
     user.nickname &&
-    user.userId &&
     user.email &&
     user.birthDate &&
     user.createdAt &&

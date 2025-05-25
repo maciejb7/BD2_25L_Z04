@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { LoginFormData } from "../../types/auth.types";
+import { LoginFormData } from "../../types/requests";
 import { login } from "../../api/api.auth";
 import { Link } from "react-router-dom";
 import { useAlert } from "../../contexts/AlertContext";
-import { getAuthObserver } from "../../utils/AuthObserver";
+import FormField from "../inputs/FormField";
 
+/**
+ * LoginForm component that handles user login.
+ */
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [loginFormData, setLoginFormData] = useState<LoginFormData>({
@@ -24,8 +27,7 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      const response = await login(loginFormData);
-      getAuthObserver().emitLogin(response.message, "success");
+      await login(loginFormData);
     } catch (error: any) {
       setLoginFormData({ nicknameOrEmail: "", password: "" });
       showAlert(error.message, "error");
@@ -35,7 +37,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="w-full px-4 py-6 sm:px-0">
+    <div className="w-full px-4 sm:px-0 py-6">
       <form
         onSubmit={handleSubmit}
         className="flex flex-col justify-center items-center bg-white w-full max-w-sm mx-auto p-4 sm:p-6 rounded-lg shadow-md space-y-6 sm:space-y-8"
@@ -44,47 +46,26 @@ function LoginForm() {
           Logowanie
         </h1>
 
-        <div className="w-full">
-          <label
-            htmlFor="nicknameOrEmail"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Login
-          </label>
-          <input
-            type="text"
-            id="nicknameOrEmail"
-            name="nicknameOrEmail"
-            value={loginFormData.nicknameOrEmail}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-            autoComplete="username"
-            className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Login lub email"
-          />
-        </div>
+        <FormField
+          label="Login"
+          name="nicknameOrEmail"
+          value={loginFormData.nicknameOrEmail}
+          onChange={handleChange}
+          required
+          disabled={isLoading}
+          placeholder="Nick Lub Email"
+        />
 
-        <div className="w-full">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Hasło
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={loginFormData.password}
-            onChange={handleChange}
-            required
-            disabled={isLoading}
-            autoComplete="current-password"
-            className="w-full px-3 py-2.5 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-            placeholder="••••••••"
-          />
-        </div>
+        <FormField
+          label="Hasło"
+          type="password"
+          name="password"
+          value={loginFormData.password}
+          onChange={handleChange}
+          required
+          disabled={isLoading}
+          placeholder="••••••••••••••••"
+        />
 
         <button
           type="submit"

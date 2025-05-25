@@ -14,6 +14,9 @@ interface AlertContextProps {
 
 const AlertContext = createContext<AlertContextProps | undefined>(undefined);
 
+/**
+ * Alert context allowing components to show alerts for whole application.
+ */
 export function useAlert() {
   const context = React.useContext(AlertContext);
   if (context === undefined) {

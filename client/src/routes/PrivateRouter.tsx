@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import DashboardPage from "../pages/DashBoardPage";
+import DashboardPage from "../pages/private/DashBoardPage";
 import NotFoundPage from "../pages/NotFoundPage";
-import AccountSettings from "../pages/AccountSettings";
+import AccountSettings from "../pages/private/AccountSettings";
 
 function PrivateRouter() {
   return (
