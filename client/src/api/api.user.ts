@@ -34,7 +34,24 @@ export const uploadUserAvatar = async (file: File): Promise<CommonResponse> => {
   } catch (error: unknown) {
     throw handleApiError(
       error,
-      "Wystąpił błąd podczas przesyłania awatara. Spróbuj ponownie.",
+      "Wystąpił błąd podczas przesyłania zdjęcia profilowego. Spróbuj ponownie.",
+    );
+  }
+};
+
+export const deleteUserAvatar = async (): Promise<CommonResponse> => {
+  try {
+    const response = await api.delete<CommonResponse>(
+      "/api/user/avatar/delete",
+      {
+        withCredentials: true,
+      },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas usuwania zdjęcia profilowego. Spróbuj ponownie.",
     );
   }
 };

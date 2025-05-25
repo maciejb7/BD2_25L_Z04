@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { User } from "../../types/general.types";
-import { getUserAvatar } from "../../api/api.user";
+import { deleteUserAvatar, getUserAvatar } from "../../api/api.user";
 import { getUser, getUserFromStorage } from "../../utils/userAuthentication";
 import AccountField from "./AccountField";
 import { formatDate } from "../../utils/dateFormatter";
 import Avatar from "../common/Avatar";
 import AvatarCropModal from "../modals/CropAvatarModal";
+import { useAlert } from "../../contexts/AlertContext";
 
 /**
  * AccountInfo component displays user information and allows editing it (avatar, name, surname, nickname, email).
  */
 function AccountInfo() {
+  const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string>("");
@@ -73,6 +75,22 @@ function AccountInfo() {
     reader.readAsDataURL(file);
   };
 
+  const handleAvatarDelete = async () => {
+    if (!avatar) {
+      showAlert("Nie masz zdjęcia profilowego do usunięcia.", "info");
+      return;
+    }
+
+    try {
+      const response = await deleteUserAvatar();
+      showAlert(response.message, "success");
+      setAvatar("");
+      setCropImageSrc(null);
+    } catch (error: any) {
+      showAlert(error.message, "error");
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center gap-4 mt-5">
       <div className="relative">
@@ -81,6 +99,7 @@ function AccountInfo() {
           size="large"
           editable={true}
           onEditClick={handleAvatarChangeClick}
+          onDeleteClick={handleAvatarDelete}
         />
         <input
           type="file"

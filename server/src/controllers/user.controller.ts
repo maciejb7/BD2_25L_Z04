@@ -80,13 +80,16 @@ export class UserController {
       await fs.promises.mkdir(avatarsPath, { recursive: true });
       await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
 
-      logger.info(`Pomyślnie przesłano awatar użytkownika ${userNickname}.`, {
-        service: "user-upload-avatar",
-        nickname: userNickname,
-      });
+      logger.info(
+        `Użytkownik ${userNickname} zmienił swoje zdjęcie profilowe.`,
+        {
+          service: "user-upload-avatar",
+          nickname: userNickname,
+        },
+      );
 
       res.status(200).json({
-        message: "Awatar zaktualizowany pomyślnie.",
+        message: "Zdjęcie profilowe zaktualizowane pomyślnie.",
       });
     } catch (error) {
       if (error instanceof FileUploadError) {
@@ -105,6 +108,41 @@ export class UserController {
       res.status(500).json({
         message:
           "Wystąpił nieznany błąd podczas przesyłania awatara. Skontaktuj się z administratorem.",
+      });
+      return;
+    }
+  }
+
+  static async deleteUserAvatar(req: Request, res: Response): Promise<void> {
+    const userId = req.user?.userId;
+    const userNickname = req.user?.userNickname;
+    const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
+    if (!fs.existsSync(avatarFilePath)) {
+      res.status(404).json({
+        message: "Nie posiadasz avatara do usunięcia.",
+      });
+      return;
+    }
+    try {
+      await fs.promises.unlink(avatarFilePath);
+      logger.info(
+        `Użytkownik ${userNickname} usunął swoje zdjęcie profilowe.`,
+        {
+          service: "user-delete-avatar",
+          nickname: userNickname,
+        },
+      );
+      res.status(200).json({
+        message: "Zdjęcie profilowe zostało pomyślnie usunięte.",
+      });
+    } catch (error) {
+      logger.error(`Nieudana próba usunięcia awatara `, error, {
+        service: "user-delete-avatar",
+        nickname: userNickname,
+      });
+      res.status(500).json({
+        message:
+          "Wystąpił nieznany błąd podczas usuwania awatara. Skontaktuj się z administratorem.",
       });
       return;
     }

@@ -27,6 +27,12 @@ userRouter.post(
   UserController.uploadUserAvatar,
 );
 
+userRouter.delete(
+  "/avatar/delete",
+  AuthMiddleware.authenticateUser(),
+  UserController.deleteUserAvatar,
+);
+
 userRouter.post(
   "/change-info",
   AuthMiddleware.authenticateUser(),
