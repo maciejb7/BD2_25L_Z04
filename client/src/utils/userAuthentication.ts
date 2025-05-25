@@ -1,6 +1,6 @@
 import { refresh } from "../api/api.auth";
 import { getUserFromAPI } from "../api/api.user";
-import { User } from "../types/general.types";
+import { User } from "../types/others";
 import { getAuthObserver } from "./AuthObserver";
 
 /**

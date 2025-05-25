@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User } from "../../types/general.types";
+import { User } from "../../types/others";
 import { deleteUserAvatar, getUserAvatar } from "../../api/api.user";
 import { getUser, getUserFromStorage } from "../../utils/userAuthentication";
 import EditableField from "../inputs/EditableField";

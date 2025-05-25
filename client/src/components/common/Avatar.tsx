@@ -20,6 +20,11 @@ const buttonSizes = {
   large: "w-12 h-12 text-base",
 };
 
+/**
+ * Avatar component that displays a user's profile picture.
+ * If no picture is provided, it shows a default avatar.
+ * It can also include edit and delete buttons if specified.
+ */
 function Avatar({
   src = "",
   size = "medium",

@@ -3,9 +3,9 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
-import { ErrorResponse } from "../types/general.types";
 import { refresh } from "./api.auth";
 import { getAuthObserver } from "../utils/AuthObserver";
+import { ErrorResponse } from "../types/responses";
 
 const API_URL = import.meta.env.VITE_API_URL;
 

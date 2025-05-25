@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { LoginFormData } from "../../types/auth.types";
+import { LoginFormData } from "../../types/requests";
 import { login } from "../../api/api.auth";
 import { Link } from "react-router-dom";
 import { useAlert } from "../../contexts/AlertContext";
 import FormField from "../inputs/FormField";
 
 /**
- * LoginForm component for user login.
+ * LoginForm component that handles user login.
  */
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);

@@ -3,6 +3,9 @@ interface InfoParagraphProps {
   description: string;
 }
 
+/**
+ * Customizable info paragraphs for home page.
+ */
 function InfoParagraph({ title, description }: InfoParagraphProps) {
   return (
     <div className="flex flex-col justify-center max-w-3xl">

@@ -1,13 +1,15 @@
 import api, { handleApiError } from "./api";
+import { getAuthObserver } from "../utils/AuthObserver";
 import {
-  AuthResponse,
   ConfirmFormData,
   LoginFormData,
-  RefreshResponse,
   RegisterFormData,
-} from "../types/auth.types";
-import { CommonResponse } from "../types/general.types";
-import { getAuthObserver } from "../utils/AuthObserver";
+} from "../types/requests";
+import {
+  AuthResponse,
+  CommonResponse,
+  RefreshResponse,
+} from "../types/responses";
 
 export const login = async (data: LoginFormData): Promise<AuthResponse> => {
   try {

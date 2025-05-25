@@ -8,6 +8,9 @@ import PasswordModal from "../modals/ChangePasswordModal";
 import { changePassword } from "../../api/api.user";
 import ConfirmModal from "../modals/ConfirmModal";
 
+/**
+ * Component for account actions such as changing password, logging out (buttons).
+ */
 function AccountActions() {
   const [isAccountDeleteModalOpen, setIsAccountDeleteModalOpen] =
     useState(false);

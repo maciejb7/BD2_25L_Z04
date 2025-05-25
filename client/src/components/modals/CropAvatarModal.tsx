@@ -10,6 +10,9 @@ interface AvatarCropModalProps {
   onSave: (url: string) => void;
 }
 
+/**
+ * AvatarCropModal component that allows users to crop their avatar image.
+ */
 function AvatarCropModal({ imageSrc, onClose, onSave }: AvatarCropModalProps) {
   const { showAlert } = useAlert();
 

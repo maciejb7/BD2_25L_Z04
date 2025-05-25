@@ -15,6 +15,10 @@ interface EditableFieldProps {
   inputMap?: TwoWayMap<string, string>;
 }
 
+/**
+ * EditableField component that allows users to edit a field value.
+ * Used for displaying and editing user information like nickname, email, etc.
+ */
 export default function EditableField({
   label,
   name,
@@ -65,7 +69,7 @@ export default function EditableField({
   }
 
   return (
-    <div className="flex flex-col sm:flex-row items-center sm:justify-center w-full gap-3 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="flex flex-col sm:flex-row items-center w-full gap-3 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
       <label className="font-medium text-gray-700 whitespace-nowrap">
         {label}:
       </label>

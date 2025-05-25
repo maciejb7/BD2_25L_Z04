@@ -1,6 +1,9 @@
 import { useEffect } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 
+/**
+ * Alert component that displays alert messages.
+ */
 function Alert() {
   const { alertInfo, closeAlert } = useAlert();
 

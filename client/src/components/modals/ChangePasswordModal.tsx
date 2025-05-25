@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { ResetPasswordFormData } from "../../types/auth.types";
+import { ResetPasswordFormData } from "../../types/requests";
 import FormField from "../inputs/FormField";
 
 interface PasswordModalProps {
@@ -10,6 +10,9 @@ interface PasswordModalProps {
   onClose: () => void;
 }
 
+/**
+ * PasswordModal component that allows users to change their password.
+ */
 function PasswordModal({
   apiCall,
   modalTitle,

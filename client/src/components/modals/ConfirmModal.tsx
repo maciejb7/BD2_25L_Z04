@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { ConfirmFormData } from "../../types/auth.types";
+import { ConfirmFormData } from "../../types/requests";
 import FormField from "../inputs/FormField";
 import { getUser } from "../../utils/userAuthentication";
 

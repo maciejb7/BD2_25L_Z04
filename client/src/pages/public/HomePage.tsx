@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import Logo from "../../components/common/Logo";
 import Background from "../../components/common/Background";
 import TopBar from "../../components/common/TopBar";
-import InfoParagraph from "../../components/home/InfoParagraph";
+import InfoParagraph from "../../components/unique/InfoParagraph";
 import Footer from "../../components/common/Footer";
 import {
   mainPageContent,

@@ -1,5 +1,6 @@
-import { ResetPasswordFormData } from "../types/auth.types";
-import { CommonResponse, User, UserResponse } from "../types/general.types";
+import { User } from "../types/others";
+import { ResetPasswordFormData } from "../types/requests";
+import { CommonResponse, UserResponse } from "../types/responses";
 import api, { handleApiError } from "./api";
 
 export const getUserFromAPI = async (): Promise<User> => {

@@ -1,5 +1,3 @@
-import { User } from "./general.types";
-
 export interface LoginFormData {
   nicknameOrEmail: string;
   password: string;
@@ -23,15 +21,4 @@ export interface RegisterFormData {
   password: string;
   gender: "male" | "female" | null;
   birthDate: string;
-}
-
-export interface RefreshResponse {
-  message: string;
-  accessToken: string;
-}
-
-export interface AuthResponse {
-  message: string;
-  accessToken: string;
-  user: User;
 }

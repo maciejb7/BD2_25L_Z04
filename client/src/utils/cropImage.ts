@@ -1,3 +1,6 @@
+/**
+ * Utility function to crop an image based on pixel crop dimensions.
+ */
 export const getCroppedImg = (
   imageSrc: string,
   pixelCrop: any,

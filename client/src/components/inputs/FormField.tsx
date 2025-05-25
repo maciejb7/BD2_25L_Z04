@@ -9,6 +9,9 @@ interface FormFieldProps {
   placeholder?: string;
 }
 
+/**
+ * Standardized form field component for user input.
+ */
 function FormField({
   label,
   type = "text",

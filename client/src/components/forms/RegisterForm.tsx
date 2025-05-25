@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { RegisterFormData } from "../../types/auth.types";
+import { RegisterFormData } from "../../types/requests";
 import { Link } from "react-router-dom";
 import { register } from "../../api/api.auth";
 import { useAlert } from "../../contexts/AlertContext";
 import FormField from "../inputs/FormField";
 
+/**
+ * RegisterForm component that handles user registration.
+ */
 function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [registerFormData, setRegisterFormData] = useState<RegisterFormData>({

@@ -1,15 +1,3 @@
-export interface CommonResponse {
-  message: string;
-}
-
-export interface ErrorResponse {
-  message: string;
-}
-
-export interface UserResponse {
-  user: User;
-}
-
 export interface User {
   nickname: string;
   name: string;

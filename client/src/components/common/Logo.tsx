@@ -11,6 +11,9 @@ const sizeMap = {
   xxl: "text-8xl",
 };
 
+/**
+ * Logo component that displays the application name with customizable size.
+ */
 function Logo({ size = "md" }: LogoProps) {
   return (
     <div className={`font-bold tracking-tight ${sizeMap[size]} text-blue-600`}>
