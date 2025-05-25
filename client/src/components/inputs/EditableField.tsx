@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 import { changeUserInfoField, getUserFromAPI } from "../../api/api.user";
+import { TwoWayMap } from "../../utils/formatters";
 
-interface AccountFieldProps {
+interface EditableFieldProps {
   label: string;
   name: string;
   value: string;
@@ -11,9 +12,10 @@ interface AccountFieldProps {
   editable?: boolean;
   type?: "text" | "date" | "select";
   options?: string[];
+  inputMap?: TwoWayMap<string, string>;
 }
 
-export default function AccountField({
+export default function EditableField({
   label,
   name,
   value,
@@ -22,7 +24,8 @@ export default function AccountField({
   type = "text",
   options = [],
   editable = true,
-}: AccountFieldProps) {
+  inputMap,
+}: EditableFieldProps) {
   const [editMode, setEditMode] = useState(false);
   const [fieldValue, setFieldValue] = useState<string>(value);
   const { showAlert } = useAlert();
@@ -44,7 +47,8 @@ export default function AccountField({
     }
 
     try {
-      const result = await changeUserInfoField(name, fieldValue);
+      const valueToSend = inputMap?.from(fieldValue) ?? fieldValue;
+      const result = await changeUserInfoField(name, valueToSend);
       await getUserFromAPI();
       onConfirm(name, fieldValue);
       showAlert(result.message, "success");
@@ -61,13 +65,13 @@ export default function AccountField({
   }
 
   return (
-    <div className="grid grid-cols-[max-content,1fr] items-center w-full gap-3 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
+    <div className="flex flex-col sm:flex-row items-center sm:justify-center w-full gap-3 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
       <label className="font-medium text-gray-700 whitespace-nowrap">
         {label}:
       </label>
 
       {editMode ? (
-        <div className="flex items-center gap-3 w-full min-w-0">
+        <div className="flex items-center justify-center gap-3 w-full max-w-full overflow-hidden">
           {type === "select" ? (
             <select
               value={fieldValue}
@@ -87,7 +91,9 @@ export default function AccountField({
               value={fieldValue}
               onChange={(e) => setFieldValue(e.target.value)}
               disabled={isLoading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                type === "date" ? "max-w-[12rem]" : ""
+              }`}
             />
           )}
 
