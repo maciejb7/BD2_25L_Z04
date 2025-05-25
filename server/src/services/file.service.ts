@@ -1,5 +1,15 @@
 import sharp from "sharp";
 import { FileUploadError } from "../errors/errors";
+import path from "path";
+import fs from "fs";
+
+export const avatarsPath = path.join(
+  __dirname,
+  "..",
+  "..",
+  "uploads",
+  "avatars",
+);
 
 export class FileService {
   static async hasImageCorrectSize(
@@ -29,5 +39,14 @@ export class FileService {
     if (square && width !== height) {
       throw new FileUploadError(`Obraz musi być kwadratowy.`, 400);
     }
+  }
+
+  static getUserAvatarPath(userId: string): string {
+    return path.join(avatarsPath, `${userId}.jpg`);
+  }
+
+  static getUserAvatar(userId: string): string | null {
+    const avatarFilePath = this.getUserAvatarPath(userId);
+    return fs.existsSync(avatarFilePath) ? avatarFilePath : null;
   }
 }
