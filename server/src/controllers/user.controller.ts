@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { User } from "../db/models/user";
-import path from "path";
 import fs from "fs";
 import AuthService from "../services/auth.service";
 import { ValidationService } from "../services/validation.service";
@@ -14,8 +13,6 @@ import {
 import logger from "../logger";
 import { userValidator } from "../utils/validators";
 import { FileService } from "../services/file.service";
-
-const avatarsPath = path.join(__dirname, "..", "..", "uploads", "avatars");
 
 export class UserController {
   /**
@@ -42,11 +39,10 @@ export class UserController {
    * Use only with "authenticateUser" middleware.
    */
   static async getUserAvatar(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
 
-    const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
-
-    if (!fs.existsSync(avatarFilePath)) {
+    const avatarFilePath = FileService.getUserAvatar(userId);
+    if (!avatarFilePath) {
       res.status(404).json({
         message: "Nie znaleziono awatara użytkownika.",
       });
@@ -61,7 +57,7 @@ export class UserController {
    * Use only with "authenticateUser" and "uploadSingleFile" middlewares.
    */
   static async uploadUserAvatar(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
     const userNickname = req.user?.userNickname;
     const avatarFile = req.file!;
 
@@ -75,9 +71,7 @@ export class UserController {
         true,
       );
 
-      const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
-
-      await fs.promises.mkdir(avatarsPath, { recursive: true });
+      const avatarFilePath = FileService.getUserAvatarPath(userId);
       await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
 
       logger.info(
@@ -114,10 +108,10 @@ export class UserController {
   }
 
   static async deleteUserAvatar(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+    const userId = req.user!.userId;
     const userNickname = req.user?.userNickname;
-    const avatarFilePath = path.join(avatarsPath, `${userId}.jpg`);
-    if (!fs.existsSync(avatarFilePath)) {
+    const avatarFilePath = FileService.getUserAvatar(userId);
+    if (!avatarFilePath) {
       res.status(404).json({
         message: "Nie posiadasz avatara do usunięcia.",
       });
