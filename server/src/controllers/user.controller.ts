@@ -1,286 +1,231 @@
 import { Request, Response } from "express";
 import { User } from "../db/models/user";
 import fs from "fs";
-import AuthService from "../services/auth.service";
-import { ValidationService } from "../services/validation.service";
+
+import { getDateTimeFromDate } from "../services/validation.service";
 import bcrypt from "bcrypt";
-import {
-  FieldValidationError,
-  FileUploadError,
-  InvalidPasswordError,
-  UserNotFoundError,
-} from "../errors/errors";
+
 import logger from "../logger";
-import { userValidator } from "../utils/validators";
-import { FileService } from "../services/file.service";
 
-export class UserController {
-  /**
-   * Returns basic informations about the currently authenticated user.
-   * Use only with "authenticateUser" middleware.
-   */
-  static async getUserInfo(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
+import {
+  checkIfImageHasCorrectSize,
+  getUserAvatarPath,
+  getUserAvatarPathVerified,
+} from "../services/file.service";
+import {
+  ChangePasswordRequest,
+  changePasswordRequestFields,
+  ChangeUserDetailsRequest,
+  changeUserDetailsRequestFields,
+  extractRequestFields,
+} from "../types/requests";
+import {
+  getPasswordChangeValidator,
+  getUserDetailsValidator,
+} from "../types/validators";
+import {
+  extractAuthenticatedUserPayload,
+  getAuthenticatedUser,
+} from "../services/auth.service";
 
-    const user = await User.findByPk(userId);
+/**
+ * Returns basic informations about the currently authenticated user.
+ * Use only with "authenticateUser" middleware.
+ */
+export const getUserInfo = async (req: Request, res: Response) => {
+  const { userId } = extractAuthenticatedUserPayload(req);
 
-    if (!user) {
-      res.status(404).json({ message: "Nie znaleziono użytkownika." });
-      return;
-    }
+  const user = await User.findByPk(userId);
 
-    res.status(200).json({
-      user: user.toJSON(),
+  if (!user) {
+    res.status(404).json({ message: "Nie znaleziono użytkownika." });
+    return;
+  }
+
+  res.status(200).json({
+    user: user.toJSON(),
+  });
+};
+
+/**
+ * Returns the avatar of the currently authenticated user.
+ * Use only with "authenticateUser" middleware.
+ */
+export const getUserAvatar = async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+
+  const avatarFilePath = getUserAvatarPathVerified(userId);
+
+  if (!avatarFilePath) {
+    res.status(404).json({
+      message: "Nie znaleziono awatara użytkownika.",
     });
+    return;
   }
 
-  /**
-   * Returns the avatar of the currently authenticated user.
-   * Use only with "authenticateUser" middleware.
-   */
-  static async getUserAvatar(req: Request, res: Response): Promise<void> {
-    const userId = req.user!.userId;
+  res.sendFile(avatarFilePath);
+};
 
-    const avatarFilePath = FileService.getUserAvatar(userId);
-    if (!avatarFilePath) {
-      res.status(404).json({
-        message: "Nie znaleziono awatara użytkownika.",
-      });
-      return;
-    }
+/**
+ * Uploads a new avatar for the currently authenticated user.
+ * Use only with "authenticateUser" and "uploadSingleFile" middlewares.
+ */
+export const uploadUserAvatar = async (req: Request, res: Response) => {
+  const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+  const avatarFile = req.file!;
 
-    res.sendFile(avatarFilePath);
+  await checkIfImageHasCorrectSize(
+    avatarFile,
+    { service: "user_upload_avatar", nickname: userNickname },
+    128,
+    128,
+    1024,
+    1024,
+    true,
+  );
+
+  const avatarFilePath = getUserAvatarPath(userId);
+  await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
+
+  logger.info(`Użytkownik ${userNickname} zmienił swoje zdjęcie profilowe.`, {
+    service: "user_upload_avatar",
+    nickname: userNickname,
+  });
+
+  res.status(200).json({
+    message: "Zdjęcie profilowe zaktualizowane pomyślnie.",
+  });
+};
+
+export const deleteUserAvatar = async (req: Request, res: Response) => {
+  const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+  const avatarFilePath = getUserAvatarPathVerified(userId);
+
+  if (!avatarFilePath) {
+    res.status(404).json({
+      message: "Nie posiadasz avatara do usunięcia.",
+    });
+    return;
   }
 
-  /**
-   * Uploads a new avatar for the currently authenticated user.
-   * Use only with "authenticateUser" and "uploadSingleFile" middlewares.
-   */
-  static async uploadUserAvatar(req: Request, res: Response): Promise<void> {
-    const userId = req.user!.userId;
-    const userNickname = req.user?.userNickname;
-    const avatarFile = req.file!;
+  await fs.promises.unlink(avatarFilePath);
+  logger.info(`Użytkownik ${userNickname} usunął swoje zdjęcie profilowe.`, {
+    service: "user-delete-avatar",
+    nickname: userNickname,
+  });
+  res.status(200).json({
+    message: "Zdjęcie profilowe zostało pomyślnie usunięte.",
+  });
+};
 
-    try {
-      await FileService.hasImageCorrectSize(
-        avatarFile,
-        128,
-        128,
-        1024,
-        1024,
-        true,
-      );
+/**
+ * Changes a field of informations of the currently authenticated user.
+ * Use only with "authenticateUser" middleware.
+ */
+export const changeUserInfoField = async (req: Request, res: Response) => {
+  const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+  const { name, value } = await extractRequestFields<ChangeUserDetailsRequest>(
+    req.body,
+    changeUserDetailsRequestFields,
+    getUserDetailsValidator({
+      service: "change_user_details",
+      nickname: userNickname,
+    }),
+  );
 
-      const avatarFilePath = FileService.getUserAvatarPath(userId);
-      await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
+  let updatedValue;
 
-      logger.info(
-        `Użytkownik ${userNickname} zmienił swoje zdjęcie profilowe.`,
-        {
-          service: "user-upload-avatar",
-          nickname: userNickname,
-        },
-      );
+  const user = await User.findByPk(userId);
 
-      res.status(200).json({
-        message: "Zdjęcie profilowe zaktualizowane pomyślnie.",
-      });
-    } catch (error) {
-      if (error instanceof FileUploadError) {
-        logger.error(`Błąd przesyłania awatara - ${error.message}`, {
-          service: "user-upload-avatar",
-          nickname: userNickname,
-        });
-        res.status(error.statusCode).json({ message: error.message });
-        return;
-      }
+  if (!user) {
+    res.status(404).json({ message: "Nie znaleziono użytkownika." });
+    return;
+  }
 
-      logger.error(`Nieudana próba przesłania awatara`, error, {
-        service: "user-upload-avatar",
+  if (
+    !getUserDetailsValidator({
+      service: "change_user_details",
+      nickname: userNickname,
+    })[name]
+  ) {
+    res.status(400).json({ message: "Nieprawidłowe pole do zmiany." });
+    return;
+  }
+
+  if (name === "password") {
+    res.status(400).json({
+      message: "Nie można zmienić hasła w ten sposób. Użyj innej metody.",
+    });
+    return;
+  }
+
+  if (name === "birthDate") {
+    updatedValue = getDateTimeFromDate(value).toJSDate();
+  } else {
+    updatedValue = value;
+  }
+
+  await user.update({ [name]: updatedValue });
+  await user.save();
+
+  logger.info(
+    `Użytkownik ${userNickname} zmienił informacje o sobie - ${name} na ${value}.`,
+    {
+      service: "change_user_details",
+      nickname: userNickname,
+    },
+  );
+
+  res.status(200).json({
+    message: `Zmiana dokonana pomyślnie.`,
+  });
+};
+
+/**
+ * Changes password of the currently authenticated user.
+ * Use only with "authenticateUser" middleware.
+ */
+export const changeUserPassword = async (req: Request, res: Response) => {
+  const { userNickname } = extractAuthenticatedUserPayload(req);
+  const { oldPassword, newPassword } =
+    await extractRequestFields<ChangePasswordRequest>(
+      req.body,
+      changePasswordRequestFields,
+      getPasswordChangeValidator({
+        service: "change_password_user",
         nickname: userNickname,
-      });
-      res.status(500).json({
-        message:
-          "Wystąpił nieznany błąd podczas przesyłania awatara. Skontaktuj się z administratorem.",
-      });
-      return;
-    }
+      }),
+    );
+
+  const user = await getAuthenticatedUser(userNickname, oldPassword, {
+    service: "change_password_user",
+    nickname: userNickname,
+  });
+
+  const isPasswordTheSame = await bcrypt.compare(newPassword, user.password);
+
+  if (isPasswordTheSame) {
+    logger.error(`Nieudana próba zmiany hasła - Podano to samo hasło.`, {
+      service: "change_password_user",
+      nickname: userNickname,
+    });
+    res.status(400).json({
+      message: "Nowe hasło nie może być takie samo jak stare.",
+    });
+    return;
   }
 
-  static async deleteUserAvatar(req: Request, res: Response): Promise<void> {
-    const userId = req.user!.userId;
-    const userNickname = req.user?.userNickname;
-    const avatarFilePath = FileService.getUserAvatar(userId);
-    if (!avatarFilePath) {
-      res.status(404).json({
-        message: "Nie posiadasz avatara do usunięcia.",
-      });
-      return;
-    }
-    try {
-      await fs.promises.unlink(avatarFilePath);
-      logger.info(
-        `Użytkownik ${userNickname} usunął swoje zdjęcie profilowe.`,
-        {
-          service: "user-delete-avatar",
-          nickname: userNickname,
-        },
-      );
-      res.status(200).json({
-        message: "Zdjęcie profilowe zostało pomyślnie usunięte.",
-      });
-    } catch (error) {
-      logger.error(`Nieudana próba usunięcia awatara `, error, {
-        service: "user-delete-avatar",
-        nickname: userNickname,
-      });
-      res.status(500).json({
-        message:
-          "Wystąpił nieznany błąd podczas usuwania awatara. Skontaktuj się z administratorem.",
-      });
-      return;
-    }
-  }
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
-  /**
-   * Changes a field of informations of the currently authenticated user.
-   * Use only with "authenticateUser" middleware.
-   */
-  static async changeUserInfoField(req: Request, res: Response): Promise<void> {
-    const userId = req.user?.userId;
-    const name = req.body.name.trim() ?? "";
-    let value = req.body.value.trim() ?? "";
+  user.password = hashedNewPassword;
+  await user.save();
 
-    const user = await User.findByPk(userId);
+  logger.info(`Użytkownik ${userNickname} zmienił swoje hasło.`, {
+    service: "change_password_user",
+    nickname: userNickname,
+  });
 
-    if (!user) {
-      res.status(404).json({ message: "Nie znaleziono użytkownika." });
-      return;
-    }
-
-    try {
-      if (!userValidator[name]) {
-        res.status(400).json({ message: "Nieprawidłowe pole do zmiany." });
-        return;
-      }
-
-      if (name === "password") {
-        res.status(400).json({
-          message: "Nie można zmienić hasła w ten sposób. Użyj innej metody.",
-        });
-        return;
-      }
-
-      await userValidator[name](value);
-
-      if (name === "birthDate") {
-        value = ValidationService.formatToDateTime(value).toJSDate();
-      }
-
-      await user.update({ [name]: value });
-      await user.save();
-      res.status(200).json({
-        message: `Zmiana dokonana pomyślnie.`,
-      });
-    } catch (error) {
-      if (error instanceof FieldValidationError) {
-        logger.error(
-          `Błąd walidacji podczas zmiany pola ${name} - ${error.message}`,
-          {
-            service: "user-change-info",
-            userId: userId,
-          },
-        );
-        res.status(error.statusCode).json({
-          message: error.message,
-        });
-        return;
-      } else {
-        logger.error(`Nieudana próba zmiany pola `, error, {
-          service: "user-change-info",
-          userId: userId,
-        });
-        res.status(500).json({
-          message:
-            "Wystąpił nieznany błąd podczas zmiany pola. Skontaktuj się z administratorem.",
-        });
-        return;
-      }
-    }
-  }
-
-  /**
-   * Changes password of the currently authenticated user.
-   * Use only with "authenticateUser" middleware.
-   */
-  static async changeUserPassword(req: Request, res: Response): Promise<void> {
-    const nickname = req.user?.userNickname ?? "";
-    const { oldPassword, newPassword } = req.body;
-
-    try {
-      const user = await AuthService.authenticateUser(nickname, oldPassword);
-
-      userValidator.password(newPassword);
-
-      const isPasswordTheSame = await bcrypt.compare(
-        newPassword,
-        user.password,
-      );
-
-      if (isPasswordTheSame) {
-        logger.error(`Nieudana próba zmiany hasła - Podano to samo hasło.`, {
-          service: "user-change-password",
-          nickname: nickname,
-        });
-        res.status(400).json({
-          message: "Nowe hasło nie może być takie samo jak stare.",
-        });
-        return;
-      }
-
-      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-      user.password = hashedNewPassword;
-      await user.save();
-      res.status(200).json({
-        message: "Hasło zostało zmienione.",
-      });
-    } catch (error) {
-      if (error instanceof FieldValidationError) {
-        logger.error(`Błąd walidacji podczas zmiany hasła - ${error.message}`, {
-          service: "user-change-password",
-          nickname: nickname,
-        });
-        res.status(error.statusCode).json({
-          message: error.message,
-        });
-      } else if (error instanceof UserNotFoundError) {
-        logger.error(
-          `Nieudana próba zmiany hasła - Nie znaleziono użytkownika.`,
-          {
-            ...error.metaData,
-            service: "user-change-password",
-          },
-        );
-        res.status(error.statusCode).json({ message: error.message });
-      } else if (error instanceof InvalidPasswordError) {
-        logger.error(`Nieudana próba zmiany hasła - Nieprawidłowe hasło.`, {
-          ...error.metaData,
-          service: "user-change-password",
-        });
-        res
-          .status(error.statusCode)
-          .json({ message: "Hasło jest nieprawidłowe." });
-      } else {
-        logger.error("Wystąpił nieznany błąd podczas zmiany hasła ", error, {
-          service: "user-change-password",
-        });
-        res
-          .status(500)
-          .send(
-            "Wystąpił błąd podczas zmiany hasła. Spróbuj ponownie lub skontaktuj się z administratorem.",
-          );
-      }
-    }
-  }
-}
+  res.status(200).json({
+    message: "Hasło zostało zmienione.",
+  });
+};

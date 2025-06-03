@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { RecommendationController } from "../controllers/recommendation.controller";
-import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { authenticateUser } from "../middlewares/auth.middleware";
 
 const recommendationRouter = Router();
 
 // All routes require authentication
-recommendationRouter.use(AuthMiddleware.authenticateUser());
+recommendationRouter.use(authenticateUser());
 
 // Get recommended profiles
 recommendationRouter.get("/", RecommendationController.getRecommendedUsers);
