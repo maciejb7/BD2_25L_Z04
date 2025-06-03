@@ -127,10 +127,10 @@ export const changeUserInfoField = async (req: Request, res: Response) => {
   const { name, value } = await extractRequestFields<ChangeUserDetailsRequest>(
     req.body,
     changeUserDetailsRequestFields,
-    getUserDetailsValidator({
+    {
       service: "change_user_details",
       nickname: userNickname,
-    }),
+    },
   );
 
   let updatedValue;
@@ -142,15 +142,17 @@ export const changeUserInfoField = async (req: Request, res: Response) => {
     return;
   }
 
-  if (
-    !getUserDetailsValidator({
-      service: "change_user_details",
-      nickname: userNickname,
-    })[name]
-  ) {
+  const validator = getUserDetailsValidator({
+    service: "change_user_details",
+    nickname: userNickname,
+  });
+
+  if (!validator[name]) {
     res.status(400).json({ message: "Nieprawidłowe pole do zmiany." });
     return;
   }
+
+  await validator[name](value);
 
   if (name === "password") {
     res.status(400).json({
@@ -191,6 +193,10 @@ export const changeUserPassword = async (req: Request, res: Response) => {
     await extractRequestFields<ChangePasswordRequest>(
       req.body,
       changePasswordRequestFields,
+      {
+        service: "change_password_user",
+        nickname: userNickname,
+      },
       getPasswordChangeValidator({
         service: "change_password_user",
         nickname: userNickname,

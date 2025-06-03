@@ -2,14 +2,18 @@ import { Request, Response, NextFunction } from "express";
 import { ApiError } from "../errors/errors";
 import logger from "../logger";
 
-export function errorHandler(
+export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
   next: NextFunction,
-) {
+) => {
   if (error instanceof ApiError) {
-    logger.error(error.loggerMessage, error.metaData);
+    // Clean up metaData by removing empty strings
+    const filteredMetaData = Object.fromEntries(
+      Object.entries(error.metaData).filter(([, value]) => value !== ""),
+    );
+    logger.error(error.loggerMessage, filteredMetaData);
 
     res.status(error.statusCode).json({
       message: error.message,
@@ -23,4 +27,4 @@ export function errorHandler(
   res.status(500).json({
     message: error.message,
   });
-}
+};

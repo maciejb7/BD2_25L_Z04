@@ -45,6 +45,10 @@ export const register = handleRequest(async (req: Request, res: Response) => {
     await extractRequestFields<RegisterRequest>(
       req.body,
       registerRequestFields,
+      {
+        service: "register",
+        nickname: nicknameForLogging,
+      },
       getUserDetailsValidator({
         service: "register",
         nickname: nicknameForLogging,
@@ -95,6 +99,10 @@ export const login = handleRequest(async (req: Request, res: Response) => {
     await extractRequestFields<LoginRequest>(
       req.body,
       loginRequestFields,
+      {
+        service: "login",
+        nickname: nicknameForLogging,
+      },
       getUserLoginValidator({
         service: "login",
         nickname: nicknameForLogging,
@@ -189,6 +197,10 @@ export const deleteAccount = handleRequest(
       await extractRequestFields<ConfirmationRequest>(
         req.body,
         confirmationRequestFields,
+        {
+          service: "register",
+          nickname: nicknameForLogging,
+        },
         getUserConfirmationValidator({
           service: "delete_account_user",
           nickname: nicknameForLogging,
