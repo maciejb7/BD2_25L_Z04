@@ -12,7 +12,7 @@ import { UserLike } from "../db/models/user_like";
  * @param limit The maximum number of recommendations to return
  * @returns Promise with recommended users
  */
-export const getRecommendedUsers = async (
+const getRecommendedUsers = async (
   userId: string,
   limit = 10,
 ): Promise<User[]> => {
@@ -83,4 +83,9 @@ const shuffleArray = <T>(array: T[]): T[] => {
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
+};
+
+export const RecommendationService = {
+  getRecommendedUsers,
+  shuffleArray,
 };

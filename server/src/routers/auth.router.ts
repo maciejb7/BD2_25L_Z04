@@ -1,24 +1,25 @@
 import { Router } from "express";
-import {
-  deleteAccount,
-  login,
-  logout,
-  logoutFromAllDevices,
-  refresh,
-  register,
-} from "../controllers/auth.controller";
-import { authenticateUser } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { AuthController } from "../controllers/auth.controller";
 
 const authRouter = Router();
 
-authRouter.post("/register", register);
-authRouter.post("/login", login);
-authRouter.delete("/logout", authenticateUser(), logout);
-authRouter.post("/refresh", refresh);
-authRouter.post("/delete-account", authenticateUser(), deleteAccount);
+authRouter.post("/register", AuthController.register);
+authRouter.post("/login", AuthController.login);
+authRouter.delete(
+  "/logout",
+  AuthMiddleware.authenticateUser(),
+  AuthController.logout,
+);
+authRouter.post("/refresh", AuthController.refresh);
+authRouter.post(
+  "/delete-account",
+  AuthMiddleware.authenticateUser(),
+  AuthController.deleteAccount,
+);
 authRouter.delete(
   "/logout-from-all-devices",
-  authenticateUser(),
-  logoutFromAllDevices,
+  AuthMiddleware.authenticateUser(),
+  AuthController.logoutFromAllDevices,
 );
 export default authRouter;

@@ -1,46 +1,50 @@
 import { Router } from "express";
 import { MusicController } from "../controllers/music.controller";
-import { authenticateUser } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const musicRouter = Router();
 
 // PROTECTED ROUTES
 
 // Search for tracks
-musicRouter.get("/search", authenticateUser(), MusicController.searchTracks);
+musicRouter.get(
+  "/search",
+  AuthMiddleware.authenticateUser(),
+  MusicController.searchTracks,
+);
 
 // Get track details
 musicRouter.get(
   "/tracks/:trackId",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MusicController.getTrackDetails,
 );
 
 // Get user's favorite tracks
 musicRouter.get(
   "/favorites/user/:userId",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MusicController.getUserFavoriteTracks,
 );
 
 // Get current user's favorite tracks
 musicRouter.get(
   "/favorites",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MusicController.getUserFavoriteTracks,
 );
 
 // Add a track to favorites
 musicRouter.post(
   "/favorites",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MusicController.addFavoriteTrack,
 );
 
 // Remove a track from favorites
 musicRouter.delete(
   "/favorites/:trackId",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MusicController.removeFavoriteTrack,
 );
 

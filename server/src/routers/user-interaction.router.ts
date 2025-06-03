@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { UserInteractionController } from "../controllers/user-interaction.controller";
-import { authenticateUser } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const userInteractionRouter = Router();
 
 // All routes require authentication
-userInteractionRouter.use(authenticateUser());
+userInteractionRouter.use(AuthMiddleware.authenticateUser());
 
 // Record a like / dislike
 userInteractionRouter.post("/", UserInteractionController.recordInteraction);

@@ -21,7 +21,7 @@ export const capitalizeFirstLetter = (string: string): string => {
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the value does not match the enum.
  */
-export const checkIfValueMatchesEnum = (
+const checkIfValueMatchesEnum = (
   name: string,
   value: string,
   enumObject: EnumLike,
@@ -53,7 +53,7 @@ export const checkIfValueMatchesEnum = (
  * @param forbiddenSpecialChars Whether special characters are forbidden in the string.
  * @throws {FieldValidationError} If the value does not meet validation criteria.
  */
-export const checkIfValueIsValid = (
+const checkIfValueIsValid = (
   name: string,
   value: string,
   metaData = emptyMetaData,
@@ -113,7 +113,7 @@ export const checkIfValueIsValid = (
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the email is invalid.
  */
-export const isEmailValid = (email: string, metaData = emptyMetaData) => {
+const isEmailValid = (email: string, metaData = emptyMetaData) => {
   const emailSchema = z
     .string()
     .nonempty({ message: "Email nie może być pusty." })
@@ -137,7 +137,7 @@ export const isEmailValid = (email: string, metaData = emptyMetaData) => {
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the password does not meet validation criteria.
  */
-export const isPasswordValid = (password: string, metaData = emptyMetaData) => {
+const isPasswordValid = (password: string, metaData = emptyMetaData) => {
   const passwordSchema = z
     .string()
     .nonempty({
@@ -171,7 +171,7 @@ export const isPasswordValid = (password: string, metaData = emptyMetaData) => {
  * @returns A DateTime object representing the date.
  * @throws {FieldValidationError} If the date is invalid or in the wrong format.
  */
-export const getDateTimeFromDate = (
+const getDateTimeFromDate = (
   date: string,
   metaData = emptyMetaData,
 ): DateTime => {
@@ -214,7 +214,7 @@ export const getDateTimeFromDate = (
  * @param yearsMax Maximum age in years.
  * @throws {FieldValidationError} If the date is not within the specified age range.
  */
-export const checkIfAgeBetween = (
+const checkIfAgeBetween = (
   date: string | DateTime,
   metaData = emptyMetaData,
   yearsMin = 13,
@@ -246,4 +246,14 @@ export const checkIfAgeBetween = (
       metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
       loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Musisz mieć co najmniej ${yearsMin} lat.`,
     });
+};
+
+export const ValidationService = {
+  checkIfValueMatchesEnum,
+  checkIfValueIsValid,
+  isEmailValid,
+  isPasswordValid,
+  getDateTimeFromDate,
+  checkIfAgeBetween,
+  capitalizeFirstLetter,
 };

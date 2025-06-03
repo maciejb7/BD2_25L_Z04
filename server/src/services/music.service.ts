@@ -61,7 +61,7 @@ const DEEZER_API_BASE = "https://api.deezer.com";
  * @param query Search query
  * @returns Promise with search results
  */
-export const searchTracks = async (query: string): Promise<DeezerTrack[]> => {
+const searchTracks = async (query: string): Promise<DeezerTrack[]> => {
   try {
     // URL encode the query
     const encodedQuery = encodeURIComponent(`track:"${query}" strict=on`);
@@ -80,7 +80,7 @@ export const searchTracks = async (query: string): Promise<DeezerTrack[]> => {
  * @param albumId Album ID
  * @returns Promise with album details
  */
-export const getAlbumDetails = async (
+const getAlbumDetails = async (
   albumId: number,
 ): Promise<DeezerAlbumDetails> => {
   try {
@@ -100,7 +100,7 @@ export const getAlbumDetails = async (
  * @param transaction Optional transaction
  * @returns Promise with the saved track
  */
-export const saveTrack = async (
+const saveTrack = async (
   track: DeezerTrack,
   transaction?: Transaction,
 ): Promise<MusicTrack> => {
@@ -188,7 +188,7 @@ export const saveTrack = async (
  * @param trackId Track ID
  * @returns Promise with the created UserMusic entry
  */
-export const addFavoriteTrack = async (
+const addFavoriteTrack = async (
   userId: string,
   trackId: number,
 ): Promise<UserMusic> => {
@@ -239,7 +239,7 @@ export const addFavoriteTrack = async (
  * @param trackId Track ID
  * @returns Promise<boolean> True if track was removed
  */
-export const removeFavoriteTrack = async (
+const removeFavoriteTrack = async (
   userId: string,
   trackId: number,
 ): Promise<boolean> => {
@@ -263,7 +263,7 @@ export const removeFavoriteTrack = async (
  * @param userId User ID
  * @returns Promise with the user's favorite tracks
  */
-export const getUserFavoriteTracks = async (
+const getUserFavoriteTracks = async (
   userId: string,
 ): Promise<{ track: MusicTrack; artist: MusicArtist; album: MusicAlbum }[]> => {
   try {
@@ -294,7 +294,7 @@ export const getUserFavoriteTracks = async (
  * @param trackId Track ID
  * @returns Promise with track details
  */
-export const getTrackDetails = async (
+const getTrackDetails = async (
   trackId: number,
 ): Promise<{
   track: MusicTrack;
@@ -322,4 +322,14 @@ export const getTrackDetails = async (
     logger.error("Error getting track details", error);
     throw error;
   }
+};
+
+export const MusicService = {
+  searchTracks,
+  getAlbumDetails,
+  saveTrack,
+  addFavoriteTrack,
+  removeFavoriteTrack,
+  getUserFavoriteTracks,
+  getTrackDetails,
 };

@@ -22,7 +22,7 @@ import { loggerMessages } from "../errors/loggerMessages";
  * @param user The user for whom to generate the access token.
  * @returns The generated access token as a string.
  */
-export const generateAccessToken = (user: User): string => {
+const generateAccessToken = (user: User): string => {
   return jwt.sign(
     { userId: user.userId, userNickname: user.nickname, userRole: user.role },
     config.ACCESS_TOKEN_SECRET as string,
@@ -37,7 +37,7 @@ export const generateAccessToken = (user: User): string => {
  * @param user The user for whom to generate the refresh token.
  * @returns The generated refresh token as a string.
  */
-export const generateRefreshToken = async (user: User): Promise<string> => {
+const generateRefreshToken = async (user: User): Promise<string> => {
   const token = randomUUID().toString();
   const hashedToken = createHash("sha256").update(token).digest("hex");
   const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
@@ -58,7 +58,7 @@ export const generateRefreshToken = async (user: User): Promise<string> => {
  * @throws ExpiredRefreshTokenError if the refresh token has expired.
  * @throws UserNotFoundError if the user associated with the session is not found.
  */
-export const refreshAccessToken = async (
+const refreshAccessToken = async (
   refreshToken: string,
   metaData = emptyMetaData,
 ): Promise<string> => {
@@ -99,7 +99,7 @@ export const refreshAccessToken = async (
  * @param metaData Optional metadata for logging and error handling.
  * @throws InvalidRefreshTokenError if the session with the provided refresh token is not found.
  */
-export const revokeSession = async (
+const revokeSession = async (
   refreshToken: string,
   metaData = emptyMetaData,
 ) => {
@@ -125,10 +125,7 @@ export const revokeSession = async (
  * @param metaData Optional metadata for logging and error handling.
  * @throws NoRefreshTokenError if no sessions are found for the user.
  */
-export const revokeAllSessions = async (
-  userId: string,
-  metaData = emptyMetaData,
-) => {
+const revokeAllSessions = async (userId: string, metaData = emptyMetaData) => {
   const destroyCount = await Session.destroy({
     where: { userId: userId },
   });
@@ -141,4 +138,12 @@ export const revokeAllSessions = async (
       loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono żadnych sesji dla użytkownika.`,
     });
   }
+};
+
+export const TokenService = {
+  generateAccessToken,
+  generateRefreshToken,
+  refreshAccessToken,
+  revokeSession,
+  revokeAllSessions,
 };

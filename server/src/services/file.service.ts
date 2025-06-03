@@ -13,16 +13,16 @@ export const avatarsPath = path.join(
   "avatars",
 );
 
-export const getUserAvatarPath = (userId: string): string => {
+const getUserAvatarPath = (userId: string): string => {
   return path.join(avatarsPath, `${userId}.jpg`);
 };
 
-export const getUserAvatarPathVerified = (userId: string): string | null => {
+const getUserAvatarPathVerified = (userId: string): string | null => {
   const avatarFilePath = getUserAvatarPath(userId);
   return fs.existsSync(avatarFilePath) ? avatarFilePath : null;
 };
 
-export const checkIfImageHasCorrectSize = async (
+const checkIfImageHasCorrectSize = async (
   file: Express.Multer.File,
   metaData = emptyMetaData,
   minWidth = 256,
@@ -77,4 +77,10 @@ export const checkIfImageHasCorrectSize = async (
       loggerMessage: `${loggerMessages(metaData.service)}: Obraz musi być kwadratowy.`,
     });
   }
+};
+
+export const FileService = {
+  getUserAvatarPath,
+  getUserAvatarPathVerified,
+  checkIfImageHasCorrectSize,
 };

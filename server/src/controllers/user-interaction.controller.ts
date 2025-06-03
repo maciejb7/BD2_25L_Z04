@@ -2,17 +2,15 @@ import { Request, Response } from "express";
 import { UserInteractionService } from "../services/user-interaction.service";
 import { LikeStatus } from "../db/models/user_like";
 import logger from "../logger";
+import { handleRequest } from "../utils/handle-request";
 
 /**
- * Controller for handling user interactions (likes, dislikes, matches).
+ * Record a user's like or dislike for another user.
+ * @param req Request
+ * @param res Response
  */
-export class UserInteractionController {
-  /**
-   * Record a user's like or dislike for another user.
-   * @param req Request
-   * @param res Response
-   */
-  static async recordInteraction(req: Request, res: Response): Promise<void> {
+export const recordInteraction = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.user as { userId: string };
       const { targetUserId, action } = req.body;
@@ -57,14 +55,16 @@ export class UserInteractionController {
         message: "Wystąpił błąd podczas zapisywania interakcji",
       });
     }
-  }
+  },
+);
 
-  /**
-   * Get all matches for the current user.
-   * @param req Request
-   * @param res Response
-   */
-  static async getUserMatches(req: Request, res: Response): Promise<void> {
+/**
+ * Get all matches for the current user.
+ * @param req Request
+ * @param res Response
+ */
+export const getUserMatches = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.user as { userId: string };
 
@@ -93,5 +93,10 @@ export class UserInteractionController {
         message: "Wystąpił błąd podczas pobierania dopasowań",
       });
     }
-  }
-}
+  },
+);
+
+export const UserInteractionController = {
+  recordInteraction,
+  getUserMatches,
+};

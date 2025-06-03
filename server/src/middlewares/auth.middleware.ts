@@ -58,3 +58,8 @@ export const authorizeRole = (role: string) => {
     next();
   };
 };
+
+export const AuthMiddleware = {
+  authenticateUser,
+  authorizeRole,
+};

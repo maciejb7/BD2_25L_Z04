@@ -125,3 +125,7 @@ export const uploadSingleFile = (
     });
   };
 };
+
+export const FileMiddleware = {
+  uploadSingleFile,
+};

@@ -2,17 +2,15 @@ import { Request, Response } from "express";
 import { MatchPreferenceService } from "../services/match-preference.service";
 import logger from "../logger";
 import { database } from "../db/database";
+import { handleRequest } from "../utils/handle-request";
 
 /**
- * Controller for handling match preferences.
+ * Get all match types
+ * @param req Request
+ * @param res Response
  */
-export class MatchPreferenceController {
-  /**
-   * Get all match types
-   * @param req Request
-   * @param res Response
-   */
-  static async getAllMatchTypes(req: Request, res: Response): Promise<void> {
+export const getAllMatchTypes = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const matchTypes = await MatchPreferenceService.getAllMatchTypes();
       res.status(200).json(matchTypes);
@@ -22,17 +20,16 @@ export class MatchPreferenceController {
         .status(500)
         .json({ message: "Wystąpił błąd podczas pobierania typów dopasowań" });
     }
-  }
+  },
+);
 
-  /**
-   * Get match preferences for the current user
-   * @param req Request
-   * @param res Response
-   */
-  static async getUserMatchPreferences(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
+/**
+ * Get match preferences for the current user
+ * @param req Request
+ * @param res Response
+ */
+export const getUserMatchPreferences = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.user as { userId: string };
       const matchPreferences =
@@ -44,17 +41,16 @@ export class MatchPreferenceController {
         message: "Wystąpił błąd podczas pobierania preferencji dopasowań",
       });
     }
-  }
+  },
+);
 
-  /**
-   * Update match preferences for the current user
-   * @param req Request
-   * @param res Response
-   */
-  static async updateUserMatchPreferences(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
+/**
+ * Update match preferences for the current user
+ * @param req Request
+ * @param res Response
+ */
+export const updateUserMatchPreferences = handleRequest(
+  async (req: Request, res: Response) => {
     const transaction = await database.transaction();
     try {
       const { userId } = req.user as { userId: string };
@@ -82,5 +78,11 @@ export class MatchPreferenceController {
         message: "Wystąpił błąd podczas aktualizacji preferencji dopasowań",
       });
     }
-  }
-}
+  },
+);
+
+export const MatchPreferenceController = {
+  getAllMatchTypes,
+  getUserMatchPreferences,
+  updateUserMatchPreferences,
+};
