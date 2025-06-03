@@ -2,16 +2,10 @@ import { Request, Response } from "express";
 import { User } from "../db/models/user";
 import fs from "fs";
 
-import { getDateTimeFromDate } from "../services/validation.service";
 import bcrypt from "bcrypt";
 
 import logger from "../logger";
 
-import {
-  checkIfImageHasCorrectSize,
-  getUserAvatarPath,
-  getUserAvatarPathVerified,
-} from "../services/file.service";
 import {
   ChangePasswordRequest,
   changePasswordRequestFields,
@@ -23,15 +17,15 @@ import {
   getPasswordChangeValidator,
   getUserDetailsValidator,
 } from "../types/validators";
-import {
-  extractAuthenticatedUserPayload,
-  getAuthenticatedUser,
-} from "../services/auth.service";
+
 import { handleRequest } from "../utils/handle-request";
+import { AuthService } from "../services/auth.service";
+import { FileService } from "../services/file.service";
+import { ValidationService } from "../services/validation.service";
 
 export const getUserInfo = handleRequest(
   async (req: Request, res: Response) => {
-    const { userId } = extractAuthenticatedUserPayload(req);
+    const { userId } = AuthService.extractAuthenticatedUserPayload(req);
 
     const user = await User.findByPk(userId);
 
@@ -50,7 +44,7 @@ export const getUserAvatar = handleRequest(
   async (req: Request, res: Response) => {
     const userId = req.user!.userId;
 
-    const avatarFilePath = getUserAvatarPathVerified(userId);
+    const avatarFilePath = FileService.getUserAvatarPathVerified(userId);
 
     if (!avatarFilePath) {
       res.status(404).json({
@@ -65,10 +59,11 @@ export const getUserAvatar = handleRequest(
 
 export const uploadUserAvatar = handleRequest(
   async (req: Request, res: Response) => {
-    const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+    const { userId, userNickname } =
+      AuthService.extractAuthenticatedUserPayload(req);
     const avatarFile = req.file!;
 
-    await checkIfImageHasCorrectSize(
+    await FileService.checkIfImageHasCorrectSize(
       avatarFile,
       { service: "user_upload_avatar", nickname: userNickname },
       128,
@@ -78,7 +73,7 @@ export const uploadUserAvatar = handleRequest(
       true,
     );
 
-    const avatarFilePath = getUserAvatarPath(userId);
+    const avatarFilePath = FileService.getUserAvatarPath(userId);
     await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
 
     logger.info(`Użytkownik ${userNickname} zmienił swoje zdjęcie profilowe.`, {
@@ -94,8 +89,9 @@ export const uploadUserAvatar = handleRequest(
 
 export const deleteUserAvatar = handleRequest(
   async (req: Request, res: Response) => {
-    const { userId, userNickname } = extractAuthenticatedUserPayload(req);
-    const avatarFilePath = getUserAvatarPathVerified(userId);
+    const { userId, userNickname } =
+      AuthService.extractAuthenticatedUserPayload(req);
+    const avatarFilePath = FileService.getUserAvatarPathVerified(userId);
 
     if (!avatarFilePath) {
       res.status(404).json({
@@ -117,7 +113,8 @@ export const deleteUserAvatar = handleRequest(
 
 export const changeUserInfoField = handleRequest(
   async (req: Request, res: Response) => {
-    const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+    const { userId, userNickname } =
+      AuthService.extractAuthenticatedUserPayload(req);
     const { name, value } =
       await extractRequestFields<ChangeUserDetailsRequest>(
         req.body,
@@ -157,7 +154,7 @@ export const changeUserInfoField = handleRequest(
     await validator[name](value);
 
     if (name === "birthDate") {
-      updatedValue = getDateTimeFromDate(value).toJSDate();
+      updatedValue = ValidationService.getDateTimeFromDate(value).toJSDate();
     } else {
       updatedValue = value;
     }
@@ -181,7 +178,7 @@ export const changeUserInfoField = handleRequest(
 
 export const changeUserPassword = handleRequest(
   async (req: Request, res: Response) => {
-    const { userNickname } = extractAuthenticatedUserPayload(req);
+    const { userNickname } = AuthService.extractAuthenticatedUserPayload(req);
     const { oldPassword, newPassword } =
       await extractRequestFields<ChangePasswordRequest>(
         req.body,
@@ -196,10 +193,14 @@ export const changeUserPassword = handleRequest(
         }),
       );
 
-    const user = await getAuthenticatedUser(userNickname, oldPassword, {
-      service: "change_password_user",
-      nickname: userNickname,
-    });
+    const user = await AuthService.getAuthenticatedUser(
+      userNickname,
+      oldPassword,
+      {
+        service: "change_password_user",
+        nickname: userNickname,
+      },
+    );
 
     const isPasswordTheSame = await bcrypt.compare(newPassword, user.password);
 
@@ -229,3 +230,12 @@ export const changeUserPassword = handleRequest(
     });
   },
 );
+
+export const UserController = {
+  getUserInfo,
+  getUserAvatar,
+  uploadUserAvatar,
+  deleteUserAvatar,
+  changeUserInfoField,
+  changeUserPassword,
+};

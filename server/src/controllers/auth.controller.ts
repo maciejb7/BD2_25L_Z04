@@ -17,19 +17,9 @@ import {
   getUserLoginValidator,
 } from "../types/validators";
 import { handleRequest } from "../utils/handle-request";
-import { getDateTimeFromDate } from "../services/validation.service";
-import {
-  extractAuthenticatedUserPayload,
-  extractRefreshToken,
-  getAuthenticatedUser,
-} from "../services/auth.service";
-import {
-  generateAccessToken,
-  generateRefreshToken,
-  refreshAccessToken,
-  revokeAllSessions,
-  revokeSession,
-} from "../services/token.service";
+import { AuthService } from "../services/auth.service";
+import { TokenService } from "../services/token.service";
+import { ValidationService } from "../services/validation.service";
 
 /**
  * Controller for handling user registration and login.
@@ -64,11 +54,11 @@ export const register = handleRequest(async (req: Request, res: Response) => {
     email: email,
     gender: gender,
     password: hashedPassword,
-    birthDate: getDateTimeFromDate(birthDate).toJSDate(),
+    birthDate: ValidationService.getDateTimeFromDate(birthDate).toJSDate(),
   });
 
-  const accessToken = generateAccessToken(createdUser);
-  const refreshToken = await generateRefreshToken(createdUser);
+  const accessToken = TokenService.generateAccessToken(createdUser);
+  const refreshToken = await TokenService.generateRefreshToken(createdUser);
 
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
@@ -109,13 +99,17 @@ export const login = handleRequest(async (req: Request, res: Response) => {
       }),
     );
 
-  const user = await getAuthenticatedUser(nicknameOrEmail, password, {
-    service: "login",
-    nickname: nicknameForLogging,
-  });
+  const user = await AuthService.getAuthenticatedUser(
+    nicknameOrEmail,
+    password,
+    {
+      service: "login",
+      nickname: nicknameForLogging,
+    },
+  );
 
-  const accessToken = generateAccessToken(user);
-  const refreshToken = await generateRefreshToken(user);
+  const accessToken = TokenService.generateAccessToken(user);
+  const refreshToken = await TokenService.generateRefreshToken(user);
 
   logger.info(`Użytkownik ${user.nickname} zalogował się pomyślnie.`, {
     service: "login",
@@ -140,10 +134,10 @@ export const login = handleRequest(async (req: Request, res: Response) => {
  * Logs out the user by clearing the refresh token cookie.
  */
 export const logout = handleRequest(async (req: Request, res: Response) => {
-  const { userNickname } = extractAuthenticatedUserPayload(req);
-  const refreshToken = extractRefreshToken(req);
+  const { userNickname } = AuthService.extractAuthenticatedUserPayload(req);
+  const refreshToken = AuthService.extractRefreshToken(req);
 
-  await revokeSession(refreshToken, {
+  await TokenService.revokeSession(refreshToken, {
     service: "logout",
     nickname: userNickname,
   });
@@ -163,10 +157,10 @@ export const logout = handleRequest(async (req: Request, res: Response) => {
 });
 
 export const refresh = handleRequest(async (req: Request, res: Response) => {
-  const refreshToken = extractRefreshToken(req);
+  const refreshToken = AuthService.extractRefreshToken(req);
 
   try {
-    const accessToken = await refreshAccessToken(refreshToken, {
+    const accessToken = await TokenService.refreshAccessToken(refreshToken, {
       service: "refresh",
     });
 
@@ -192,7 +186,8 @@ export const deleteAccount = handleRequest(
   async (req: Request, res: Response) => {
     const nicknameForLogging: string = req.user?.userNickname?.trim() ?? "";
 
-    const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+    const { userId, userNickname } =
+      AuthService.extractAuthenticatedUserPayload(req);
     const { nickname, password } =
       await extractRequestFields<ConfirmationRequest>(
         req.body,
@@ -221,10 +216,14 @@ export const deleteAccount = handleRequest(
       return;
     }
 
-    const userToDelete = await getAuthenticatedUser(nickname, password, {
-      service: "delete_account_user",
-      nickname: nicknameForLogging,
-    });
+    const userToDelete = await AuthService.getAuthenticatedUser(
+      nickname,
+      password,
+      {
+        service: "delete_account_user",
+        nickname: nicknameForLogging,
+      },
+    );
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
@@ -248,7 +247,8 @@ export const deleteAccount = handleRequest(
  */
 export const logoutFromAllDevices = handleRequest(
   async (req: Request, res: Response) => {
-    const { userId, userNickname } = extractAuthenticatedUserPayload(req);
+    const { userId, userNickname } =
+      AuthService.extractAuthenticatedUserPayload(req);
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
@@ -256,7 +256,7 @@ export const logoutFromAllDevices = handleRequest(
       secure: false,
     });
 
-    revokeAllSessions(userId, {
+    TokenService.revokeAllSessions(userId, {
       service: "logout_from_all_devices",
       nickname: userNickname,
     });
@@ -274,3 +274,12 @@ export const logoutFromAllDevices = handleRequest(
       .json({ message: "Pomyślnie wylogowano ze wszystkich urządzeń." });
   },
 );
+
+export const AuthController = {
+  register,
+  login,
+  logout,
+  refresh,
+  deleteAccount,
+  logoutFromAllDevices,
+};

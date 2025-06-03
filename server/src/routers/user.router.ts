@@ -1,20 +1,24 @@
 import { Router } from "express";
-import { authenticateUser } from "../middlewares/auth.middleware";
 import {
-  changeUserInfoField,
-  changeUserPassword,
-  deleteUserAvatar,
-  getUserAvatar,
-  getUserInfo,
-  uploadUserAvatar,
-} from "../controllers/user.controller";
+  authenticateUser,
+  AuthMiddleware,
+} from "../middlewares/auth.middleware";
+import { UserController } from "../controllers/user.controller";
 import { uploadSingleFile } from "../middlewares/file.middleware";
 
 const userRouter = Router();
 
-userRouter.get("/", authenticateUser(), getUserInfo);
+userRouter.get(
+  "/",
+  AuthMiddleware.authenticateUser(),
+  UserController.getUserInfo,
+);
 
-userRouter.get("/avatar", authenticateUser(), getUserAvatar);
+userRouter.get(
+  "/avatar",
+  AuthMiddleware.authenticateUser(),
+  UserController.getUserAvatar,
+);
 
 userRouter.post(
   "/avatar/upload",
@@ -23,13 +27,25 @@ userRouter.post(
     formField: "avatar",
     allowedMimeTypes: ["image/jpeg"],
   }),
-  uploadUserAvatar,
+  UserController.uploadUserAvatar,
 );
 
-userRouter.delete("/avatar/delete", authenticateUser(), deleteUserAvatar);
+userRouter.delete(
+  "/avatar/delete",
+  AuthMiddleware.authenticateUser(),
+  UserController.deleteUserAvatar,
+);
 
-userRouter.post("/change-info", authenticateUser(), changeUserInfoField);
+userRouter.post(
+  "/change-info",
+  AuthMiddleware.authenticateUser(),
+  UserController.changeUserInfoField,
+);
 
-userRouter.post("/change-password", authenticateUser(), changeUserPassword);
+userRouter.post(
+  "/change-password",
+  AuthMiddleware.authenticateUser(),
+  UserController.changeUserPassword,
+);
 
 export default userRouter;

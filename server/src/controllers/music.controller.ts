@@ -1,17 +1,15 @@
 import { Request, Response } from "express";
 import { MusicService } from "../services/music.service";
 import logger from "../logger";
+import { handleRequest } from "../utils/handle-request";
 
 /**
- * Controller for handling music-related requests.
+ * Search for tracks by name
+ * @param req Request
+ * @param res Response
  */
-export class MusicController {
-  /**
-   * Search for tracks by name
-   * @param req Request
-   * @param res Response
-   */
-  static async searchTracks(req: Request, res: Response): Promise<void> {
+export const searchTracks = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const query = req.query.q as string;
 
@@ -32,14 +30,16 @@ export class MusicController {
         message: "Wystąpił błąd podczas wyszukiwania utworów",
       });
     }
-  }
+  },
+);
 
-  /**
-   * Add a track to user's favorites
-   * @param req Request
-   * @param res Response
-   */
-  static async addFavoriteTrack(req: Request, res: Response): Promise<void> {
+/**
+ * Add a track to user's favorites
+ * @param req Request
+ * @param res Response
+ */
+export const addFavoriteTrack = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.user as { userId: string };
       const { trackData } = req.body;
@@ -77,14 +77,16 @@ export class MusicController {
         message: "Wystąpił błąd podczas dodawania utworu do ulubionych",
       });
     }
-  }
+  },
+);
 
-  /**
-   * Remove a track from user's favorites
-   * @param req Request
-   * @param res Response
-   */
-  static async removeFavoriteTrack(req: Request, res: Response): Promise<void> {
+/**
+ * Remove a track from user's favorites
+ * @param req Request
+ * @param res Response
+ */
+export const removeFavoriteTrack = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.user as { userId: string };
       const trackId = parseInt(req.params.trackId);
@@ -112,17 +114,16 @@ export class MusicController {
         message: "Wystąpił błąd podczas usuwania utworu z ulubionych",
       });
     }
-  }
+  },
+);
 
-  /**
-   * Get user's favorite tracks
-   * @param req Request
-   * @param res Response
-   */
-  static async getUserFavoriteTracks(
-    req: Request,
-    res: Response,
-  ): Promise<void> {
+/**
+ * Get user's favorite tracks
+ * @param req Request
+ * @param res Response
+ */
+export const getUserFavoriteTracks = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const userId =
         req.params.userId || (req.user as { userId: string }).userId;
@@ -139,14 +140,16 @@ export class MusicController {
         message: "Wystąpił błąd podczas pobierania ulubionych utworów",
       });
     }
-  }
+  },
+);
 
-  /**
-   * Get track details
-   * @param req Request
-   * @param res Response
-   */
-  static async getTrackDetails(req: Request, res: Response): Promise<void> {
+/**
+ * Get track details
+ * @param req Request
+ * @param res Response
+ */
+export const getTrackDetails = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const trackId = parseInt(req.params.trackId);
 
@@ -171,5 +174,13 @@ export class MusicController {
         message: "Wystąpił błąd podczas pobierania szczegółów utworu",
       });
     }
-  }
-}
+  },
+);
+
+export const MusicController = {
+  searchTracks,
+  addFavoriteTrack,
+  removeFavoriteTrack,
+  getUserFavoriteTracks,
+  getTrackDetails,
+};

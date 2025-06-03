@@ -6,7 +6,7 @@ import { Transaction } from "sequelize";
  * Initialize match types in the database
  * @returns Promise void
  */
-export const initializeMatchTypes = async (): Promise<void> => {
+const initializeMatchTypes = async (): Promise<void> => {
   const defaultMatchTypes = [
     {
       match_type_name: "friend",
@@ -35,7 +35,7 @@ export const initializeMatchTypes = async (): Promise<void> => {
  * Get all match types
  * @returns Promise with all match types
  */
-export const getAllMatchTypes = async (): Promise<MatchType[]> => {
+const getAllMatchTypes = async (): Promise<MatchType[]> => {
   return await MatchType.findAll();
 };
 
@@ -44,7 +44,7 @@ export const getAllMatchTypes = async (): Promise<MatchType[]> => {
  * @param userId The ID of the user
  * @returns Promise with user's match preferences
  */
-export const getUserMatchPreferences = async (
+const getUserMatchPreferences = async (
   userId: string,
 ): Promise<MatchType[]> => {
   const userPreferences = await UserMatchPreference.findAll({
@@ -62,7 +62,7 @@ export const getUserMatchPreferences = async (
  * @param transaction Optional transaction to use
  * @returns Promise void
  */
-export const updateUserMatchPreferences = async (
+const updateUserMatchPreferences = async (
   userId: string,
   matchTypeIds: string[],
   transaction?: Transaction,
@@ -85,4 +85,11 @@ export const updateUserMatchPreferences = async (
   );
 
   await Promise.all(preferencePromises);
+};
+
+export const MatchPreferenceService = {
+  initializeMatchTypes,
+  getAllMatchTypes,
+  getUserMatchPreferences,
+  updateUserMatchPreferences,
 };

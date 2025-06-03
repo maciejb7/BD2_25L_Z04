@@ -14,7 +14,7 @@ import { database } from "../db/database";
  * @param transaction Optional transaction to use
  * @returns Promise<{ like: UserLike, match?: UserMatch }> The created like and match (if created)
  */
-export const recordInteraction = async (
+const recordInteraction = async (
   likerId: string,
   likeeId: string,
   status: LikeStatus,
@@ -142,7 +142,7 @@ export const recordInteraction = async (
  * @param userId The ID of the user to get matches for
  * @returns Promise with the user's matches
  */
-export const getUserMatches = async (userId: string): Promise<UserMatch[]> => {
+const getUserMatches = async (userId: string): Promise<UserMatch[]> => {
   return UserMatch.findAll({
     where: {
       [database.Sequelize.Op.or]: [{ user1Id: userId }, { user2Id: userId }],
@@ -176,4 +176,9 @@ export const getUserMatches = async (userId: string): Promise<UserMatch[]> => {
     ],
     order: [["matchedAt", "DESC"]],
   });
+};
+
+export const UserInteractionService = {
+  recordInteraction,
+  getUserMatches,
 };

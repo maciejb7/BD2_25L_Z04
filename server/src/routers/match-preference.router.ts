@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { MatchPreferenceController } from "../controllers/match-preference.controller";
-import { authenticateUser } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const matchPreferenceRouter = Router();
 
@@ -14,13 +14,13 @@ matchPreferenceRouter.get("/types", MatchPreferenceController.getAllMatchTypes);
 // User match preferences
 matchPreferenceRouter.get(
   "/user",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MatchPreferenceController.getUserMatchPreferences,
 );
 
 matchPreferenceRouter.put(
   "/user",
-  authenticateUser(),
+  AuthMiddleware.authenticateUser(),
   MatchPreferenceController.updateUserMatchPreferences,
 );
 

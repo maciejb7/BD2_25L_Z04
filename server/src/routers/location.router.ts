@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { LocationController } from "../controllers/location.controller";
-import { authenticateUser } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 const locationRouter = Router();
 
-locationRouter.use(authenticateUser());
+locationRouter.use(AuthMiddleware.authenticateUser());
 
 // Get distance to another user (must come before /:userId route to avoid conflict)
 locationRouter.get("/distance/:userId", LocationController.getDistanceToUser);

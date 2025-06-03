@@ -1,17 +1,15 @@
 import { Request, Response } from "express";
 import { RecommendationService } from "../services/recommendation.service";
 import logger from "../logger";
+import { handleRequest } from "../utils/handle-request";
 
 /**
- * Controller for handling user recommendations.
+ * Get recommended profiles for the current user.
+ * @param req Request
+ * @param res Response
  */
-export class RecommendationController {
-  /**
-   * Get recommended profiles for the current user.
-   * @param req Request
-   * @param res Response
-   */
-  static async getRecommendedUsers(req: Request, res: Response): Promise<void> {
+export const getRecommendedUsers = handleRequest(
+  async (req: Request, res: Response) => {
     try {
       const { userId } = req.user as { userId: string };
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
@@ -32,5 +30,9 @@ export class RecommendationController {
           "Wystąpił błąd podczas pobierania rekomendowanych użytkowników",
       });
     }
-  }
-}
+  },
+);
+
+export const RecommendationController = {
+  getRecommendedUsers,
+};

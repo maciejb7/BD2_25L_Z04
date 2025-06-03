@@ -12,7 +12,7 @@ interface LocationData {
  * @param locationData Location data including latitude, longitude, and (optionally) address
  * @returns Created or updated location
  */
-export const setUserLocation = async (
+const setUserLocation = async (
   userId: string,
   locationData: LocationData,
 ): Promise<UserLocation> => {
@@ -44,7 +44,7 @@ export const setUserLocation = async (
  * @param userId User ID
  * @returns User's location or null if not found
  */
-export const getUserLocation = async (
+const getUserLocation = async (
   userId: string,
 ): Promise<UserLocation | null> => {
   return await UserLocation.findOne({
@@ -57,7 +57,7 @@ export const getUserLocation = async (
  * @param userId User ID
  * @returns true if location was deleted, false if not found
  */
-export const deleteUserLocation = async (userId: string): Promise<boolean> => {
+const deleteUserLocation = async (userId: string): Promise<boolean> => {
   const result = await UserLocation.destroy({
     where: { user_id: userId },
   });
@@ -72,7 +72,7 @@ export const deleteUserLocation = async (userId: string): Promise<boolean> => {
  * @param lon2 Longitude of second point
  * @returns Distance in kilometers
  */
-export const calculateDistance = (
+const calculateDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
@@ -108,7 +108,7 @@ const deg2rad = (deg: number): number => {
  * @param userId2 Second user ID
  * @returns Distance in kilometers, or null if one or both locations not found
  */
-export const getDistanceBetweenUsers = async (
+const getDistanceBetweenUsers = async (
   userId1: string,
   userId2: string,
 ): Promise<number | null> => {
@@ -125,4 +125,12 @@ export const getDistanceBetweenUsers = async (
     location2.latitude,
     location2.longitude,
   );
+};
+
+export const LocationService = {
+  setUserLocation,
+  getUserLocation,
+  deleteUserLocation,
+  calculateDistance,
+  getDistanceBetweenUsers,
 };

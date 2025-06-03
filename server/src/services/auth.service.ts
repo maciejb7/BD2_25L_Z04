@@ -21,7 +21,7 @@ import { loggerMessages } from "../errors/loggerMessages";
  * @returns An object containing the authenticated user's ID, nickname, and role.
  * @throws NoAuthenticationError if the user is not authenticated.
  */
-export const extractAuthenticatedUserPayload = (
+const extractAuthenticatedUserPayload = (
   request: Request,
   metaData = emptyMetaData,
 ): AuthenticatedUserPayload => {
@@ -41,7 +41,7 @@ export const extractAuthenticatedUserPayload = (
  * @returns The access token as a string.
  * @throws NoAuthenticationError if the access token is not found in the request.
  */
-export const extractRefreshToken = (
+const extractRefreshToken = (
   request: Request,
   metaData = emptyMetaData,
 ): string => {
@@ -65,7 +65,7 @@ export const extractRefreshToken = (
  * @throws UserNotFoundError if no user is found with the provided nickname or email.
  * @throws InvalidPasswordError if the provided password does not match the user's password.
  */
-export const getAuthenticatedUser = async (
+const getAuthenticatedUser = async (
   nicknameOrEmail: string,
   password: string,
   metaData = emptyMetaData,
@@ -105,10 +105,7 @@ export const getAuthenticatedUser = async (
  * @param metaData - Optional metadata for error handling.
  * @throws UserAlreadyExistsByNicknameError if a user with the given nickname already exists.
  */
-export const isNicknameTaken = async (
-  nickname: string,
-  metaData = emptyMetaData,
-) => {
+const isNicknameTaken = async (nickname: string, metaData = emptyMetaData) => {
   const existingUserByNickname = await User.findOne({
     where: { nickname: nickname },
   });
@@ -126,7 +123,7 @@ export const isNicknameTaken = async (
  * @param email - The email to check.
  * @param metaData  - Optional metadata for error handling.
  */
-export const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
+const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
   const existingUserByEmail = await User.findOne({
     where: { email: email },
   });
@@ -137,4 +134,12 @@ export const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
       loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym adresie e-mail już istnieje.`,
     });
   }
+};
+
+export const AuthService = {
+  extractAuthenticatedUserPayload,
+  extractRefreshToken,
+  getAuthenticatedUser,
+  isNicknameTaken,
+  isEmailTaken,
 };
