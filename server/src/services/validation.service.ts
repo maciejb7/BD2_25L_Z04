@@ -96,6 +96,9 @@ export const checkIfValueIsValid = (
   const isValid = fieldSchema.safeParse(value);
 
   if (!isValid.success) {
+    console.log(
+      `Validation error for field "${name}": ${isValid.error.errors[0].message}`,
+    );
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: name, value: value },

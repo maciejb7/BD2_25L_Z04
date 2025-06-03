@@ -1,4 +1,7 @@
 import { Validator } from "./validators";
+import { FieldValidationError } from "../errors/errors";
+import { emptyMetaData } from "./others";
+import { loggerMessages } from "../errors/loggerMessages";
 
 /**
  * Extracts specified fields from the request body and validates them.
@@ -11,17 +14,36 @@ import { Validator } from "./validators";
 export const extractRequestFields = async <T>(
   requestBody: Record<string, string>,
   requestFields: (keyof T)[],
-  validator: Validator,
+  metaData = emptyMetaData,
+  validator?: Validator,
 ): Promise<T> => {
-  return Object.fromEntries(
-    requestFields.map((field) => {
+  const entries = await Promise.all(
+    requestFields.map(async (field) => {
       const value = requestBody[field as string];
-      const trimmedValue = value ? value.trim() : "";
-      if (validator[field as string]) validator[field as string](trimmedValue);
+
+      if (value === undefined) {
+        throw new FieldValidationError({
+          message: `Pole ${field as string} jest wymagane.`,
+          statusCode: 400,
+          metaData: {
+            ...metaData,
+            field: field as string,
+          },
+          loggerMessage: `${loggerMessages(metaData.service)}: Pole ${field as string} jest wymagane.`,
+        });
+      }
+
+      const trimmedValue = value.trim();
+
+      if (validator && validator[field as string]) {
+        await validator[field as string](trimmedValue);
+      }
 
       return [field, trimmedValue];
     }),
-  ) as T;
+  );
+
+  return Object.fromEntries(entries) as T;
 };
 
 export interface RegisterRequest {
