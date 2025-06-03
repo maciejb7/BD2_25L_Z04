@@ -50,7 +50,9 @@ export class HobbyService {
   /**
    * Get category by ID
    */
-  static async getCategoryById(categoryId: number): Promise<HobbyCategory | null> {
+  static async getCategoryById(
+    categoryId: number,
+  ): Promise<HobbyCategory | null> {
     return await HobbyCategory.findByPk(categoryId);
   }
 
@@ -127,9 +129,9 @@ export class HobbyService {
     userId: string,
     hobbyId: number,
     rating: number,
-    transaction?: Transaction
+    transaction?: Transaction,
   ): Promise<UserHobby> {
-    const t = transaction || await database.transaction();
+    const t = transaction || (await database.transaction());
 
     try {
       // Check if the hobby exists
@@ -182,9 +184,9 @@ export class HobbyService {
   static async removeHobbyRating(
     userId: string,
     hobbyId: number,
-    transaction?: Transaction
+    transaction?: Transaction,
   ): Promise<boolean> {
-    const t = transaction || await database.transaction();
+    const t = transaction || (await database.transaction());
 
     try {
       const result = await UserHobby.destroy({
