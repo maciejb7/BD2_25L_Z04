@@ -2,6 +2,8 @@ import sharp from "sharp";
 import { FileUploadError } from "../errors/errors";
 import path from "path";
 import fs from "fs";
+import { emptyMetaData } from "../types/others";
+import { loggerMessages } from "../errors/loggerMessages";
 
 export const avatarsPath = path.join(
   __dirname,
@@ -11,42 +13,68 @@ export const avatarsPath = path.join(
   "avatars",
 );
 
-export class FileService {
-  static async hasImageCorrectSize(
-    file: Express.Multer.File,
-    minWidth = 256,
-    minHeight = 256,
-    maxWidth = 1024,
-    maxHeight = 1024,
-    square: boolean = false,
-  ): Promise<void> {
-    const imageMetadata = await sharp(file.buffer).metadata();
-    const width = imageMetadata.width ?? 0;
-    const height = imageMetadata.height ?? 0;
+export const getUserAvatarPath = (userId: string): string => {
+  return path.join(avatarsPath, `${userId}.jpg`);
+};
 
-    if (width < minWidth || height < minHeight) {
-      throw new FileUploadError(
-        `Obraz jest zbyt mały. Minimalny rozmiar to ${minWidth}x${minHeight} pikseli.`,
-        400,
-      );
-    }
-    if (width > maxWidth || height > maxHeight) {
-      throw new FileUploadError(
-        `Obraz jest zbyt duży. Maksymalny rozmiar to ${maxWidth}x${maxHeight} pikseli.`,
-        400,
-      );
-    }
-    if (square && width !== height) {
-      throw new FileUploadError(`Obraz musi być kwadratowy.`, 400);
-    }
-  }
+export const getUserAvatarPathVerified = (userId: string): string | null => {
+  const avatarFilePath = getUserAvatarPath(userId);
+  return fs.existsSync(avatarFilePath) ? avatarFilePath : null;
+};
 
-  static getUserAvatarPath(userId: string): string {
-    return path.join(avatarsPath, `${userId}.jpg`);
-  }
+export const checkIfImageHasCorrectSize = async (
+  file: Express.Multer.File,
+  metaData = emptyMetaData,
+  minWidth = 256,
+  minHeight = 256,
+  maxWidth = 1024,
+  maxHeight = 1024,
+  square: boolean = false,
+) => {
+  const imageMetadata = await sharp(file.buffer).metadata();
+  const width = imageMetadata.width ?? 0;
+  const height = imageMetadata.height ?? 0;
 
-  static getUserAvatar(userId: string): string | null {
-    const avatarFilePath = this.getUserAvatarPath(userId);
-    return fs.existsSync(avatarFilePath) ? avatarFilePath : null;
+  if (width < minWidth || height < minHeight) {
+    throw new FileUploadError({
+      message: `Obraz jest zbyt mały. Minimalny rozmiar to ${minWidth}x${minHeight} pikseli.`,
+      metaData: {
+        ...metaData,
+        width: width,
+        height: height,
+        minWidth: minWidth,
+        minHeight: minHeight,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+      },
+      loggerMessage: `${loggerMessages(metaData.service)}: Obraz jest zbyt mały.`,
+      statusCode: 400,
+    });
   }
-}
+  if (width > maxWidth || height > maxHeight) {
+    throw new FileUploadError({
+      message: `Obraz jest zbyt duży. Maksymalny rozmiar to ${maxWidth}x${maxHeight} pikseli.`,
+      metaData: {
+        ...metaData,
+        width: width,
+        height: height,
+        minWidth: minWidth,
+        minHeight: minHeight,
+        maxWidth: maxWidth,
+        maxHeight: maxHeight,
+      },
+      loggerMessage: `${loggerMessages(metaData.service)}: Obraz jest zbyt duży.`,
+    });
+  }
+  if (square && width !== height) {
+    throw new FileUploadError({
+      message: "Obraz musi być kwadratowy.",
+      metaData: {
+        ...metaData,
+        width: width,
+        height: height,
+      },
+      loggerMessage: `${loggerMessages(metaData.service)}: Obraz musi być kwadratowy.`,
+    });
+  }
+};

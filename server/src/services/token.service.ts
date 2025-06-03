@@ -6,118 +6,139 @@ import { Session } from "../db/models/session";
 import {
   ExpiredRefreshTokenError,
   InvalidRefreshTokenError,
+  NoRefreshTokenError,
   UserNotFoundError,
 } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
+import { emptyMetaData } from "../types/others";
+import { loggerMessages } from "../errors/loggerMessages";
 
 /**
  * Service for handling tokens.
  */
-export class TokenService {
-  /**
-   * Generates a JWT access token for given user.
-   * @param user
-   * @returns jwt access token
-   */
-  static generateAccessToken(user: User): string {
-    return jwt.sign(
-      { userId: user.userId, userNickname: user.nickname, userRole: user.role },
-      config.ACCESS_TOKEN_SECRET as string,
-      {
-        expiresIn: "15m",
-      },
-    );
-  }
 
-  /**
-   * Generaters a refresh token for given user stored in database.
-   * @param user
-   * @returns jwt refresh token
-   */
-  static async generateRefreshToken(user: User): Promise<string> {
-    const token = randomUUID().toString();
+/**
+ * Generates an access token for the given user.
+ * @param user The user for whom to generate the access token.
+ * @returns The generated access token as a string.
+ */
+export const generateAccessToken = (user: User): string => {
+  return jwt.sign(
+    { userId: user.userId, userNickname: user.nickname, userRole: user.role },
+    config.ACCESS_TOKEN_SECRET as string,
+    {
+      expiresIn: "15m",
+    },
+  );
+};
 
-    const hashedToken = createHash("sha256").update(token).digest("hex");
+/**
+ * Generates a refresh token for the given user and stores it in the database.
+ * @param user The user for whom to generate the refresh token.
+ * @returns The generated refresh token as a string.
+ */
+export const generateRefreshToken = async (user: User): Promise<string> => {
+  const token = randomUUID().toString();
+  const hashedToken = createHash("sha256").update(token).digest("hex");
+  const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
+  await Session.create({
+    refreshToken: hashedToken,
+    expiresAt: expiresAt,
+    userId: user.userId,
+  });
+  return token;
+};
 
-    const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
+/**
+ * Refreshes the access token using the provided refresh token.
+ * @param refreshToken The refresh token to use for generating a new access token.
+ * @param metaData Optional metadata for logging and error handling.
+ * @returns A promise that resolves to the new access token.
+ * @throws InvalidRefreshTokenError if the refresh token is invalid or not found.
+ * @throws ExpiredRefreshTokenError if the refresh token has expired.
+ * @throws UserNotFoundError if the user associated with the session is not found.
+ */
+export const refreshAccessToken = async (
+  refreshToken: string,
+  metaData = emptyMetaData,
+): Promise<string> => {
+  const hashedRefreshToken = createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
 
-    await Session.create({
-      refreshToken: hashedToken,
-      expiresAt: expiresAt,
-      userId: user.userId,
+  const session = await Session.findOne({
+    where: { refreshToken: hashedRefreshToken },
+  });
+
+  if (!session)
+    throw new InvalidRefreshTokenError({
+      metaData: { ...metaData },
+      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono sesji dla podanego refresh tokena.`,
     });
 
-    return token;
-  }
-
-  /**
-   * Generates a new JWT access token for given refresh token.
-   * @param refreshTokenBody
-   * @returns jwt access token
-   * @throws InvalidRefreshTokenError if refresh token is invalid
-   * @throws ExpiredRefreshTokenError if refresh token is expired
-   * @throws UserNotFoundError if user for session is not found
-   * @throws Error if any other error occurs
-   */
-  static async refreshAccessToken(refreshToken: string): Promise<string> {
-    const hashedRefreshToken = createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
-
-    const session = await Session.findOne({
-      where: { refreshToken: hashedRefreshToken },
+  if (DateTime.now() > DateTime.fromJSDate(session.expiresAt))
+    throw new ExpiredRefreshTokenError({
+      metaData: { ...metaData },
+      loggerMessage: `${loggerMessages(metaData.service)}: Token odświeżający wygasł.`,
     });
 
-    if (!session) {
-      throw new InvalidRefreshTokenError("", 401);
-    }
+  const user = await User.findByPk(session.userId);
 
-    if (DateTime.now() > DateTime.fromJSDate(session.expiresAt)) {
-      throw new ExpiredRefreshTokenError("", 401);
-    }
-
-    const user = await User.findByPk(session.userId);
-
-    if (!user) {
-      throw new UserNotFoundError("Nie znaleziono użytkownika dla sesji.", 500);
-    }
-
-    return this.generateAccessToken(user);
-  }
-
-  /**
-   * Deletes given session token from database.
-   * @param refreshToken session's refresh token to delete
-   * @throws InvalidSessionError if session is invalid (not found in database)
-   */
-  static async revokeSession(refreshToken: string): Promise<void> {
-    const hashedRefreshToken = createHash("sha256")
-      .update(refreshToken)
-      .digest("hex");
-
-    const destroyCounter = await Session.destroy({
-      where: { refreshToken: hashedRefreshToken },
+  if (!user)
+    throw new UserNotFoundError({
+      metaData: { ...metaData },
+      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika dla sesji.`,
     });
 
-    if (destroyCounter === 0) {
-      throw new InvalidRefreshTokenError("Nie znaleziono refresh tokena.", 401);
-    }
-  }
+  return generateAccessToken(user);
+};
 
-  /**
-   * Deletes all refresh tokens for given user from database.
-   * @param userId user id to delete refresh tokens
-   */
-  static async revokeAllSessions(userId: string): Promise<void> {
-    const destroyCount = await Session.destroy({
-      where: { userId: userId },
+/**
+ * Revokes a session by removing it from the database using the provided refresh token.
+ * @param refreshToken The refresh token of the session to be revoked.
+ * @param metaData Optional metadata for logging and error handling.
+ * @throws InvalidRefreshTokenError if the session with the provided refresh token is not found.
+ */
+export const revokeSession = async (
+  refreshToken: string,
+  metaData = emptyMetaData,
+) => {
+  const hashedRefreshToken = createHash("sha256")
+    .update(refreshToken)
+    .digest("hex");
+
+  const destroyCounter = await Session.destroy({
+    where: { refreshToken: hashedRefreshToken },
+  });
+
+  if (destroyCounter === 0) {
+    throw new InvalidRefreshTokenError({
+      metaData: { ...metaData },
+      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono sesji dla podanego refresh tokena.`,
     });
-
-    if (destroyCount === 0) {
-      throw new InvalidRefreshTokenError(
-        "Nie znaleziono refresh tokenów.",
-        404,
-      );
-    }
   }
-}
+};
+
+/**
+ * Revokes all sessions for a given user.
+ * @param userId The ID of the user whose sessions should be revoked.
+ * @param metaData Optional metadata for logging and error handling.
+ * @throws NoRefreshTokenError if no sessions are found for the user.
+ */
+export const revokeAllSessions = async (
+  userId: string,
+  metaData = emptyMetaData,
+) => {
+  const destroyCount = await Session.destroy({
+    where: { userId: userId },
+  });
+
+  if (destroyCount === 0) {
+    throw new NoRefreshTokenError({
+      message: "Nie znaleziono żadnych sesji dla użytkownika.",
+      metaData: { ...metaData, userId: userId },
+      statusCode: 404,
+      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono żadnych sesji dla użytkownika.`,
+    });
+  }
+};

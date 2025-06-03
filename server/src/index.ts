@@ -17,6 +17,7 @@ import locationRouter from "./routers/location.router";
 import path from "path";
 import fs from "fs";
 import userRouter from "./routers/user.router";
+import { errorHandler } from "./middlewares/error.handler";
 
 export const connectToDatabase = async () => {
   try {
@@ -41,6 +42,8 @@ export const initializeExpress = async (): Promise<Express> => {
   );
   app.use(cookieParser());
   addRouters(app);
+
+  app.use(errorHandler);
 
   return app;
 };

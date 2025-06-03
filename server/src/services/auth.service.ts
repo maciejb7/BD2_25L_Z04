@@ -3,78 +3,138 @@ import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import {
   InvalidPasswordError,
-  UserAlreadyExistsError,
+  NoAuthenticationError,
+  NoRefreshTokenError,
+  UserAlreadyExistsByEmailError,
+  UserAlreadyExistsByNicknameError,
   UserNotFoundError,
 } from "../errors/errors";
-import { loginValidator } from "../utils/validators";
+import { Request } from "express";
+import { AuthenticatedUserPayload } from "../middlewares/auth.middleware";
+import { emptyMetaData } from "../types/others";
+import { loggerMessages } from "../errors/loggerMessages";
 
-class AuthService {
-  /**
-   * Authenticates a user by checking if the provided nickname or email and password match a user in the database.
-   * @param nicknameOrEmail The nickname or email of the user.
-   * @param password The password of the user.
-   * @returns The authenticated user.
-   * @throws UserNotFoundError if the user is not found.
-   * @throws InvalidPasswordError if the password is incorrect.
-   */
-  static async authenticateUser(
-    nicknameOrEmail: string,
-    password: string,
-  ): Promise<User> {
-    loginValidator.nicknameOrEmail(nicknameOrEmail);
-    loginValidator.password(password);
+/**
+ * Extracts the authenticated user payload from the request object.
+ * @param request - The Express request object containing user information.
+ * @param metaData - Optional metadata for error handling.
+ * @returns An object containing the authenticated user's ID, nickname, and role.
+ * @throws NoAuthenticationError if the user is not authenticated.
+ */
+export const extractAuthenticatedUserPayload = (
+  request: Request,
+  metaData = emptyMetaData,
+): AuthenticatedUserPayload => {
+  if (!request.user)
+    throw new NoAuthenticationError({ metaData: { ...metaData } });
+  return {
+    userId: request.user.userId,
+    userNickname: request.user.userNickname,
+    userRole: request.user.userRole,
+  };
+};
 
-    const user = await User.findOne({
-      where: {
-        [Op.or]: [{ nickname: nicknameOrEmail }, { email: nicknameOrEmail }],
-      },
+/**
+ * Extracts the access token from the request object.
+ * @param request - The Express request object containing the access token.
+ * @param metaData - Optional metadata for error handling.
+ * @returns The access token as a string.
+ * @throws NoAuthenticationError if the access token is not found in the request.
+ */
+export const extractRefreshToken = (
+  request: Request,
+  metaData = emptyMetaData,
+): string => {
+  const refreshToken = request.cookies?.refreshToken;
+
+  if (!refreshToken)
+    throw new NoRefreshTokenError({
+      metaData: { ...metaData },
+      loggerMessage: `${loggerMessages(metaData.service)}: Brak tokenu odświeżającego.`,
     });
 
-    // Check if user exists
-    if (!user) {
-      throw new UserNotFoundError("Nieprawidłowy login lub hasło.", 401, {
-        nicknameOrEmail: nicknameOrEmail,
-      });
-    }
+  return refreshToken;
+};
 
-    // Check if password is correct
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect) {
-      throw new InvalidPasswordError("Nieprawidłowy login lub hasło.", 401, {
-        nicknameOrEmail: nicknameOrEmail,
-      });
-    }
+/**
+ * Retrieves an authenticated user based on their nickname or email and password.
+ * @param nicknameOrEmail - The user's nickname or email address.
+ * @param password - The user's password.
+ * @param metaData - Optional metadata for error handling.
+ * @returns A promise that resolves to the authenticated user.
+ * @throws UserNotFoundError if no user is found with the provided nickname or email.
+ * @throws InvalidPasswordError if the provided password does not match the user's password.
+ */
+export const getAuthenticatedUser = async (
+  nicknameOrEmail: string,
+  password: string,
+  metaData = emptyMetaData,
+): Promise<User> => {
+  const user = await User.findOne({
+    where: {
+      [Op.or]: [{ nickname: nicknameOrEmail }, { email: nicknameOrEmail }],
+    },
+  });
 
-    return user;
-  }
-
-  static async isNicknameTaken(nickname: string): Promise<void> {
-    const existingUserByNickname = await User.findOne({
-      where: { nickname: nickname },
+  if (!user) {
+    throw new UserNotFoundError({
+      message: "Nieprawidłowy login lub hasło.",
+      statusCode: 401,
+      metaData: { ...metaData, nicknameOrEmail },
+      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika.`,
     });
-
-    if (existingUserByNickname) {
-      throw new UserAlreadyExistsError(
-        "Użytkownik o podanym nicku już istnieje.",
-        409,
-        { nickname: nickname },
-      );
-    }
   }
 
-  static async isEmailTaken(email: string): Promise<void> {
-    const existingUserByEmail = await User.findOne({
-      where: { email: email },
+  const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordCorrect) {
+    throw new InvalidPasswordError({
+      message: "Nieprawidłowy login lub hasło.",
+      statusCode: 401,
+      metaData: { ...metaData, nicknameOrEmail },
+      loggerMessage: `${loggerMessages(metaData.service)}: Nieprawidłowe hasło.`,
     });
-
-    if (existingUserByEmail) {
-      throw new UserAlreadyExistsError(
-        "Użytkownik o podanym adresie email już istnieje.",
-        409,
-        { email: email },
-      );
-    }
   }
-}
 
-export default AuthService;
+  return user;
+};
+
+/**
+ * Checks if a nickname is already taken by another user.
+ * @param nickname - The nickname to check.
+ * @param metaData - Optional metadata for error handling.
+ * @throws UserAlreadyExistsByNicknameError if a user with the given nickname already exists.
+ */
+export const isNicknameTaken = async (
+  nickname: string,
+  metaData = emptyMetaData,
+) => {
+  const existingUserByNickname = await User.findOne({
+    where: { nickname: nickname },
+  });
+
+  if (existingUserByNickname) {
+    throw new UserAlreadyExistsByNicknameError({
+      metaData: { ...metaData, nickname: nickname },
+      loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym nicku już istnieje.`,
+    });
+  }
+};
+
+/**
+ * Checks if an email is already taken by another user.
+ * @param email - The email to check.
+ * @param metaData  - Optional metadata for error handling.
+ */
+export const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
+  const existingUserByEmail = await User.findOne({
+    where: { email: email },
+  });
+
+  if (existingUserByEmail) {
+    throw new UserAlreadyExistsByEmailError({
+      metaData: { ...metaData, email: email },
+      loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym adresie e-mail już istnieje.`,
+    });
+  }
+};
