@@ -21,14 +21,16 @@ export function getTwoWayMap<T, U>(forwardMap: Map<T, U>): TwoWayMap<T, U> {
   };
 }
 
-export type DateFormatter = {
-  getYMD: () => string;
+export interface DateFormatter {
   getDMY: () => string;
-};
+  getDMYWithTime: () => string;
+}
 
 /**
  * Creates a date formatter from a date string.
- * The formatter provides methods to get the date in "YYYY-MM-DD" and "DD-MM-YYYY" formats.
+ * The formatter provides methods to get the date in "DD.MM.YYYY" format,
+ * with or without time (HH:mm).
+ * Uses Intl.DateTimeFormat for proper locale-safe formatting.
  * @param dateString
  * @returns A DateFormatter object or null if the date string is invalid.
  */
@@ -39,12 +41,26 @@ export function getDateFormatter(dateString: string): DateFormatter | null {
 
   if (isNaN(date.getTime())) return null;
 
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
+  const dmyFormatter = new Intl.DateTimeFormat("pl-PL", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  const timeFormatter = new Intl.DateTimeFormat("pl-PL", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 
   return {
-    getYMD: () => `${year}-${month}-${day}`,
-    getDMY: () => `${day}-${month}-${year}`,
+    getDMY: () => {
+      return dmyFormatter.format(date);
+    },
+    getDMYWithTime: () => {
+      const dmy = dmyFormatter.format(date);
+      const time = timeFormatter.format(date);
+      return `${dmy} ${time}`;
+    },
   };
 }

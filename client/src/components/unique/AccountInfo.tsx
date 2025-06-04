@@ -165,7 +165,7 @@ function AccountInfo() {
           label="Data urodzenia"
           name="birthDate"
           value={
-            getDateFormatter(userInfo.birthDate)?.getDMY() ??
+            getDateFormatter(userInfo.birthDate)?.getDMYWithTime() ??
             "Nieprawidłowa Data"
           }
           onConfirm={onConfirm}
@@ -176,7 +176,7 @@ function AccountInfo() {
           label="Data utworzenia konta"
           name="createdAt"
           value={
-            getDateFormatter(userInfo.createdAt)?.getDMY() ??
+            getDateFormatter(userInfo.createdAt)?.getDMYWithTime() ??
             "Nieprawidłowa Data"
           }
           onConfirm={onConfirm}
