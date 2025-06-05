@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getUser } from "../../utils/userAuthentication";
 import Logo from "./Logo";
-import { getUserAvatar } from "../../api/api.user";
+import { getUserAvatar, getUserFromAPI } from "../../api/api.user";
 import { SideBarOption } from "../../constants/sideBarOptions";
 import Avatar from "./Avatar";
 
@@ -32,7 +31,7 @@ function SideBar({ options }: SideBarOptions) {
   // Load user informations (name etc.) to the sidbebar top.
   useEffect(() => {
     const fetchUser = async () => {
-      const currentUser = await getUser();
+      const currentUser = await getUserFromAPI();
       const { name, surname, nickname } = currentUser;
       setUserInfo({ name, surname, nickname });
       setIsLoading(false);

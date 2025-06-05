@@ -1,4 +1,5 @@
 import { logout } from "../api/api.auth";
+import { isUserAdminByStorage } from "../utils/userAuthentication";
 
 export interface SideBarOption {
   name: string;
@@ -6,6 +7,7 @@ export interface SideBarOption {
   link?: string;
   onClick?: () => void;
   active?: boolean;
+  admin?: boolean;
 }
 
 /**
@@ -17,6 +19,12 @@ const options: SideBarOption[] = [
     name: "Konto",
     icon: "fas fa-user",
     link: "/account-settings",
+  },
+  {
+    name: "Panel Administratora",
+    icon: "fas fa-cog",
+    link: "/admin-panel",
+    admin: true,
   },
   {
     name: "Wyloguj",
@@ -36,5 +44,10 @@ export const getSideBarOptions = (activeOption?: string) => {
     else option.active = false;
   });
 
-  return options;
+  return options.filter((option) => {
+    if (option.admin && !isUserAdminByStorage()) {
+      return false;
+    }
+    return true;
+  });
 };

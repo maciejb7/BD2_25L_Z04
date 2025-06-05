@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { ApiError } from "../errors/errors";
+import { ApiError, NoRefreshTokenError } from "../errors/errors";
 import logger from "../logger";
 
 export const errorHandler = (
@@ -13,7 +13,9 @@ export const errorHandler = (
     const filteredMetaData = Object.fromEntries(
       Object.entries(error.metaData).filter(([, value]) => value !== ""),
     );
-    logger.error(error.loggerMessage, filteredMetaData);
+
+    if (!(error instanceof NoRefreshTokenError))
+      logger.error(error.loggerMessage, filteredMetaData);
 
     res.status(error.statusCode).json({
       message: error.message,

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { User } from "../../types/others";
-import { deleteUserAvatar, getUserAvatar } from "../../api/api.user";
-import { getUser, getUserFromStorage } from "../../utils/userAuthentication";
+import {
+  deleteUserAvatar,
+  getUserAvatar,
+  getUserFromAPI,
+} from "../../api/api.user";
 import EditableField from "../inputs/EditableField";
 import Avatar from "../common/Avatar";
 import AvatarCropModal from "../modals/CropAvatarModal";
@@ -18,23 +21,21 @@ function AccountInfo() {
   const [cropImage, setCropImage] = useState<string>("");
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [avatar, setAvatar] = useState<string>("");
-  const [userInfo, setUserInfo] = useState<User>(
-    getUserFromStorage() ?? {
-      nickname: "",
-      name: "",
-      surname: "",
-      email: "",
-      gender: "",
-      role: "",
-      birthDate: "",
-      createdAt: "",
-    },
-  );
+  const [userInfo, setUserInfo] = useState<User>({
+    nickname: "",
+    name: "",
+    surname: "",
+    email: "",
+    gender: "",
+    role: "",
+    birthDate: "",
+    createdAt: "",
+  });
 
   useEffect(() => {
     const fetchUser = async () => {
       setIsLoading(true);
-      const user = await getUser();
+      const user = await getUserFromAPI();
       const mappedGender = twoWayGenderMap.to(user.gender);
       const mappedRole = twoWayRoleMap.to(user.role);
       if (mappedGender) user.gender = mappedGender;
@@ -165,7 +166,7 @@ function AccountInfo() {
           label="Data urodzenia"
           name="birthDate"
           value={
-            getDateFormatter(userInfo.birthDate)?.getDMYWithTime() ??
+            getDateFormatter(userInfo.birthDate)?.getDMY() ??
             "Nieprawidłowa Data"
           }
           onConfirm={onConfirm}
