@@ -1,7 +1,7 @@
 import { Transaction } from "sequelize";
 import { User } from "../db/models/user";
-import { UserLike, LikeStatus } from "../db/models/user_like";
-import { UserMatch } from "../db/models/user_match";
+import { UserLike, LikeStatus } from "../db/models/user-like";
+import { UserMatch } from "../db/models/user-match";
 import { database } from "../db/database";
 
 /**

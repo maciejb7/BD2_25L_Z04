@@ -1,4 +1,4 @@
-import { UserLocation } from "../db/models/user_location";
+import { UserLocation } from "../db/models/user-location";
 
 interface LocationData {
   latitude: number;

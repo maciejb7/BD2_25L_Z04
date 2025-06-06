@@ -8,9 +8,9 @@ import {
   HasOne,
 } from "sequelize-typescript";
 import { Session } from "./session";
-import { UserMatchPreference } from "./user_match_preference";
-import { UserLike } from "./user_like";
-import { UserLocation } from "./user_location";
+import { UserMatchPreference } from "./user-match-preference";
+import { UserLike } from "./user-like";
+import { UserLocation } from "./user-location";
 
 export enum Gender {
   M = "male",
