@@ -143,7 +143,7 @@ function RegisterForm() {
             />
 
             <FormField
-              label="Powtóz Hasło"
+              label="Powtórz Hasło"
               type="password"
               name="confirmPassword"
               value={confirmPassword}
