@@ -67,9 +67,13 @@ export const postAnswer = handleRequest(async (req: Request, res: Response) => {
     // Check if userId exists in the database
     try {
       const user = await User.findByPk(userId);
+      if (!user) {
+        res.status(404).json({ error: `There is no user with id: ${userId}` });
+        return;
+      }
     } catch (error) {
-      console.error(`There is no user with id: ${userId}`, error);
-      res.status(500).json({ error: `There is no user with id: ${userId}` });
+      console.error(`Error finding user with id: ${userId}`, error);
+      res.status(500).json({ error: "Database error while finding user" });
       return;
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { logout } from "../api/api.auth";
 
 export interface SideBarOption {
@@ -13,6 +14,11 @@ export interface SideBarOption {
  */
 const options: SideBarOption[] = [
   { name: "Dashboard", icon: "fas fa-home", link: "/dashboard" },
+  {
+    name: "Pytania",
+    icon: "fas fa-question-circle",
+    link: "/questions",
+  },
   {
     name: "Konto",
     icon: "fas fa-user",
