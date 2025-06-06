@@ -10,7 +10,6 @@ import {
   UserNotFoundError,
 } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
-import { emptyMetaData } from "../types/others";
 import { loggerMessages } from "../errors/loggerMessages";
 
 /**
@@ -60,7 +59,7 @@ const generateRefreshToken = async (user: User): Promise<string> => {
  */
 const refreshAccessToken = async (
   refreshToken: string,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
 ): Promise<string> => {
   const hashedRefreshToken = createHash("sha256")
     .update(refreshToken)
@@ -101,7 +100,7 @@ const refreshAccessToken = async (
  */
 const revokeSession = async (
   refreshToken: string,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
 ) => {
   const hashedRefreshToken = createHash("sha256")
     .update(refreshToken)
@@ -125,7 +124,10 @@ const revokeSession = async (
  * @param metaData Optional metadata for logging and error handling.
  * @throws NoRefreshTokenError if no sessions are found for the user.
  */
-const revokeAllSessions = async (userId: string, metaData = emptyMetaData) => {
+const revokeAllSessions = async (
+  userId: string,
+  metaData = { service: "" },
+) => {
   const destroyCount = await Session.destroy({
     where: { userId: userId },
   });

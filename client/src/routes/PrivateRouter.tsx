@@ -3,7 +3,7 @@ import DashboardPage from "../pages/private/DashBoardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AccountSettings from "../pages/private/AccountSettings";
 import { isUserAdminByStorage } from "../utils/userAuthentication";
-import AdminPanelPage from "../pages/admin/AdminPanelPage";
+import UsersListPage from "../pages/admin/UsersListPage";
 
 function PrivateRouter() {
   const isUserAdmin = isUserAdminByStorage();
@@ -17,7 +17,9 @@ function PrivateRouter() {
       <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFoundPage />} />
       {isUserAdmin && (
-        <Route path="/admin-panel" element={<AdminPanelPage />} />
+        <>
+          <Route path="/users-management" element={<UsersListPage />} />
+        </>
       )}
     </Routes>
   );

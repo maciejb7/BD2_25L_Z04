@@ -4,6 +4,7 @@ import { login } from "../../api/api.auth";
 import { Link } from "react-router-dom";
 import { useAlert } from "../../contexts/AlertContext";
 import FormField from "../inputs/FormField";
+import ForgottenPasswordModal from "../modals/ForgottenPasswordModal";
 
 /**
  * LoginForm component that handles user login.
@@ -14,6 +15,8 @@ function LoginForm() {
     nicknameOrEmail: "",
     password: "",
   });
+  const [forgottenPasswordModalOpen, setForgottenPasswordModalOpen] =
+    useState(false);
 
   const { showAlert } = useAlert();
 
@@ -38,6 +41,11 @@ function LoginForm() {
 
   return (
     <div className="w-full px-4 sm:px-0 py-6">
+      <ForgottenPasswordModal
+        modalTitle="Resetowanie Hasła"
+        isOpen={forgottenPasswordModalOpen}
+        onClose={() => setForgottenPasswordModalOpen(false)}
+      />
       <form
         onSubmit={handleSubmit}
         className="flex flex-col justify-center items-center bg-white w-full max-w-sm mx-auto p-4 sm:p-6 rounded-lg shadow-md space-y-6 sm:space-y-8"
@@ -75,7 +83,7 @@ function LoginForm() {
           {isLoading ? "Logowanie..." : "Zaloguj się"}
         </button>
 
-        <p className="text-center text-sm text-gray-600 pt-2">
+        <p className="text-center text-sm text-gray-600">
           Nie masz konta?
           <Link
             to="/register"
@@ -83,6 +91,15 @@ function LoginForm() {
           >
             Zarejestruj się!
           </Link>
+        </p>
+        <p className="text-center text-sm text-gray-600">
+          <button
+            type="button"
+            onClick={() => setForgottenPasswordModalOpen(true)}
+            className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+          >
+            Zapomniałeś hasła?
+          </button>
         </p>
       </form>
     </div>

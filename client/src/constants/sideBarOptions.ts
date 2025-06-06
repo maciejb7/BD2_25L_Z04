@@ -21,9 +21,15 @@ const options: SideBarOption[] = [
     link: "/account-settings",
   },
   {
-    name: "Panel Administratora",
-    icon: "fas fa-cog",
-    link: "/admin-panel",
+    name: "Użytkownicy",
+    icon: "fas fa-user-cog",
+    link: "/users-management",
+    admin: true,
+  },
+  {
+    name: "Zgłoszenia",
+    icon: "fas fa-receipt",
+    link: "/tickets",
     admin: true,
   },
   {

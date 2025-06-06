@@ -11,7 +11,6 @@ import {
 } from "../errors/errors";
 import { Request } from "express";
 import { AuthenticatedUserPayload } from "../middlewares/auth.middleware";
-import { emptyMetaData } from "../types/others";
 import { loggerMessages } from "../errors/loggerMessages";
 
 /**
@@ -23,7 +22,7 @@ import { loggerMessages } from "../errors/loggerMessages";
  */
 const extractAuthenticatedUserPayload = (
   request: Request,
-  metaData = emptyMetaData,
+  metaData = {},
 ): AuthenticatedUserPayload => {
   if (!request.user)
     throw new NoAuthenticationError({ metaData: { ...metaData } });
@@ -43,7 +42,7 @@ const extractAuthenticatedUserPayload = (
  */
 const extractRefreshToken = (
   request: Request,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
 ): string => {
   const refreshToken = request.cookies?.refreshToken;
 
@@ -68,7 +67,7 @@ const extractRefreshToken = (
 const getAuthenticatedUser = async (
   nicknameOrEmail: string,
   password: string,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
 ): Promise<User> => {
   const user = await User.findOne({
     where: {
@@ -105,7 +104,10 @@ const getAuthenticatedUser = async (
  * @param metaData - Optional metadata for error handling.
  * @throws UserAlreadyExistsByNicknameError if a user with the given nickname already exists.
  */
-const isNicknameTaken = async (nickname: string, metaData = emptyMetaData) => {
+const isNicknameTaken = async (
+  nickname: string,
+  metaData = { service: "" },
+) => {
   const existingUserByNickname = await User.findOne({
     where: { nickname: nickname },
   });
@@ -123,7 +125,7 @@ const isNicknameTaken = async (nickname: string, metaData = emptyMetaData) => {
  * @param email - The email to check.
  * @param metaData  - Optional metadata for error handling.
  */
-const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
+const isEmailTaken = async (email: string, metaData = { service: "" }) => {
   const existingUserByEmail = await User.findOne({
     where: { email: email },
   });

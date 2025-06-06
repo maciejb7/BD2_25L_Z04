@@ -2,7 +2,6 @@ import sharp from "sharp";
 import { FileUploadError } from "../errors/errors";
 import path from "path";
 import fs from "fs";
-import { emptyMetaData } from "../types/others";
 import { loggerMessages } from "../errors/loggerMessages";
 
 export const avatarsPath = path.join(
@@ -24,7 +23,7 @@ const getUserAvatarPathVerified = (userId: string): string | null => {
 
 const checkIfImageHasCorrectSize = async (
   file: Express.Multer.File,
-  metaData = emptyMetaData,
+  metaData = { service: "", nickname: "" },
   minWidth = 256,
   minHeight = 256,
   maxWidth = 1024,

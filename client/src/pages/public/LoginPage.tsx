@@ -3,7 +3,6 @@ import Background from "../../components/common/Background";
 import Footer from "../../components/common/Footer";
 import TopBar from "../../components/common/TopBar";
 import { getTopBarOptions } from "../../constants/topBarOptions";
-
 function LoginPage() {
   return (
     <div>

@@ -11,13 +11,13 @@ const userRouter = Router();
 userRouter.get(
   "/",
   AuthMiddleware.authenticateUser(),
-  UserController.getUserInfo,
+  UserController.getUserDetailsByUser,
 );
 
 userRouter.get(
   "/avatar",
   AuthMiddleware.authenticateUser(),
-  UserController.getUserAvatar,
+  UserController.getUserAvatarByUser,
 );
 
 userRouter.post(
@@ -27,25 +27,32 @@ userRouter.post(
     formField: "avatar",
     allowedMimeTypes: ["image/jpeg"],
   }),
-  UserController.uploadUserAvatar,
+  UserController.uploadUserAvatarByUser,
 );
 
 userRouter.delete(
   "/avatar/delete",
   AuthMiddleware.authenticateUser(),
-  UserController.deleteUserAvatar,
+  UserController.deleteUserAvatarByUser,
 );
 
 userRouter.post(
   "/change-info",
   AuthMiddleware.authenticateUser(),
-  UserController.changeUserInfoField,
+  UserController.changeDetailsFieldByUser,
 );
+
+userRouter.post("/reset-password-link", UserController.createResetPasswordLink);
+userRouter.get(
+  "/reset-password-link/:passwordResetLinkId",
+  UserController.checkIfPasswordResetLinkExists,
+);
+userRouter.post("/reset-password", UserController.resetUserPasswordByUser);
 
 userRouter.post(
   "/change-password",
   AuthMiddleware.authenticateUser(),
-  UserController.changeUserPassword,
+  UserController.changeUserPasswordbyUser,
 );
 
 export default userRouter;

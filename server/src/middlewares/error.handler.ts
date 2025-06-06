@@ -14,7 +14,7 @@ export const errorHandler = (
       Object.entries(error.metaData).filter(([, value]) => value !== ""),
     );
 
-    if (!(error instanceof NoRefreshTokenError))
+    if (error.loggerMessage && !(error instanceof NoRefreshTokenError))
       logger.error(error.loggerMessage, filteredMetaData);
 
     res.status(error.statusCode).json({

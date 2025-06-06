@@ -2,7 +2,6 @@ import { EnumLike, z } from "zod";
 import { FieldValidationError } from "../errors/errors";
 import { DateTime } from "luxon";
 import { validationErrorLoggerMessages } from "../errors/loggerMessages";
-import { emptyMetaData } from "../types/others";
 
 /**
  * Capitalizes the first letter of a string.
@@ -25,7 +24,7 @@ const checkIfValueMatchesEnum = (
   name: string,
   value: string,
   enumObject: EnumLike,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
 ) => {
   name = capitalizeFirstLetter(name);
   const enumSchema = z.nativeEnum(enumObject);
@@ -56,7 +55,7 @@ const checkIfValueMatchesEnum = (
 const checkIfValueIsValid = (
   name: string,
   value: string,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
   minLength = 1,
   maxLength = 500,
   forbiddenNumbers = false,
@@ -113,7 +112,7 @@ const checkIfValueIsValid = (
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the email is invalid.
  */
-const isEmailValid = (email: string, metaData = emptyMetaData) => {
+const isEmailValid = (email: string, metaData = { service: "" }) => {
   const emailSchema = z
     .string()
     .nonempty({ message: "Email nie może być pusty." })
@@ -137,7 +136,7 @@ const isEmailValid = (email: string, metaData = emptyMetaData) => {
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the password does not meet validation criteria.
  */
-const isPasswordValid = (password: string, metaData = emptyMetaData) => {
+const isPasswordValid = (password: string, metaData = { service: "" }) => {
   const passwordSchema = z
     .string()
     .nonempty({
@@ -173,7 +172,7 @@ const isPasswordValid = (password: string, metaData = emptyMetaData) => {
  */
 const getDateTimeFromDate = (
   date: string,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
 ): DateTime => {
   const dateSchema = z
     .string()
@@ -216,7 +215,7 @@ const getDateTimeFromDate = (
  */
 const checkIfAgeBetween = (
   date: string | DateTime,
-  metaData = emptyMetaData,
+  metaData = { service: "" },
   yearsMin = 13,
   yearsMax = 105,
 ) => {
@@ -248,6 +247,20 @@ const checkIfAgeBetween = (
     });
 };
 
+const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
+  const uuidSchema = z
+    .string()
+    .nonempty({ message: `${fieldName} nie może być pusty.` })
+    .uuid({ message: `${fieldName} musi być poprawnym UUID.` });
+
+  const isValid = uuidSchema.safeParse(uuid);
+  if (!isValid.success) {
+    throw new FieldValidationError({
+      message: isValid.error.errors[0].message,
+    });
+  }
+};
+
 export const ValidationService = {
   checkIfValueMatchesEnum,
   checkIfValueIsValid,
@@ -255,5 +268,6 @@ export const ValidationService = {
   isPasswordValid,
   getDateTimeFromDate,
   checkIfAgeBetween,
+  checkIfUUIDIsValid,
   capitalizeFirstLetter,
 };

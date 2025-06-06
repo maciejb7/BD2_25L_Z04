@@ -75,6 +75,57 @@ export const changeUserInfoField = async (
   }
 };
 
+export const createResetPasswordLink = async (
+  email: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/reset-password-link",
+      { email },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas wysyłania linku resetowania hasła. Sprawdź poprawność adresu e-mail.",
+    );
+  }
+};
+
+export const checkIfPasswordResetLinkExists = async (
+  passwordResetLinkId: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.get<CommonResponse>(
+      `/api/user/reset-password-link/${passwordResetLinkId}`,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas sprawdzania linku resetowania hasła. Sprawdź poprawność linku.",
+    );
+  }
+};
+
+export const resetPassword = async (
+  passwordResetLinkId: string,
+  password: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/reset-password",
+      { passwordResetLinkId, password },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas resetowania hasła. Sprawdź poprawność linku resetowania hasła.",
+    );
+  }
+};
+
 export const changePassword = async (
   data: ResetPasswordFormData,
 ): Promise<CommonResponse> => {

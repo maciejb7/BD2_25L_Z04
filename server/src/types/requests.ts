@@ -1,6 +1,5 @@
 import { Validator } from "./validators";
 import { FieldValidationError } from "../errors/errors";
-import { emptyMetaData } from "./others";
 import { loggerMessages } from "../errors/loggerMessages";
 
 /**
@@ -14,7 +13,9 @@ import { loggerMessages } from "../errors/loggerMessages";
 export const extractRequestFields = async <T>(
   requestBody: Record<string, string>,
   requestFields: (keyof T)[],
-  metaData = emptyMetaData,
+  metaData = {
+    service: "",
+  },
   validator?: Validator,
 ): Promise<T> => {
   const entries = await Promise.all(
@@ -103,3 +104,19 @@ export interface ChangeUserDetailsRequest {
 
 export const changeUserDetailsRequestFields: (keyof ChangeUserDetailsRequest)[] =
   ["name", "value"];
+
+export interface EmailRequest {
+  email: string;
+}
+
+export const emailRequestFields: (keyof EmailRequest)[] = ["email"];
+
+export interface PasswordResetRequest {
+  passwordResetLinkId: string;
+  password: string;
+}
+
+export const passwordResetRequestFields: (keyof PasswordResetRequest)[] = [
+  "passwordResetLinkId",
+  "password",
+];

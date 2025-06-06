@@ -12,11 +12,6 @@ authRouter.delete(
   AuthController.logout,
 );
 authRouter.post("/refresh", AuthController.refresh);
-authRouter.post(
-  "/delete-account",
-  AuthMiddleware.authenticateUser(),
-  AuthController.deleteAccount,
-);
 authRouter.delete(
   "/logout-from-all-devices",
   AuthMiddleware.authenticateUser(),

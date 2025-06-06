@@ -11,6 +11,7 @@ import { Session } from "./session";
 import { UserMatchPreference } from "./user-match-preference";
 import { UserLike } from "./user-like";
 import { UserLocation } from "./user-location";
+import { PasswordResetLink } from "./password-reset-link";
 
 export enum Gender {
   M = "male",
@@ -99,6 +100,12 @@ export class User extends Model {
     foreignKey: "userId",
   })
   declare sessions: Session[];
+
+  @HasMany(() => PasswordResetLink, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+  })
+  declare passwordResetLinks: PasswordResetLink[];
 
   @HasMany(() => UserMatchPreference)
   declare matchPreferences: UserMatchPreference[];
