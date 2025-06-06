@@ -84,6 +84,18 @@ export class UserNotFoundError extends ApiError {
   }
 }
 
+export class UserNotActiveError extends ApiError {
+  constructor(options: ApiErrorOptions = {}) {
+    super({
+      ...options,
+      statusCode: 403,
+      message: options.message ?? "Konto użytkownika nie jest aktywne.",
+      loggerMessage:
+        options.loggerMessage ?? "Konto użytkownika nie jest aktywne.",
+    });
+  }
+}
+
 export class InvalidPasswordError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({

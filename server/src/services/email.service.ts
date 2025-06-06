@@ -12,8 +12,6 @@ const sendPasswordResetEmail = async (
   email: string,
   resetLink: string,
 ) => {
-  console.log(resetLink);
-
   await transporter.sendMail({
     from: `"ClingClang" <${config.EMAIL_USER}>`,
     to: email,
@@ -24,10 +22,26 @@ const sendPasswordResetEmail = async (
       resetLink,
     },
   } as MailWithTemplate);
+};
 
-  console.log(resetLink);
+const sendActivationEmail = async (
+  username: string,
+  email: string,
+  activationLink: string,
+) => {
+  await transporter.sendMail({
+    from: `"ClingClang" <${config.EMAIL_USER}>`,
+    to: email,
+    subject: "Aktywacja Konta",
+    template: "account-activation",
+    context: {
+      username,
+      activationLink,
+    },
+  } as MailWithTemplate);
 };
 
 export const EmailService = {
   sendPasswordResetEmail,
+  sendActivationEmail,
 };

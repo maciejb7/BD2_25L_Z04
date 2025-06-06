@@ -35,6 +35,9 @@ import { DateTime } from "luxon";
 import { config } from "../config";
 import { EmailService } from "../services/email.service";
 
+/**
+ * Retrieves the details of the authenticated user.
+ */
 const getUserDetailsByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId } = AuthService.extractAuthenticatedUserPayload(req);
@@ -52,6 +55,9 @@ const getUserDetailsByUser = handleRequest(
   },
 );
 
+/**
+ * Retrieves the avatar of the authenticated user.
+ */
 const getUserAvatarByUser = handleRequest(
   async (req: Request, res: Response) => {
     const userId = req.user!.userId;
@@ -69,6 +75,9 @@ const getUserAvatarByUser = handleRequest(
   },
 );
 
+/**
+ * Uploads a new avatar for the authenticated user.
+ */
 const uploadUserAvatarByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
@@ -99,6 +108,9 @@ const uploadUserAvatarByUser = handleRequest(
   },
 );
 
+/**
+ * Deletes the avatar of the authenticated user.
+ */
 const deleteUserAvatarByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
@@ -123,6 +135,9 @@ const deleteUserAvatarByUser = handleRequest(
   },
 );
 
+/**
+ * Changes a specific field of the authenticated user's details.
+ */
 const changeDetailsFieldByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
@@ -248,6 +263,9 @@ const deleteAccountByUser = handleRequest(
   },
 );
 
+/**
+ * Creates a password reset link for the user.
+ */
 const createResetPasswordLink = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
@@ -284,8 +302,6 @@ const createResetPasswordLink = handleRequest(
 
     const resetLinkUrl = `${config.CLIENT_URL}/reset-password/${resetLink.linkId}`;
 
-    console.log(resetLinkUrl);
-
     await EmailService.sendPasswordResetEmail(
       user.nickname,
       user.email,
@@ -308,6 +324,9 @@ const createResetPasswordLink = handleRequest(
   },
 );
 
+/**
+ * Checks if a password reset link exists and is valid.
+ */
 const checkIfPasswordResetLinkExists = handleRequest(
   async (req: Request, res: Response) => {
     const { passwordResetLinkId } = req.params;
@@ -336,11 +355,13 @@ const checkIfPasswordResetLinkExists = handleRequest(
 
     res.status(200).json({
       message: "Link resetujący hasło jest ważny.",
-      passwordResetLinkId: passwordResetLink.id,
     });
   },
 );
 
+/**
+ * Resets the user's password using the provided reset link and new password.
+ */
 const resetUserPasswordByUser = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
@@ -357,12 +378,6 @@ const resetUserPasswordByUser = handleRequest(
 
     const passwordResetLink =
       await PasswordResetLink.findByPk(passwordResetLinkId);
-
-    console.log(
-      `Sprawdzanie linku resetującego hasło o ID ${passwordResetLinkId}.`,
-    );
-
-    console.log(passwordResetLink);
 
     if (!passwordResetLink) {
       logger.error(
@@ -427,6 +442,9 @@ const resetUserPasswordByUser = handleRequest(
   },
 );
 
+/**
+ * Changes the user's password.
+ */
 const changeUserPasswordbyUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userNickname } = AuthService.extractAuthenticatedUserPayload(req);

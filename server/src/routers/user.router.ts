@@ -55,4 +55,10 @@ userRouter.post(
   UserController.changeUserPasswordbyUser,
 );
 
+userRouter.post(
+  "/delete-account",
+  AuthMiddleware.authenticateUser(),
+  UserController.deleteAccountByUser,
+);
+
 export default userRouter;

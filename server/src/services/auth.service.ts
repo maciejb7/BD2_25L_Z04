@@ -7,6 +7,7 @@ import {
   NoRefreshTokenError,
   UserAlreadyExistsByEmailError,
   UserAlreadyExistsByNicknameError,
+  UserNotActiveError,
   UserNotFoundError,
 } from "../errors/errors";
 import { Request } from "express";
@@ -81,6 +82,15 @@ const getAuthenticatedUser = async (
       statusCode: 401,
       metaData: { ...metaData, nicknameOrEmail },
       loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika.`,
+    });
+  }
+
+  if (!user.isActive) {
+    throw new UserNotActiveError({
+      message: "Twoje konto nie jest aktywne. Aktywuj je, aby się zalogować.",
+      statusCode: 403,
+      metaData: { ...metaData, nicknameOrEmail },
+      loggerMessage: `${loggerMessages(metaData.service)}: Konto użytkownika ${user.nickname} nie jest aktywne.`,
     });
   }
 

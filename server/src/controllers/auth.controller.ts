@@ -17,6 +17,10 @@ import { handleRequest } from "../utils/handle-request";
 import { AuthService } from "../services/auth.service";
 import { TokenService } from "../services/token.service";
 import { ValidationService } from "../services/validation.service";
+import { AccountActivationLink } from "../db/models/account-activation-link";
+import { DateTime } from "luxon";
+import { config } from "../config";
+import { EmailService } from "../services/email.service";
 
 /**
  * Registers a new user.
@@ -47,28 +51,85 @@ const register = handleRequest(async (req: Request, res: Response) => {
     birthDate: ValidationService.getDateTimeFromDate(birthDate).toJSDate(),
   });
 
-  const accessToken = TokenService.generateAccessToken(createdUser);
-  const refreshToken = await TokenService.generateRefreshToken(createdUser);
-
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-    maxAge: 30 * 24 * 60 * 60 * 1000,
+  const activationLink = await AccountActivationLink.create({
+    userId: createdUser.userId,
+    expiresAt: DateTime.now().plus({ minutes: 15 }),
   });
 
-  logger.info(`Zarejestrowano nowego użytkownika ${createdUser.nickname}}.`, {
+  const activationLinkUrl = `${config.CLIENT_URL}/activate-account/${activationLink.linkId}`;
+
+  await EmailService.sendActivationEmail(
+    createdUser.nickname,
+    createdUser.email,
+    activationLinkUrl,
+  );
+
+  logger.info(`Zarejestrowano nowego użytkownika ${createdUser.nickname}.`, {
     service: "register",
     nickname: createdUser.nickname,
     email: createdUser.email,
   });
 
   res.status(201).json({
-    message: "Zarejestrowano pomyślnie.",
-    accessToken: accessToken,
-    user: createdUser.toJSON(),
+    message:
+      "Zarejestrowano pomyślnie. Link aktywacyjny został wysłany na podany adres e-mail.",
   });
 });
+
+/**
+ * Activates a user account using the provided activation link ID.
+ */
+const activateUserAccount = handleRequest(
+  async (req: Request, res: Response) => {
+    const { accountActivationLinkId } = req.params;
+
+    ValidationService.checkIfUUIDIsValid(
+      accountActivationLinkId,
+      "Link do aktywacji konta",
+    );
+
+    const accountActivationLink = await AccountActivationLink.findByPk(
+      accountActivationLinkId,
+    );
+
+    if (!accountActivationLink) {
+      res.status(404).json({
+        message: "Nie znaleziono linku aktywacyjnego.",
+      });
+      return;
+    }
+
+    const user = await User.findByPk(accountActivationLink.userId);
+
+    if (!user) {
+      res.status(404).json({
+        message: "Nie znaleziono użytkownika powiązanego z tym linkiem.",
+      });
+      return;
+    }
+
+    if (DateTime.fromJSDate(accountActivationLink.expiresAt) < DateTime.now()) {
+      await user.destroy();
+      res.status(400).json({
+        message: "Link aktywacyjny wygasł. Proszę zarejestrować się ponownie.",
+      });
+      return;
+    }
+
+    user.isActive = true;
+    await user.save();
+    await accountActivationLink.destroy();
+
+    logger.info(`Konto użytkownika ${user.nickname} zostało aktywowane.`, {
+      service: "activate_user_account",
+      nickname: user.nickname,
+    });
+
+    res.status(200).json({
+      message: "Pomyślnie aktywowano konto. Możesz się teraz zalogować.",
+    });
+  },
+);
 
 /**
  * Logs in an existing user.
@@ -142,6 +203,9 @@ const logout = handleRequest(async (req: Request, res: Response) => {
   res.status(200).json({ message: "Wylogowano pomyślnie." });
 });
 
+/**
+ * Refreshes the access token using the provided refresh token.
+ */
 const refresh = handleRequest(async (req: Request, res: Response) => {
   const refreshToken = AuthService.extractRefreshToken(req);
 
@@ -202,6 +266,7 @@ const logoutFromAllDevices = handleRequest(
  */
 export const AuthController = {
   register,
+  activateUserAccount,
   login,
   logout,
   refresh,

@@ -5,6 +5,10 @@ import { AuthController } from "../controllers/auth.controller";
 const authRouter = Router();
 
 authRouter.post("/register", AuthController.register);
+authRouter.post(
+  "/activate-account/:accountActivationLinkId",
+  AuthController.activateUserAccount,
+);
 authRouter.post("/login", AuthController.login);
 authRouter.delete(
   "/logout",

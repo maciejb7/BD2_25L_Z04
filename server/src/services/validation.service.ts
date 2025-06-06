@@ -247,6 +247,12 @@ const checkIfAgeBetween = (
     });
 };
 
+/**
+ *  Checks if a UUID is valid.
+ * @param uuid The UUID string to validate.
+ * @param fieldName The name of the field being validated, used for error messages.
+ * @throws {FieldValidationError} If the UUID is not valid.
+ */
 const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
   const uuidSchema = z
     .string()

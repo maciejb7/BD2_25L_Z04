@@ -12,6 +12,7 @@ import { UserMatchPreference } from "./user-match-preference";
 import { UserLike } from "./user-like";
 import { UserLocation } from "./user-location";
 import { PasswordResetLink } from "./password-reset-link";
+import { AccountActivationLink } from "./account-activation-link";
 
 export enum Gender {
   M = "male",
@@ -91,7 +92,7 @@ export class User extends Model {
 
   @Column({
     type: DataType.BOOLEAN,
-    defaultValue: true,
+    defaultValue: false,
   })
   declare isActive: boolean;
 
@@ -106,6 +107,12 @@ export class User extends Model {
     onDelete: "CASCADE",
   })
   declare passwordResetLinks: PasswordResetLink[];
+
+  @HasOne(() => AccountActivationLink, {
+    foreignKey: "userId",
+    onDelete: "CASCADE",
+  })
+  declare accountActivationLink: AccountActivationLink;
 
   @HasMany(() => UserMatchPreference)
   declare matchPreferences: UserMatchPreference[];

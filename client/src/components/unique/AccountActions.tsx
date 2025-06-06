@@ -1,11 +1,7 @@
 import { useState } from "react";
-import {
-  deleteAccount,
-  logout,
-  logoutFromAllDevices,
-} from "../../api/api.auth";
+import { logout, logoutFromAllDevices } from "../../api/api.auth";
 import PasswordModal from "../modals/ChangePasswordModal";
-import { changePassword } from "../../api/api.user";
+import { changePassword, deleteAccount } from "../../api/api.user";
 import ConfirmModal from "../modals/ConfirmModal";
 
 /**
