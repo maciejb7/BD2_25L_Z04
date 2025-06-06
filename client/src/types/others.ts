@@ -1,4 +1,6 @@
+/* eslint-disable prettier/prettier */
 export interface User {
+  userId: string;
   nickname: string;
   name: string;
   surname: string;

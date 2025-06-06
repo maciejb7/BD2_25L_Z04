@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { useEffect, useState } from "react";
 import { User } from "../../types/others";
 import { deleteUserAvatar, getUserAvatar } from "../../api/api.user";
@@ -20,6 +21,7 @@ function AccountInfo() {
   const [avatar, setAvatar] = useState<string>("");
   const [userInfo, setUserInfo] = useState<User>(
     getUserFromStorage() ?? {
+      userId: "",
       nickname: "",
       name: "",
       surname: "",
