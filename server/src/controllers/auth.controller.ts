@@ -3,7 +3,6 @@ import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import logger from "../logger";
 import {
-  extractRequestFields,
   LoginRequest,
   loginRequestFields,
   RegisterRequest,
@@ -21,18 +20,24 @@ import { AccountActivationLink } from "../db/models/account-activation-link";
 import { DateTime } from "luxon";
 import { config } from "../config";
 import { EmailService } from "../services/email.service";
+import { RequestService } from "../services/request.service";
+import { services } from "../constants/services";
+import {
+  ActivationLinkNotFoundError,
+  UserNotFoundError,
+} from "../errors/errors";
 
 /**
  * Registers a new user.
  */
 const register = handleRequest(async (req: Request, res: Response) => {
   const loggerMetaData = {
-    service: "register",
-    nickname: req.body.nickname ?? "",
+    service: services.register,
+    nickname: req.body.nickname,
   };
 
   const { nickname, email, name, surname, password, gender, birthDate } =
-    await extractRequestFields<RegisterRequest>(
+    await RequestService.extractRequestFields<RegisterRequest>(
       req.body,
       registerRequestFields,
       loggerMetaData,
@@ -64,11 +69,14 @@ const register = handleRequest(async (req: Request, res: Response) => {
     activationLinkUrl,
   );
 
-  logger.info(`Zarejestrowano nowego użytkownika ${createdUser.nickname}.`, {
-    service: "register",
-    nickname: createdUser.nickname,
-    email: createdUser.email,
-  });
+  logger.info(
+    `Zarejestrowano nowego użytkownika ${createdUser.nickname} i wysłano link do aktywacji konta na jego adres email.`,
+    {
+      service: services.register,
+      nickname: createdUser.nickname,
+      email: createdUser.email,
+    },
+  );
 
   res.status(201).json({
     message:
@@ -81,7 +89,13 @@ const register = handleRequest(async (req: Request, res: Response) => {
  */
 const activateUserAccount = handleRequest(
   async (req: Request, res: Response) => {
-    const { accountActivationLinkId } = req.params;
+    const accountActivationLinkId = await RequestService.extractPathParameter(
+      req,
+      "accountActivationLinkId",
+      {
+        service: services.activateUserAccount,
+      },
+    );
 
     ValidationService.checkIfUUIDIsValid(
       accountActivationLinkId,
@@ -93,27 +107,26 @@ const activateUserAccount = handleRequest(
     );
 
     if (!accountActivationLink) {
-      res.status(404).json({
-        message: "Nie znaleziono linku aktywacyjnego.",
+      throw new ActivationLinkNotFoundError({
+        makeLog: false,
       });
-      return;
     }
 
     const user = await User.findByPk(accountActivationLink.userId);
 
     if (!user) {
-      res.status(404).json({
-        message: "Nie znaleziono użytkownika powiązanego z tym linkiem.",
+      throw new UserNotFoundError({
+        message:
+          "Nie znaleziono użytkownika powiązanego z linkiem aktywacyjnym.",
+        makeLog: false,
       });
-      return;
     }
 
     if (DateTime.fromJSDate(accountActivationLink.expiresAt) < DateTime.now()) {
       await user.destroy();
-      res.status(400).json({
-        message: "Link aktywacyjny wygasł. Proszę zarejestrować się ponownie.",
+      throw new ActivationLinkNotFoundError({
+        makeLog: false,
       });
-      return;
     }
 
     user.isActive = true;
@@ -121,7 +134,7 @@ const activateUserAccount = handleRequest(
     await accountActivationLink.destroy();
 
     logger.info(`Konto użytkownika ${user.nickname} zostało aktywowane.`, {
-      service: "activate_user_account",
+      service: services.activateUserAccount,
       nickname: user.nickname,
     });
 
@@ -137,10 +150,10 @@ const activateUserAccount = handleRequest(
 const login = handleRequest(async (req: Request, res: Response) => {
   const loggerMetaData = {
     service: "login",
-    nicknameOrEmail: req.body.nicknameOrEmail ?? "",
+    nicknameOrEmail: req.body.nicknameOrEmail,
   };
   const { nicknameOrEmail, password } =
-    await extractRequestFields<LoginRequest>(
+    await RequestService.extractRequestFields<LoginRequest>(
       req.body,
       loginRequestFields,
       loggerMetaData,
@@ -179,13 +192,12 @@ const login = handleRequest(async (req: Request, res: Response) => {
  * Logs out the user by clearing the refresh token cookie.
  */
 const logout = handleRequest(async (req: Request, res: Response) => {
-  const { userNickname } = AuthService.extractAuthenticatedUserPayload(req);
-  const refreshToken = AuthService.extractRefreshToken(req);
-
   const loggerMetaData = {
     service: "logout",
-    nickname: userNickname,
+    nickname: req.user?.userNickname,
   };
+  const { userNickname } = RequestService.extractAuthenticatedUserPayload(req);
+  const refreshToken = RequestService.extractRefreshToken(req, loggerMetaData);
 
   await TokenService.revokeSession(refreshToken, loggerMetaData);
 
@@ -207,11 +219,11 @@ const logout = handleRequest(async (req: Request, res: Response) => {
  * Refreshes the access token using the provided refresh token.
  */
 const refresh = handleRequest(async (req: Request, res: Response) => {
-  const refreshToken = AuthService.extractRefreshToken(req);
+  const refreshToken = RequestService.extractRefreshToken(req);
 
   try {
     const accessToken = await TokenService.refreshAccessToken(refreshToken, {
-      service: "refresh",
+      service: services.refresh,
     });
 
     res.status(200).json({
@@ -235,10 +247,10 @@ const refresh = handleRequest(async (req: Request, res: Response) => {
 const logoutFromAllDevices = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
-      AuthService.extractAuthenticatedUserPayload(req);
+      RequestService.extractAuthenticatedUserPayload(req);
 
     const loggerMetaData = {
-      service: "logout_from_all_devices",
+      service: services.logoutFromAllDevices,
       nickname: userNickname,
     };
 
@@ -251,7 +263,7 @@ const logoutFromAllDevices = handleRequest(
     TokenService.revokeAllSessions(userId, loggerMetaData);
 
     logger.info(
-      `Użytkownik ${req.user?.userNickname} wylogował się ze wszystkich urządzeń.`,
+      `Użytkownik ${userNickname} wylogował się ze wszystkich urządzeń.`,
       loggerMetaData,
     );
 

@@ -3,58 +3,12 @@ import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import {
   InvalidPasswordError,
-  NoAuthenticationError,
-  NoRefreshTokenError,
   UserAlreadyExistsByEmailError,
   UserAlreadyExistsByNicknameError,
   UserNotActiveError,
   UserNotFoundError,
 } from "../errors/errors";
-import { Request } from "express";
-import { AuthenticatedUserPayload } from "../middlewares/auth.middleware";
-import { loggerMessages } from "../errors/loggerMessages";
-
-/**
- * Extracts the authenticated user payload from the request object.
- * @param request - The Express request object containing user information.
- * @param metaData - Optional metadata for error handling.
- * @returns An object containing the authenticated user's ID, nickname, and role.
- * @throws NoAuthenticationError if the user is not authenticated.
- */
-const extractAuthenticatedUserPayload = (
-  request: Request,
-  metaData = {},
-): AuthenticatedUserPayload => {
-  if (!request.user)
-    throw new NoAuthenticationError({ metaData: { ...metaData } });
-  return {
-    userId: request.user.userId,
-    userNickname: request.user.userNickname,
-    userRole: request.user.userRole,
-  };
-};
-
-/**
- * Extracts the access token from the request object.
- * @param request - The Express request object containing the access token.
- * @param metaData - Optional metadata for error handling.
- * @returns The access token as a string.
- * @throws NoAuthenticationError if the access token is not found in the request.
- */
-const extractRefreshToken = (
-  request: Request,
-  metaData = { service: "" },
-): string => {
-  const refreshToken = request.cookies?.refreshToken;
-
-  if (!refreshToken)
-    throw new NoRefreshTokenError({
-      metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Brak tokenu odświeżającego.`,
-    });
-
-  return refreshToken;
-};
+import { services } from "../constants/services";
 
 /**
  * Retrieves an authenticated user based on their nickname or email and password.
@@ -68,7 +22,7 @@ const extractRefreshToken = (
 const getAuthenticatedUser = async (
   nicknameOrEmail: string,
   password: string,
-  metaData = { service: "" },
+  metaData = { service: services.getAuthenticatedUser },
 ): Promise<User> => {
   const user = await User.findOne({
     where: {
@@ -81,16 +35,14 @@ const getAuthenticatedUser = async (
       message: "Nieprawidłowy login lub hasło.",
       statusCode: 401,
       metaData: { ...metaData, nicknameOrEmail },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika.`,
     });
   }
 
   if (!user.isActive) {
     throw new UserNotActiveError({
-      message: "Twoje konto nie jest aktywne. Aktywuj je, aby się zalogować.",
       statusCode: 403,
       metaData: { ...metaData, nicknameOrEmail },
-      loggerMessage: `${loggerMessages(metaData.service)}: Konto użytkownika ${user.nickname} nie jest aktywne.`,
+      loggerMessage: `Użytkownik ${user.nickname} próbuje wykonać akcję, ale jego konto nie jest aktywne.`,
     });
   }
 
@@ -101,7 +53,6 @@ const getAuthenticatedUser = async (
       message: "Nieprawidłowy login lub hasło.",
       statusCode: 401,
       metaData: { ...metaData, nicknameOrEmail },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nieprawidłowe hasło.`,
     });
   }
 
@@ -116,7 +67,7 @@ const getAuthenticatedUser = async (
  */
 const isNicknameTaken = async (
   nickname: string,
-  metaData = { service: "" },
+  metaData = { service: services.isNicknameTaken },
 ) => {
   const existingUserByNickname = await User.findOne({
     where: { nickname: nickname },
@@ -125,7 +76,6 @@ const isNicknameTaken = async (
   if (existingUserByNickname) {
     throw new UserAlreadyExistsByNicknameError({
       metaData: { ...metaData, nickname: nickname },
-      loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym nicku już istnieje.`,
     });
   }
 };
@@ -143,14 +93,11 @@ const isEmailTaken = async (email: string, metaData = { service: "" }) => {
   if (existingUserByEmail) {
     throw new UserAlreadyExistsByEmailError({
       metaData: { ...metaData, email: email },
-      loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym adresie e-mail już istnieje.`,
     });
   }
 };
 
 export const AuthService = {
-  extractAuthenticatedUserPayload,
-  extractRefreshToken,
   getAuthenticatedUser,
   isNicknameTaken,
   isEmailTaken,

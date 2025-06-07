@@ -15,7 +15,6 @@ import {
   confirmationRequestFields,
   EmailRequest,
   emailRequestFields,
-  extractRequestFields,
   PasswordResetRequest,
   passwordResetRequestFields,
 } from "../types/requests";
@@ -34,19 +33,30 @@ import { PasswordResetLink } from "../db/models/password-reset-link";
 import { DateTime } from "luxon";
 import { config } from "../config";
 import { EmailService } from "../services/email.service";
+import { RequestService } from "../services/request.service";
+import {
+  FieldValidationError,
+  ForbiddenActionError,
+  PasswordResetLinkExpiredError,
+  PasswordResetLinkNotFoundError,
+  UserAvatarNotFoundError,
+  UserNotFoundError,
+} from "../errors/errors";
+import { services } from "../constants/services";
 
 /**
  * Retrieves the details of the authenticated user.
  */
 const getUserDetailsByUser = handleRequest(
   async (req: Request, res: Response) => {
-    const { userId } = AuthService.extractAuthenticatedUserPayload(req);
+    const { userId } = RequestService.extractAuthenticatedUserPayload(req);
 
     const user = await User.findByPk(userId);
 
     if (!user) {
-      res.status(404).json({ message: "Nie znaleziono użytkownika." });
-      return;
+      throw new UserNotFoundError({
+        makeLog: false,
+      });
     }
 
     res.status(200).json({
@@ -65,10 +75,9 @@ const getUserAvatarByUser = handleRequest(
     const avatarFilePath = FileService.getUserAvatarPathVerified(userId);
 
     if (!avatarFilePath) {
-      res.status(404).json({
-        message: "Nie znaleziono awatara użytkownika.",
+      throw new UserAvatarNotFoundError({
+        makeLog: false,
       });
-      return;
     }
 
     res.sendFile(avatarFilePath);
@@ -81,12 +90,12 @@ const getUserAvatarByUser = handleRequest(
 const uploadUserAvatarByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
-      AuthService.extractAuthenticatedUserPayload(req);
+      RequestService.extractAuthenticatedUserPayload(req);
     const avatarFile = req.file!;
 
     await FileService.checkIfImageHasCorrectSize(
       avatarFile,
-      { service: "user_upload_avatar", nickname: userNickname },
+      { service: services.uploadUserAvatarByUser, nickname: userNickname },
       128,
       128,
       1024,
@@ -98,7 +107,7 @@ const uploadUserAvatarByUser = handleRequest(
     await fs.promises.writeFile(avatarFilePath, avatarFile.buffer);
 
     logger.info(`Użytkownik ${userNickname} zmienił swoje zdjęcie profilowe.`, {
-      service: "user_upload_avatar",
+      service: services.uploadUserAvatarByUser,
       nickname: userNickname,
     });
 
@@ -114,19 +123,21 @@ const uploadUserAvatarByUser = handleRequest(
 const deleteUserAvatarByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
-      AuthService.extractAuthenticatedUserPayload(req);
+      RequestService.extractAuthenticatedUserPayload(req);
     const avatarFilePath = FileService.getUserAvatarPathVerified(userId);
 
     if (!avatarFilePath) {
-      res.status(404).json({
-        message: "Nie posiadasz avatara do usunięcia.",
+      throw new UserAvatarNotFoundError({
+        metaData: {
+          service: services.deleteUserAvatarByUser,
+          nickname: userNickname,
+        },
       });
-      return;
     }
 
     await fs.promises.unlink(avatarFilePath);
     logger.info(`Użytkownik ${userNickname} usunął swoje zdjęcie profilowe.`, {
-      service: "user-delete-avatar",
+      service: services.deleteUserAvatarByUser,
       nickname: userNickname,
     });
     res.status(200).json({
@@ -141,15 +152,15 @@ const deleteUserAvatarByUser = handleRequest(
 const changeDetailsFieldByUser = handleRequest(
   async (req: Request, res: Response) => {
     const { userId, userNickname } =
-      AuthService.extractAuthenticatedUserPayload(req);
+      RequestService.extractAuthenticatedUserPayload(req);
 
     const loggerMetaData = {
-      service: "change_user_details",
+      service: services.changeUserDetailsByUser,
       nickname: userNickname,
     };
 
     const { name, value } =
-      await extractRequestFields<ChangeUserDetailsRequest>(
+      await RequestService.extractRequestFields<ChangeUserDetailsRequest>(
         req.body,
         changeUserDetailsRequestFields,
         loggerMetaData,
@@ -160,22 +171,27 @@ const changeDetailsFieldByUser = handleRequest(
     const user = await User.findByPk(userId);
 
     if (!user) {
-      res.status(404).json({ message: "Nie znaleziono użytkownika." });
-      return;
+      throw new UserNotFoundError({
+        metaData: loggerMetaData,
+      });
     }
 
     const validator = getUserDetailsValidator(loggerMetaData);
 
     if (!validator[name]) {
-      res.status(400).json({ message: "Nieprawidłowe pole do zmiany." });
-      return;
+      throw new FieldValidationError({
+        message: `Nieprawidłowa nazwa pola: ${name}.`,
+        metaData: loggerMetaData,
+        loggerMessage: `Użytkownik ${userNickname} próbował zmienić nieistniejące pole: ${name}.`,
+      });
     }
 
     if (name === "password") {
-      res.status(400).json({
+      throw new ForbiddenActionError({
         message: "Nie można zmienić hasła w ten sposób. Użyj innej metody.",
+        metaData: loggerMetaData,
+        loggerMessage: `Użytkownik ${userNickname} próbował zmienić hasło przez zwykłą zmianę informacji o sobie, co jest niedozwolone.`,
       });
-      return;
     }
 
     await validator[name](value);
@@ -206,27 +222,24 @@ const changeDetailsFieldByUser = handleRequest(
 const deleteAccountByUser = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
-      service: "delete_account_user",
-      nickname: req.user?.userNickname ?? "",
+      service: services.deleteAccountByUser,
+      nickname: req.user?.userNickname,
     };
 
     const { userNickname, userRole } =
-      AuthService.extractAuthenticatedUserPayload(req);
+      RequestService.extractAuthenticatedUserPayload(req);
 
     if (userRole === "admin") {
-      logger.error(
-        `Użytkownik ${userNickname} próbował usunąć swoje konto, ale jest administratorem.`,
-        loggerMetaData,
-      );
-      res.status(403).json({
+      throw new ForbiddenActionError({
         message:
           "Nie możesz usunąć swojego konta, ponieważ jesteś administratorem.",
+        metaData: loggerMetaData,
+        loggerMessage: `Użytkownik ${userNickname} próbował usunąć swoje konto, ale jest administratorem.`,
       });
-      return;
     }
 
     const { nickname, password } =
-      await extractRequestFields<ConfirmationRequest>(
+      await RequestService.extractRequestFields<ConfirmationRequest>(
         req.body,
         confirmationRequestFields,
         loggerMetaData,
@@ -234,14 +247,11 @@ const deleteAccountByUser = handleRequest(
       );
 
     if (nickname !== userNickname) {
-      logger.error(
-        `Nieudana próba usunięcia konta przez użytkownika ${userNickname} - podano inny nick.`,
-        loggerMetaData,
-      );
-      res.status(400).json({
+      throw new ForbiddenActionError({
         message: "Nieprawidłowy login lub hasło.",
+        metaData: loggerMetaData,
+        loggerMessage: `Nieudana próba usunięcia konta przez użytkownika ${userNickname} - podano inny nick.`,
       });
-      return;
     }
 
     const userToDelete = await AuthService.getAuthenticatedUser(
@@ -273,7 +283,7 @@ const createResetPasswordLink = handleRequest(
       email: req.body.email ?? "",
     };
 
-    const { email } = await extractRequestFields<EmailRequest>(
+    const { email } = await RequestService.extractRequestFields<EmailRequest>(
       req.body,
       emailRequestFields,
       loggerMetaData,
@@ -285,14 +295,11 @@ const createResetPasswordLink = handleRequest(
     });
 
     if (!user) {
-      logger.error(
-        `Nieudana próba wygenerowania linku resetującego hasło - nie znaleziono użytkownika z emailem ${email}.`,
-        loggerMetaData,
-      );
-      res.status(404).json({
-        message: "Użytkownik z podanym adresem e-mail nie istnieje.",
+      throw new UserNotFoundError({
+        message: "Nie znaleziono użytkownika z podanym adresem e-mail.",
+        metaData: loggerMetaData,
+        loggerMessage: `Nieudana próba resetowania hasła - nie znaleziono użytkownika z adresem e-mail: ${email}.`,
       });
-      return;
     }
 
     const resetLink = await PasswordResetLink.create({
@@ -329,7 +336,10 @@ const createResetPasswordLink = handleRequest(
  */
 const checkIfPasswordResetLinkExists = handleRequest(
   async (req: Request, res: Response) => {
-    const { passwordResetLinkId } = req.params;
+    const passwordResetLinkId = await RequestService.extractPathParameter(
+      req,
+      "passwordResetLinkId",
+    );
 
     ValidationService.checkIfUUIDIsValid(
       passwordResetLinkId,
@@ -340,17 +350,15 @@ const checkIfPasswordResetLinkExists = handleRequest(
       await PasswordResetLink.findByPk(passwordResetLinkId);
 
     if (!passwordResetLink) {
-      res.status(404).json({
-        message: "Nie znaleziono linku resetującego hasło.",
+      throw new PasswordResetLinkNotFoundError({
+        makeLog: false,
       });
-      return;
     }
 
     if (DateTime.fromJSDate(passwordResetLink.expiresAt) < DateTime.now()) {
-      res.status(400).json({
-        message: "Link resetujący hasło wygasł.",
+      throw new PasswordResetLinkExpiredError({
+        makeLog: false,
       });
-      return;
     }
 
     res.status(200).json({
@@ -365,11 +373,11 @@ const checkIfPasswordResetLinkExists = handleRequest(
 const resetUserPasswordByUser = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
-      service: "reset_user_password",
+      service: services.resetUserPasswordByUser,
     };
 
     const { passwordResetLinkId, password } =
-      await extractRequestFields<PasswordResetRequest>(
+      await RequestService.extractRequestFields<PasswordResetRequest>(
         req.body,
         passwordResetRequestFields,
         loggerMetaData,
@@ -380,51 +388,48 @@ const resetUserPasswordByUser = handleRequest(
       await PasswordResetLink.findByPk(passwordResetLinkId);
 
     if (!passwordResetLink) {
-      logger.error(
-        `Nieudana próba resetowania hasła - nie znaleziono linku resetującego o ID ${passwordResetLinkId}.`,
-        loggerMetaData,
-      );
-      res.status(404).json({
-        message: "Nie znaleziono linku resetującego hasło.",
+      throw new PasswordResetLinkNotFoundError({
+        metaData: {
+          ...loggerMetaData,
+          passwordResetLinkId: passwordResetLinkId,
+        },
       });
-      return;
     }
 
     const user = await User.findByPk(passwordResetLink.userId);
 
     if (!user) {
-      logger.error(
-        `Nieudana próba resetowania hasła - nie znaleziono użytkownika powiązanego z linkiem resetującym o ID ${passwordResetLinkId}.`,
-        loggerMetaData,
-      );
-      res.status(404).json({
-        message: "Nie znaleziono użytkownika powiązanego z tym linkiem.",
+      throw new UserNotFoundError({
+        metaData: {
+          ...loggerMetaData,
+          passwordResetLinkId: passwordResetLinkId,
+        },
       });
-      return;
     }
 
     if (DateTime.fromJSDate(passwordResetLink.expiresAt) < DateTime.now()) {
-      logger.error(
-        `Nieudana próba resetowania hasła - link resetujący o ID ${passwordResetLinkId} wygasł.`,
-        { ...loggerMetaData, nickname: user.nickname },
-      );
-      res.status(400).json({
-        message: "Link resetujący hasło wygasł.",
+      await passwordResetLink.destroy();
+      throw new PasswordResetLinkExpiredError({
+        metaData: {
+          ...loggerMetaData,
+          passwordResetLinkId: passwordResetLinkId,
+          nickname: user.nickname,
+        },
       });
-      return;
     }
 
     const isPasswordTheSame = await bcrypt.compare(password, user.password);
 
     if (isPasswordTheSame) {
-      logger.error(`Nieudana próba resetowania hasła - podano to samo hasło.`, {
-        ...loggerMetaData,
-        nickname: user.nickname,
-      });
-      res.status(400).json({
+      throw new ForbiddenActionError({
         message: "Nowe hasło nie może być takie samo jak stare.",
+        metaData: {
+          ...loggerMetaData,
+          passwordResetLinkId: passwordResetLinkId,
+          nickname: user.nickname,
+        },
+        loggerMessage: `Użytkownik ${user.nickname} próbował zresetować hasło, ale podał to samo hasło.`,
       });
-      return;
     }
 
     const hashedNewPassword = await bcrypt.hash(password, 10);
@@ -447,15 +452,16 @@ const resetUserPasswordByUser = handleRequest(
  */
 const changeUserPasswordbyUser = handleRequest(
   async (req: Request, res: Response) => {
-    const { userNickname } = AuthService.extractAuthenticatedUserPayload(req);
+    const { userNickname } =
+      RequestService.extractAuthenticatedUserPayload(req);
 
     const loggerMetaData = {
-      service: "change_password_user",
+      service: services.changeUserPasswordByUser,
       nickname: userNickname,
     };
 
     const { oldPassword, newPassword } =
-      await extractRequestFields<ChangePasswordRequest>(
+      await RequestService.extractRequestFields<ChangePasswordRequest>(
         req.body,
         changePasswordRequestFields,
         loggerMetaData,
@@ -471,14 +477,11 @@ const changeUserPasswordbyUser = handleRequest(
     const isPasswordTheSame = await bcrypt.compare(newPassword, user.password);
 
     if (isPasswordTheSame) {
-      logger.error(
-        `Nieudana próba zmiany hasła - Podano to samo hasło.`,
-        loggerMetaData,
-      );
-      res.status(400).json({
+      throw new ForbiddenActionError({
         message: "Nowe hasło nie może być takie samo jak stare.",
+        metaData: loggerMetaData,
+        loggerMessage: `Użytkownik ${userNickname} próbował zmienić hasło, ale podał to samo hasło.`,
       });
-      return;
     }
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);

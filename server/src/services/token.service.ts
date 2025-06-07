@@ -10,11 +10,7 @@ import {
   UserNotFoundError,
 } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
-import { loggerMessages } from "../errors/loggerMessages";
-
-/**
- * Service for handling tokens.
- */
+import { services } from "../constants/services";
 
 /**
  * Generates an access token for the given user.
@@ -59,7 +55,7 @@ const generateRefreshToken = async (user: User): Promise<string> => {
  */
 const refreshAccessToken = async (
   refreshToken: string,
-  metaData = { service: "" },
+  metaData = { service: services.refresh },
 ): Promise<string> => {
   const hashedRefreshToken = createHash("sha256")
     .update(refreshToken)
@@ -72,13 +68,13 @@ const refreshAccessToken = async (
   if (!session)
     throw new InvalidRefreshTokenError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono sesji dla podanego refresh tokena.`,
+      makeLog: false,
     });
 
   if (DateTime.now() > DateTime.fromJSDate(session.expiresAt))
     throw new ExpiredRefreshTokenError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Token odświeżający wygasł.`,
+      makeLog: false,
     });
 
   const user = await User.findByPk(session.userId);
@@ -86,7 +82,7 @@ const refreshAccessToken = async (
   if (!user)
     throw new UserNotFoundError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika dla sesji.`,
+      makeLog: false,
     });
 
   return generateAccessToken(user);
@@ -100,7 +96,7 @@ const refreshAccessToken = async (
  */
 const revokeSession = async (
   refreshToken: string,
-  metaData = { service: "" },
+  metaData = { service: services.logout },
 ) => {
   const hashedRefreshToken = createHash("sha256")
     .update(refreshToken)
@@ -113,7 +109,7 @@ const revokeSession = async (
   if (destroyCounter === 0) {
     throw new InvalidRefreshTokenError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono sesji dla podanego refresh tokena.`,
+      loggerMessage: `Nie znaleziono sesji do dla tokena.`,
     });
   }
 };
@@ -126,7 +122,7 @@ const revokeSession = async (
  */
 const revokeAllSessions = async (
   userId: string,
-  metaData = { service: "" },
+  metaData = { service: services.logoutFromAllDevices },
 ) => {
   const destroyCount = await Session.destroy({
     where: { userId: userId },
@@ -134,10 +130,10 @@ const revokeAllSessions = async (
 
   if (destroyCount === 0) {
     throw new NoRefreshTokenError({
-      message: "Nie znaleziono żadnych sesji dla użytkownika.",
+      message: "Nie znaleziono żadnych sesji, z których można się wylogować.",
       metaData: { ...metaData, userId: userId },
       statusCode: 404,
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono żadnych sesji dla użytkownika.`,
+      loggerMessage: `Nie znaleziono żadnych sesji dla użytkownika.`,
     });
   }
 };

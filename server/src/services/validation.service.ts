@@ -1,7 +1,7 @@
 import { EnumLike, z } from "zod";
 import { FieldValidationError } from "../errors/errors";
 import { DateTime } from "luxon";
-import { validationErrorLoggerMessages } from "../errors/loggerMessages";
+import { services } from "../constants/services";
 
 /**
  * Capitalizes the first letter of a string.
@@ -24,7 +24,7 @@ const checkIfValueMatchesEnum = (
   name: string,
   value: string,
   enumObject: EnumLike,
-  metaData = { service: "" },
+  metaData = { service: services.checkIfValueMatchesEnum },
 ) => {
   name = capitalizeFirstLetter(name);
   const enumSchema = z.nativeEnum(enumObject);
@@ -36,7 +36,7 @@ const checkIfValueMatchesEnum = (
     throw new FieldValidationError({
       message: errorMessage,
       metaData: { ...metaData, field: name, value: value },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${errorMessage}`,
+      loggerMessage: `${errorMessage}`,
     });
   }
 };
@@ -95,13 +95,10 @@ const checkIfValueIsValid = (
   const isValid = fieldSchema.safeParse(value);
 
   if (!isValid.success) {
-    console.log(
-      `Validation error for field "${name}": ${isValid.error.errors[0].message}`,
-    );
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: name, value: value },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${isValid.error.errors[0].message}`,
+      loggerMessage: `${isValid.error.errors[0].message}`,
     });
   }
 };
@@ -112,7 +109,10 @@ const checkIfValueIsValid = (
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the email is invalid.
  */
-const isEmailValid = (email: string, metaData = { service: "" }) => {
+const chekcIfEmailIsValid = (
+  email: string,
+  metaData = { service: services.checkIfEmailIsValid },
+) => {
   const emailSchema = z
     .string()
     .nonempty({ message: "Email nie może być pusty." })
@@ -125,7 +125,7 @@ const isEmailValid = (email: string, metaData = { service: "" }) => {
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: "Email", value: email },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${isValid.error.errors[0].message}`,
+      loggerMessage: `${isValid.error.errors[0].message}`,
     });
   }
 };
@@ -136,7 +136,10 @@ const isEmailValid = (email: string, metaData = { service: "" }) => {
  * @param metaData Additional metadata for error handling.
  * @throws {FieldValidationError} If the password does not meet validation criteria.
  */
-const isPasswordValid = (password: string, metaData = { service: "" }) => {
+const checkIfPasswordIsValid = (
+  password: string,
+  metaData = { service: services.checkIfPasswordIsValid },
+) => {
   const passwordSchema = z
     .string()
     .nonempty({
@@ -158,7 +161,7 @@ const isPasswordValid = (password: string, metaData = { service: "" }) => {
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: "Hasło" },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${isValid.error.errors[0].message}`,
+      loggerMessage: `${isValid.error.errors[0].message}`,
     });
   }
 };
@@ -172,7 +175,7 @@ const isPasswordValid = (password: string, metaData = { service: "" }) => {
  */
 const getDateTimeFromDate = (
   date: string,
-  metaData = { service: "" },
+  metaData = { service: services.getDateTimeFromDate },
 ): DateTime => {
   const dateSchema = z
     .string()
@@ -188,7 +191,7 @@ const getDateTimeFromDate = (
     throw new FieldValidationError({
       message: dateValidationResult.error.errors[0].message,
       metaData: { ...metaData, field: "Data", value: date },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${dateValidationResult.error.errors[0].message}`,
+      loggerMessage: `${dateValidationResult.error.errors[0].message}`,
     });
   }
 
@@ -198,7 +201,7 @@ const getDateTimeFromDate = (
     throw new FieldValidationError({
       message: `Format daty ${date} jest niepoprawny.`,
       metaData: { ...metaData, field: "Data", value: date },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Format daty ${date} jest niepoprawny.`,
+      loggerMessage: `Format daty ${date} jest niepoprawny.`,
     });
   }
 
@@ -229,21 +232,33 @@ const checkIfAgeBetween = (
     throw new FieldValidationError({
       message: "Nie mogłeś urodzić się w przyszłości.",
       metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Nie mogłeś urodzić się w przyszłości.`,
+      loggerMessage: `Użytkownik próbuje ustawić datę urodzenia w przyszłości.`,
     });
 
   if (date <= maximalDate)
     throw new FieldValidationError({
       message: `Nie możesz mieć więcej niż ${yearsMax} lat.`,
-      metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Nie możesz mieć więcej niż ${yearsMax} lat.`,
+      metaData: {
+        ...metaData,
+        field: "Data urodzenia",
+        value: date.toISO(),
+        yearsMax: yearsMax,
+      },
+      loggerMessage:
+        "Użytkownik próbuje ustawić datę urodzenia, która przekracza maksymalny wiek.",
     });
 
   if (date >= minimalDate)
     throw new FieldValidationError({
       message: `Musisz mieć co najmniej ${yearsMin} lat.`,
-      metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Musisz mieć co najmniej ${yearsMin} lat.`,
+      metaData: {
+        ...metaData,
+        field: "Data urodzenia",
+        value: date.toISO(),
+        yearsMin: yearsMin,
+      },
+      loggerMessage:
+        "Użytkownik próbuje ustawić datę urodzenia, która jest poniżej minimalnego wieku.",
     });
 };
 
@@ -263,6 +278,8 @@ const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
   if (!isValid.success) {
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
+      metaData: { field: fieldName, value: uuid },
+      loggerMessage: "Użytkownik podał niepoprawny UUID.",
     });
   }
 };
@@ -270,8 +287,8 @@ const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
 export const ValidationService = {
   checkIfValueMatchesEnum,
   checkIfValueIsValid,
-  isEmailValid,
-  isPasswordValid,
+  chekcIfEmailIsValid,
+  checkIfPasswordIsValid,
   getDateTimeFromDate,
   checkIfAgeBetween,
   checkIfUUIDIsValid,

@@ -1,7 +1,10 @@
-import { Request, Response, NextFunction } from "express";
-import { ApiError, NoRefreshTokenError } from "../errors/errors";
+import { NextFunction, Request, Response } from "express";
+import { ApiError } from "../errors/errors";
 import logger from "../logger";
 
+/**
+ * Global error handler. Handles errors thrown in all controllers logs them and returns a response to the client.
+ */
 export const errorHandler = (
   error: Error,
   req: Request,
@@ -11,20 +14,26 @@ export const errorHandler = (
   if (error instanceof ApiError) {
     // Clean up metaData by removing empty strings
     const filteredMetaData = Object.fromEntries(
-      Object.entries(error.metaData).filter(([, value]) => value !== ""),
+      Object.entries(error.options.metaData ?? {}).filter(
+        ([, value]) => value !== "" && value !== undefined,
+      ),
     );
 
-    if (error.loggerMessage && !(error instanceof NoRefreshTokenError))
-      logger.error(error.loggerMessage, filteredMetaData);
+    if (error.options.makeLog)
+      logger.error(
+        error.options.loggerMessage ??
+          "Wystąpił błąd podczas przetwarzania żądania.",
+        filteredMetaData,
+      );
 
-    res.status(error.statusCode).json({
+    res.status(error.options.statusCode ?? 500).json({
       message: error.message,
     });
 
     return;
   }
 
-  logger.error("Nieoczekiwany błąd serwera", error);
+  logger.error("Wystąpił błąd serwera podczas przetwarzania żądania: ", error);
 
   res.status(500).json({
     message: error.message,
