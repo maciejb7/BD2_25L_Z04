@@ -3,6 +3,7 @@ import { questions } from "../db/models/question";
 import { User } from "../db/models/user";
 import { handleRequest } from "../utils/handle-request";
 import { QuestionService } from "../services/question.service";
+import { AuthService } from "../services/auth.service";
 
 /**
  * Get random questions
@@ -165,10 +166,42 @@ export const getAllAnswersController = handleRequest(
   },
 );
 
+/**
+ * Get current user's answers for specific questions
+ * @param req Request
+ * @param res Response
+ */
+export const getCurrentUserAnswersForQuestions = handleRequest(
+  async (req: Request, res: Response) => {
+    try {
+      const { userId } = AuthService.extractAuthenticatedUserPayload(req);
+      const { questionIds } = req.body;
+
+      if (!Array.isArray(questionIds)) {
+        res.status(400).json({ error: "questionIds must be an array" });
+        return;
+      }
+
+      const answers = await QuestionService.getUserAnswersForQuestions(
+        userId,
+        questionIds,
+      );
+
+      res.json(answers);
+    } catch (error) {
+      console.error("Error getting user answers for questions", error);
+      res
+        .status(500)
+        .json({ error: "Error getting user answers for questions" });
+    }
+  },
+);
+
 export const QuestionController = {
   getRandom,
   postAnswer,
   getAnswersByUser: getAnswersByUserController,
   getAnswersByQuestion: getAnswersByQuestionController,
   getAllAnswers: getAllAnswersController,
+  getCurrentUserAnswersForQuestions,
 };

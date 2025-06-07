@@ -29,5 +29,10 @@ router.post(
   AuthMiddleware.authenticateUser(),
   QuestionController.postAnswer,
 );
+router.post(
+  "/user-answers-for-questions",
+  AuthMiddleware.authenticateUser(),
+  QuestionController.getCurrentUserAnswersForQuestions,
+);
 
 export default router;
