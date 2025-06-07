@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Background from "../../components/common/Background";
 import SideBar from "../../components/common/SideBar";
 import { getSideBarOptions } from "../../constants/sideBarOptions";
@@ -42,8 +42,18 @@ function QuestionsPage() {
   const [error, setError] = useState<string>("");
   const { showAlert } = useAlert();
 
+  // Używamy useRef do zapewnienia jednokrotnej inicjalizacji
+  const initializationRef = useRef(false);
+
   // Load questions and existing answers on component mount
   useEffect(() => {
+    // Sprawdzamy czy inicjalizacja już się wykonała
+    if (initializationRef.current) {
+      return;
+    }
+
+    initializationRef.current = true;
+
     const initializeQuestionsAndAnswers = async () => {
       try {
         setIsLoading(true);
