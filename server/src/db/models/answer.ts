@@ -7,6 +7,7 @@ import {
   BelongsTo,
 } from "sequelize-typescript";
 import { User } from "./user";
+import { Question } from "./question";
 
 @Table({
   tableName: "user_answers",
@@ -36,12 +37,16 @@ export class Answer extends Model {
   @BelongsTo(() => User)
   declare user: User;
 
+  @ForeignKey(() => Question)
   @Column({
     type: DataType.STRING,
     allowNull: false,
     field: "question_id",
   })
   declare questionId: string;
+
+  @BelongsTo(() => Question)
+  declare question: Question;
 
   @Column({
     type: DataType.TEXT,

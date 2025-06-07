@@ -16,6 +16,7 @@ import { MusicTrack } from "./models/music_track";
 import { UserMusic } from "./models/user_music";
 import { UserLocation } from "./models/user_location";
 import { Answer } from "./models/answer";
+import { Question } from "./models/question";
 
 const models = [
   User,
@@ -34,6 +35,7 @@ const models = [
   UserMusic,
   UserLocation,
   Answer,
+  Question,
 ];
 
 export const database = new Sequelize({

@@ -12,6 +12,7 @@ import { MatchPreferenceService } from "./services/match-preference.service";
 import questionRouter from "./routers/question.router";
 import hobbyRouter from "./routers/hobby.router";
 import { HobbyService } from "./services/hobby.service";
+import { QuestionService } from "./services/question.service";
 import musicRouter from "./routers/music.router";
 import locationRouter from "./routers/location.router";
 import path from "path";
@@ -56,6 +57,9 @@ const onStart = async () => {
 
   await HobbyService.initializeHobbyData();
   logger.info("Zainicjalizowano dane hobby.");
+
+  await QuestionService.initializeQuestionsData();
+  logger.info("Zainicjalizowano pytania.");
 };
 
 const startExpress = (app: Express) => {
