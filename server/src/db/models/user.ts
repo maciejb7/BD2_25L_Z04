@@ -11,6 +11,7 @@ import { Session } from "./session";
 import { UserMatchPreference } from "./user_match_preference";
 import { UserLike } from "./user_like";
 import { UserLocation } from "./user_location";
+import { Answer } from "./answer";
 
 export enum Gender {
   M = "male",
@@ -112,6 +113,12 @@ export class User extends Model {
   @HasOne(() => UserLocation, { foreignKey: "user_id" })
   declare location: UserLocation;
 
+  @HasMany(() => Answer, {
+    onDelete: "CASCADE",
+    foreignKey: "userId",
+  })
+  declare answers: Answer[];
+
   public toJSON(): object {
     const userData = this.get({ plain: true });
 
@@ -123,6 +130,7 @@ export class User extends Model {
     delete userData.givenLikes;
     delete userData.receivedLikes;
     delete userData.location;
+    delete userData.answers;
 
     return userData;
   }
