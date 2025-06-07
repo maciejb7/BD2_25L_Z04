@@ -123,6 +123,7 @@ export class User extends Model {
     delete userData.givenLikes;
     delete userData.receivedLikes;
     delete userData.location;
+    delete userData.userId;
 
     return userData;
   }
