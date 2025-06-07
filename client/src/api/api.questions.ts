@@ -22,17 +22,12 @@ interface Answer {
 }
 
 /**
- * Pobiera losowe pytania z API
- * @param count Liczba pytań do pobrania
+ * Pobiera wszystkie pytania z API w losowej kolejności
  * @returns Promise z tablicą pytań
  */
-export const getRandomQuestions = async (
-  count: number,
-): Promise<Question[]> => {
+export const getAllQuestions = async (): Promise<Question[]> => {
   try {
-    const response: AxiosResponse<Question[]> = await api.get(
-      `api/questions/random?count=${count}`,
-    );
+    const response: AxiosResponse<Question[]> = await api.get("api/questions/");
     return response.data;
   } catch (error) {
     handleApiError(error, "Błąd podczas pobierania pytań");

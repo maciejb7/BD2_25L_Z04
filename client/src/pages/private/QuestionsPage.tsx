@@ -3,7 +3,7 @@ import Background from "../../components/common/Background";
 import SideBar from "../../components/common/SideBar";
 import { getSideBarOptions } from "../../constants/sideBarOptions";
 import {
-  getRandomQuestions,
+  getAllQuestions,
   submitAnswer,
   getUserAnswersForQuestions,
 } from "../../api/api.questions";
@@ -56,8 +56,8 @@ function QuestionsPage() {
         }
         setUserId(user.userId);
 
-        // Get random questions
-        const questionsData = await getRandomQuestions(5);
+        // Get all questions in random order
+        const questionsData = await getAllQuestions();
         if (!questionsData || questionsData.length === 0) {
           throw new Error("Nie udało się pobrać pytań");
         }
