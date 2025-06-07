@@ -59,6 +59,8 @@ export const getloggerMessage = (service: string | undefined) => {
       "Wystąpił błąd podczas sprawdzania, czy hasło jest poprawne",
     get_date_time_from_date:
       "Wystąpił błąd podczas pobierania daty i godziny z daty",
+    check_if_age_between:
+      "Wystąpił błąd podczas sprawdzania, czy wiek jest pomiędzy określonymi wartościami",
   };
 
   return (

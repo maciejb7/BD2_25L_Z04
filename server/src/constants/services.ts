@@ -34,4 +34,6 @@ export const services = {
   checkIfEmailIsValid: "check_if_password_is_valid",
   checkIfPasswordIsValid: "check_if_email_is_valid",
   getDateTimeFromDate: "get_date_time_from_date",
+  checkIfAgeBetween: "check_if_age_between",
+  checkIfUUIDIsValid: "check_if_uuid_is_valid",
 };

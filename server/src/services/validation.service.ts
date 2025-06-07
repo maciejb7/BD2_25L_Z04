@@ -18,13 +18,15 @@ export const capitalizeFirstLetter = (string: string): string => {
  * @param value The value to check against the enum.
  * @param enumObject The enum object to validate against.
  * @param metaData Additional metadata for error handling.
- * @throws {FieldValidationError} If the value does not match the enum.
+ * @throws FieldValidationError If the value does not match the enum.
  */
 const checkIfValueMatchesEnum = (
   name: string,
   value: string,
   enumObject: EnumLike,
-  metaData = { service: services.checkIfValueMatchesEnum },
+  metaData: Record<string, unknown> = {
+    service: services.checkIfValueMatchesEnum,
+  },
 ) => {
   name = capitalizeFirstLetter(name);
   const enumSchema = z.nativeEnum(enumObject);
@@ -50,12 +52,12 @@ const checkIfValueMatchesEnum = (
  * @param maxLength Maximum length of the string.
  * @param forbiddenNumbers Whether numbers are forbidden in the string.
  * @param forbiddenSpecialChars Whether special characters are forbidden in the string.
- * @throws {FieldValidationError} If the value does not meet validation criteria.
+ * @throws FieldValidationError If the value does not meet validation criteria.
  */
 const checkIfValueIsValid = (
   name: string,
   value: string,
-  metaData = { service: "" },
+  metaData: Record<string, unknown> = { service: services.checkIfValueIsValid },
   minLength = 1,
   maxLength = 500,
   forbiddenNumbers = false,
@@ -107,11 +109,11 @@ const checkIfValueIsValid = (
  * Validates an email address.
  * @param email The email address to validate.
  * @param metaData Additional metadata for error handling.
- * @throws {FieldValidationError} If the email is invalid.
+ * @throws FieldValidationError If the email is invalid.
  */
 const chekcIfEmailIsValid = (
   email: string,
-  metaData = { service: services.checkIfEmailIsValid },
+  metaData: Record<string, unknown> = { service: services.checkIfEmailIsValid },
 ) => {
   const emailSchema = z
     .string()
@@ -134,11 +136,13 @@ const chekcIfEmailIsValid = (
  * Validates a password against security criteria.
  * @param password The password to validate.
  * @param metaData Additional metadata for error handling.
- * @throws {FieldValidationError} If the password does not meet validation criteria.
+ * @throws FieldValidationError If the password does not meet validation criteria.
  */
 const checkIfPasswordIsValid = (
   password: string,
-  metaData = { service: services.checkIfPasswordIsValid },
+  metaData: Record<string, unknown> = {
+    service: services.checkIfPasswordIsValid,
+  },
 ) => {
   const passwordSchema = z
     .string()
@@ -171,11 +175,11 @@ const checkIfPasswordIsValid = (
  * @param date The date string to convert.
  * @param metaData Additional metadata for error handling.
  * @returns A DateTime object representing the date.
- * @throws {FieldValidationError} If the date is invalid or in the wrong format.
+ * @throws FieldValidationError If the date is invalid or in the wrong format.
  */
 const getDateTimeFromDate = (
   date: string,
-  metaData = { service: services.getDateTimeFromDate },
+  metaData: Record<string, unknown> = { service: services.getDateTimeFromDate },
 ): DateTime => {
   const dateSchema = z
     .string()
@@ -214,11 +218,11 @@ const getDateTimeFromDate = (
  * @param metaData Additional metadata for error handling.
  * @param yearsMin Minimum age in years.
  * @param yearsMax Maximum age in years.
- * @throws {FieldValidationError} If the date is not within the specified age range.
+ * @throws FieldValidationError If the date is not within the specified age range.
  */
 const checkIfAgeBetween = (
   date: string | DateTime,
-  metaData = { service: "" },
+  metaData: Record<string, unknown> = { service: services.checkIfAgeBetween },
   yearsMin = 13,
   yearsMax = 105,
 ) => {
@@ -266,7 +270,7 @@ const checkIfAgeBetween = (
  *  Checks if a UUID is valid.
  * @param uuid The UUID string to validate.
  * @param fieldName The name of the field being validated, used for error messages.
- * @throws {FieldValidationError} If the UUID is not valid.
+ * @throws FieldValidationError If the UUID is not valid.
  */
 const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
   const uuidSchema = z

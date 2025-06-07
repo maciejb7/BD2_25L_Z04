@@ -19,11 +19,11 @@ export const getUserDetailsValidator = (metaData = {}): Validator => {
       await AuthService.isNicknameTaken(value);
     },
     email: async (value: string) => {
-      ValidationService.isEmailValid(value, metaData);
+      ValidationService.chekcIfEmailIsValid(value, metaData);
       await AuthService.isEmailTaken(value);
     },
     password: (value: string) => {
-      ValidationService.isPasswordValid(value, metaData);
+      ValidationService.checkIfPasswordIsValid(value, metaData);
     },
     name: (value: string) => {
       ValidationService.checkIfValueIsValid(
@@ -129,7 +129,7 @@ export const getPasswordResetValidator = (metaData = {}): Validator => {
       );
     },
     password: (value: string) => {
-      ValidationService.isPasswordValid(value, metaData);
+      ValidationService.checkIfPasswordIsValid(value, metaData);
     },
   };
 };
@@ -148,7 +148,7 @@ export const getPasswordChangeValidator = (metaData = {}): Validator => {
       );
     },
     newPassword: (value: string) => {
-      ValidationService.isPasswordValid(value, metaData);
+      ValidationService.checkIfPasswordIsValid(value, metaData);
     },
   };
 };
@@ -156,7 +156,7 @@ export const getPasswordChangeValidator = (metaData = {}): Validator => {
 export const getEmailValidator = (metaData = {}): Validator => {
   return {
     email: (value: string) => {
-      ValidationService.isEmailValid(value, metaData);
+      ValidationService.chekcIfEmailIsValid(value, metaData);
     },
   };
 };
