@@ -7,6 +7,11 @@ import {
   submitAnswer,
   getUserAnswersForQuestions,
 } from "../../api/api.questions";
+import {
+  getAllMatchTypes,
+  getUserMatchPreferences,
+  updateUserMatchPreferences,
+} from "../../api/api.match_preferences";
 import { useAlert } from "../../contexts/AlertContext";
 import { getUser } from "../../utils/userAuthentication";
 
@@ -30,6 +35,12 @@ interface UserAnswer {
   isSaved: boolean;
 }
 
+interface MatchType {
+  match_type_id: string;
+  match_type_name: string;
+  match_type_description: string;
+}
+
 function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<Record<string, UserAnswer>>(
@@ -40,12 +51,22 @@ function QuestionsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [error, setError] = useState<string>("");
+
+  // Match preferences state
+  const [matchTypes, setMatchTypes] = useState<MatchType[]>([]);
+  const [selectedMatchTypes, setSelectedMatchTypes] = useState<string[]>([]);
+  const [isMatchPreferencesLoading, setIsMatchPreferencesLoading] =
+    useState(true);
+  const [isMatchPreferencesSaving, setIsMatchPreferencesSaving] =
+    useState(false);
+  const [matchPreferencesSaved, setMatchPreferencesSaved] = useState(false);
+
   const { showAlert } = useAlert();
 
   // Używamy useRef do zapewnienia jednokrotnej inicjalizacji
   const initializationRef = useRef(false);
 
-  // Load questions and existing answers on component mount
+  // Load questions, answers and match preferences on component mount
   useEffect(() => {
     // Sprawdzamy czy inicjalizacja już się wykonała
     if (initializationRef.current) {
@@ -54,7 +75,7 @@ function QuestionsPage() {
 
     initializationRef.current = true;
 
-    const initializeQuestionsAndAnswers = async () => {
+    const initializeData = async () => {
       try {
         setIsLoading(true);
         setError("");
@@ -90,6 +111,9 @@ function QuestionsPage() {
           };
         });
         setUserAnswers(answersMap);
+
+        // Load match preferences data
+        await loadMatchPreferences();
       } catch (error: any) {
         console.error("❌ Błąd podczas inicjalizacji:", error);
         const errorMessage =
@@ -101,8 +125,62 @@ function QuestionsPage() {
       }
     };
 
-    initializeQuestionsAndAnswers();
+    initializeData();
   }, [showAlert]);
+
+  const loadMatchPreferences = async () => {
+    try {
+      setIsMatchPreferencesLoading(true);
+
+      // Get all available match types
+      const allMatchTypes = await getAllMatchTypes();
+      setMatchTypes(allMatchTypes);
+
+      // Get user's current preferences
+      const userPreferences = await getUserMatchPreferences();
+      const userPreferenceIds = userPreferences.map(
+        (pref) => pref.match_type_id,
+      );
+      setSelectedMatchTypes(userPreferenceIds);
+      setMatchPreferencesSaved(userPreferenceIds.length > 0);
+    } catch (error: any) {
+      console.error("❌ Błąd podczas ładowania preferencji:", error);
+      showAlert("Nie udało się załadować preferencji dopasowań", "error");
+    } finally {
+      setIsMatchPreferencesLoading(false);
+    }
+  };
+
+  const handleMatchPreferenceChange = (
+    matchTypeId: string,
+    checked: boolean,
+  ) => {
+    setSelectedMatchTypes((prev) => {
+      if (checked) {
+        return [...prev, matchTypeId];
+      } else {
+        return prev.filter((id) => id !== matchTypeId);
+      }
+    });
+    setMatchPreferencesSaved(false);
+  };
+
+  const handleSaveMatchPreferences = async () => {
+    try {
+      setIsMatchPreferencesSaving(true);
+
+      await updateUserMatchPreferences(selectedMatchTypes);
+      setMatchPreferencesSaved(true);
+      showAlert("Preferencje dopasowań zostały zapisane!", "success");
+    } catch (error: any) {
+      console.error("❌ Błąd podczas zapisywania preferencji:", error);
+      const errorMessage =
+        error?.message || "Błąd podczas zapisywania preferencji dopasowań";
+      showAlert(errorMessage, "error");
+    } finally {
+      setIsMatchPreferencesSaving(false);
+    }
+  };
 
   const handleAnswerChange = (questionId: string, newAnswer: string) => {
     setUserAnswers((prev) => ({
@@ -212,6 +290,19 @@ function QuestionsPage() {
     ).length;
   };
 
+  const getMatchTypeLabel = (matchTypeName: string) => {
+    switch (matchTypeName) {
+      case "friend":
+        return "Znajomości";
+      case "romantic":
+        return "Relacje romantyczne";
+      case "business":
+        return "Kontakty biznesowe";
+      default:
+        return matchTypeName;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="relative min-h-screen flex">
@@ -286,8 +377,102 @@ function QuestionsPage() {
         <SideBar options={getSideBarOptions("Pytania")} />
         <div className="ml-12 sm:ml-16 py-8 px-4 max-w-4xl mx-auto">
           <h2 className="flex flex-row items-center justify-start gap-4 text-2xl font-bold mb-6 text-gray-800">
-            <i className="fas fa-question-circle"></i>Pytania
+            <i className="fas fa-question-circle"></i>Pytania i Preferencje
           </h2>
+
+          {/* Match Preferences Section */}
+          <div className="mb-8 bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i className="fas fa-heart text-red-500"></i>
+              Preferencje dopasowań
+            </h3>
+
+            {isMatchPreferencesLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">
+                  Ładowanie preferencji...
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-4 text-sm">
+                  Wybierz typy relacji, które Cię interesują:
+                </p>
+
+                <div className="space-y-3 mb-4">
+                  {matchTypes.map((matchType) => (
+                    <label
+                      key={matchType.match_type_id}
+                      className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMatchTypes.includes(
+                          matchType.match_type_id,
+                        )}
+                        onChange={(e) =>
+                          handleMatchPreferenceChange(
+                            matchType.match_type_id,
+                            e.target.checked,
+                          )
+                        }
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        disabled={isMatchPreferencesSaving}
+                      />
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {getMatchTypeLabel(matchType.match_type_name)}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {matchType.match_type_description}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {!matchPreferencesSaved &&
+                      selectedMatchTypes.length > 0 && (
+                        <span className="text-sm text-orange-600">
+                          <i className="fas fa-exclamation-triangle mr-1"></i>
+                          Niezapisane zmiany
+                        </span>
+                      )}
+                    {matchPreferencesSaved && (
+                      <span className="text-sm text-green-600">
+                        <i className="fas fa-check mr-1"></i>
+                        Preferencje zapisane
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={handleSaveMatchPreferences}
+                    disabled={
+                      isMatchPreferencesSaving ||
+                      (matchPreferencesSaved && selectedMatchTypes.length > 0)
+                    }
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isMatchPreferencesSaving ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Zapisuję...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save mr-2"></i>
+                        Zapisz preferencje
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Statistics */}
           <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
@@ -447,17 +632,18 @@ function QuestionsPage() {
 
           {/* Summary */}
           {getTotalAnsweredCount() === questions.length &&
-            unsavedCount === 0 && (
+            unsavedCount === 0 &&
+            matchPreferencesSaved && (
               <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
                 <div className="flex items-center">
                   <i className="fas fa-check-circle text-green-500 text-xl mr-3"></i>
                   <div>
                     <h4 className="font-semibold text-green-800">
-                      Wszystkie pytania zostały ukończone!
+                      Profil został ukończony!
                     </h4>
                     <p className="text-green-600 text-sm">
-                      Odpowiedziałeś na wszystkie pytania i wszystko zostało
-                      zapisane.
+                      Odpowiedziałeś na wszystkie pytania i ustawiłeś
+                      preferencje dopasowań.
                     </p>
                   </div>
                 </div>
