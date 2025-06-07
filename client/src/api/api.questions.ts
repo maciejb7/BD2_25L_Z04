@@ -13,9 +13,12 @@ interface AnswerRequest {
 }
 
 interface Answer {
+  id: string;
   userId: string;
   questionId: string;
   answer: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -105,6 +108,26 @@ export const getAllAnswers = async (): Promise<Answer[]> => {
     return response.data;
   } catch (error) {
     handleApiError(error, "Błąd podczas pobierania odpowiedzi");
+    throw error;
+  }
+};
+
+/**
+ * Pobiera odpowiedzi użytkownika dla konkretnych pytań
+ * @param questionIds Array ID pytań
+ * @returns Promise z tablicą odpowiedzi użytkownika
+ */
+export const getUserAnswersForQuestions = async (
+  questionIds: string[],
+): Promise<Answer[]> => {
+  try {
+    const response: AxiosResponse<Answer[]> = await api.post(
+      "api/questions/user-answers-for-questions",
+      { questionIds },
+    );
+    return response.data;
+  } catch (error) {
+    handleApiError(error, "Błąd podczas pobierania odpowiedzi użytkownika");
     throw error;
   }
 };

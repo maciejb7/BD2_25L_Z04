@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import Background from "../../components/common/Background";
 import SideBar from "../../components/common/SideBar";
 import { getSideBarOptions } from "../../constants/sideBarOptions";
-import { getRandomQuestions, submitAnswer } from "../../api/api.questions";
+import {
+  getRandomQuestions,
+  submitAnswer,
+  getUserAnswersForQuestions,
+} from "../../api/api.questions";
 import { useAlert } from "../../contexts/AlertContext";
 import { getUser } from "../../utils/userAuthentication";
 
@@ -12,51 +16,70 @@ interface Question {
 }
 
 interface Answer {
+  id: string;
+  userId: string;
   questionId: string;
   answer: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface UserAnswer {
+  questionId: string;
+  answer: string;
+  isSaved: boolean;
 }
 
 function QuestionsPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [userAnswers, setUserAnswers] = useState<Record<string, UserAnswer>>(
+    {},
+  );
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentAnswer, setCurrentAnswer] = useState("");
   const [userId, setUserId] = useState<string>("");
   const [error, setError] = useState<string>("");
   const { showAlert } = useAlert();
 
+  // Load questions and existing answers on component mount
   useEffect(() => {
-    const fetchQuestionsAndUser = async () => {
-      console.log("🔄 Rozpoczynam ładowanie pytań i użytkownika...");
+    const initializeQuestionsAndAnswers = async () => {
       try {
         setIsLoading(true);
         setError("");
 
-        // Pobierz użytkownika
-        console.log("👤 Pobieram dane użytkownika...");
+        // Get user ID
         const user = await getUser();
-        console.log("✅ Użytkownik pobrany:", user);
-
-        // Sprawdź czy user ma id
         if (!user || !user.userId) {
           throw new Error("Nie udało się pobrać ID użytkownika");
         }
-
         setUserId(user.userId);
 
-        // Pobierz pytania
-        console.log("❓ Pobieram pytania...");
+        // Get random questions
         const questionsData = await getRandomQuestions(5);
-        console.log("✅ Pytania pobrane:", questionsData);
-
         if (!questionsData || questionsData.length === 0) {
           throw new Error("Nie udało się pobrać pytań");
         }
-
         setQuestions(questionsData);
-        console.log("🎉 Inicjalizacja zakończona pomyślnie");
+
+        // Get existing answers for these questions
+        const questionIds = questionsData.map((q) => q.id);
+        const existingAnswers = await getUserAnswersForQuestions(questionIds);
+
+        // Create answers map with existing answers
+        const answersMap: Record<string, UserAnswer> = {};
+        questionsData.forEach((question) => {
+          const existingAnswer = existingAnswers.find(
+            (a) => a.questionId === question.id,
+          );
+          answersMap[question.id] = {
+            questionId: question.id,
+            answer: existingAnswer?.answer || "",
+            isSaved: !!existingAnswer,
+          };
+        });
+        setUserAnswers(answersMap);
       } catch (error: any) {
         console.error("❌ Błąd podczas inicjalizacji:", error);
         const errorMessage =
@@ -68,58 +91,46 @@ function QuestionsPage() {
       }
     };
 
-    fetchQuestionsAndUser();
+    initializeQuestionsAndAnswers();
   }, [showAlert]);
 
-  const handleAnswerSubmit = async () => {
-    if (!currentAnswer.trim()) {
-      showAlert("Proszę podać odpowiedź", "info");
+  const handleAnswerChange = (questionId: string, newAnswer: string) => {
+    setUserAnswers((prev) => ({
+      ...prev,
+      [questionId]: {
+        ...prev[questionId],
+        answer: newAnswer,
+        isSaved: false, // Mark as unsaved when changed
+      },
+    }));
+  };
+
+  const handleSaveAnswer = async (questionId: string) => {
+    const userAnswer = userAnswers[questionId];
+    if (!userAnswer || !userAnswer.answer.trim()) {
+      showAlert("Proszę podać odpowiedź przed zapisaniem", "info");
       return;
     }
 
-    console.log("💾 Zapisuję odpowiedź...", {
-      userId,
-      questionId: questions[currentQuestionIndex]?.id,
-      currentAnswer: currentAnswer.trim(),
-    });
-
     try {
       setIsSubmitting(true);
-      const currentQuestion = questions[currentQuestionIndex];
 
-      if (!currentQuestion) {
-        throw new Error("Brak aktualnego pytania");
-      }
-
-      if (!userId) {
-        throw new Error("Brak ID użytkownika");
-      }
-
-      const result = await submitAnswer({
+      await submitAnswer({
         userId,
-        questionId: currentQuestion.id,
-        answer: currentAnswer.trim(),
+        questionId,
+        answer: userAnswer.answer.trim(),
       });
 
-      console.log("✅ Odpowiedź zapisana:", result);
-
-      // Dodaj odpowiedź do lokalnej listy
-      setAnswers((prev) => [
+      // Mark answer as saved
+      setUserAnswers((prev) => ({
         ...prev,
-        {
-          questionId: currentQuestion.id,
-          answer: currentAnswer.trim(),
+        [questionId]: {
+          ...prev[questionId],
+          isSaved: true,
         },
-      ]);
+      }));
 
-      // Przejdź do następnego pytania lub zakończ
-      if (currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex((prev) => prev + 1);
-        setCurrentAnswer("");
-        showAlert("Odpowiedź zapisana!", "success");
-      } else {
-        showAlert("Wszystkie pytania zostały ukończone!", "success");
-      }
+      showAlert("Odpowiedź zapisana!", "success");
     } catch (error: any) {
       console.error("❌ Błąd podczas zapisywania odpowiedzi:", error);
       const errorMessage =
@@ -130,33 +141,66 @@ function QuestionsPage() {
     }
   };
 
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
-      // Załaduj poprzednią odpowiedź jeśli istnieje
-      const prevAnswer = answers.find(
-        (a) => a.questionId === questions[currentQuestionIndex - 1].id,
-      );
-      setCurrentAnswer(prevAnswer?.answer || "");
+  const handleSaveAllAnswers = async () => {
+    const unsavedAnswers = Object.values(userAnswers).filter(
+      (answer) => answer.answer.trim() && !answer.isSaved,
+    );
+
+    if (unsavedAnswers.length === 0) {
+      showAlert("Wszystkie odpowiedzi są już zapisane", "info");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      for (const userAnswer of unsavedAnswers) {
+        await submitAnswer({
+          userId,
+          questionId: userAnswer.questionId,
+          answer: userAnswer.answer.trim(),
+        });
+      }
+
+      // Mark all answers as saved
+      setUserAnswers((prev) => {
+        const updated = { ...prev };
+        unsavedAnswers.forEach((answer) => {
+          updated[answer.questionId] = {
+            ...updated[answer.questionId],
+            isSaved: true,
+          };
+        });
+        return updated;
+      });
+
+      showAlert(`Zapisano ${unsavedAnswers.length} odpowiedzi!`, "success");
+    } catch (error: any) {
+      console.error("❌ Błąd podczas zapisywania odpowiedzi:", error);
+      const errorMessage =
+        error?.message || "Błąd podczas zapisywania odpowiedzi";
+      showAlert(errorMessage, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const isCompleted =
-    currentQuestionIndex >= questions.length && questions.length > 0;
-  const progress =
-    questions.length > 0
-      ? ((currentQuestionIndex + (isCompleted ? 0 : 0)) / questions.length) *
-        100
-      : 0;
+  const goToQuestion = (index: number) => {
+    if (index >= 0 && index < questions.length) {
+      setCurrentQuestionIndex(index);
+    }
+  };
 
-  console.log("🐛 Debug info:", {
-    questionsLength: questions.length,
-    currentQuestionIndex,
-    isCompleted,
-    isLoading,
-    error,
-    userId,
-  });
+  const getTotalAnsweredCount = () => {
+    return Object.values(userAnswers).filter((answer) => answer.answer.trim())
+      .length;
+  };
+
+  const getUnsavedCount = () => {
+    return Object.values(userAnswers).filter(
+      (answer) => answer.answer.trim() && !answer.isSaved,
+    ).length;
+  };
 
   if (isLoading) {
     return (
@@ -222,6 +266,10 @@ function QuestionsPage() {
     );
   }
 
+  const currentQuestion = questions[currentQuestionIndex];
+  const currentAnswer = userAnswers[currentQuestion.id];
+  const unsavedCount = getUnsavedCount();
+
   return (
     <div className="relative min-h-screen flex">
       <Background blur="lg">
@@ -231,126 +279,180 @@ function QuestionsPage() {
             <i className="fas fa-question-circle"></i>Pytania
           </h2>
 
-          {/* Debug info - usuń w produkcji */}
-          <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-            Debug: Pytań: {questions.length}, Aktualny indeks:{" "}
-            {currentQuestionIndex}, Ukończone: {isCompleted ? "Tak" : "Nie"}
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>Postęp</span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {!isCompleted ? (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="mb-6">
-                <div className="text-sm text-gray-500 mb-2">
-                  Pytanie {currentQuestionIndex + 1} z {questions.length}
+          {/* Statistics */}
+          <div className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Pytania:</span>
+                <span>{questions.length}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Odpowiedzi:</span>
+                <span>
+                  {getTotalAnsweredCount()}/{questions.length}
+                </span>
+              </div>
+              {unsavedCount > 0 && (
+                <div className="flex items-center gap-2 text-orange-600">
+                  <i className="fas fa-exclamation-triangle"></i>
+                  <span className="font-medium">Niezapisane:</span>
+                  <span>{unsavedCount}</span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">
-                  {questions[currentQuestionIndex]?.content}
-                </h3>
-              </div>
+              )}
+            </div>
+          </div>
 
-              <div className="mb-6">
-                <textarea
-                  value={currentAnswer}
-                  onChange={(e) => setCurrentAnswer(e.target.value)}
-                  placeholder="Napisz swoją odpowiedź..."
-                  className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={4}
-                  disabled={isSubmitting}
-                />
-              </div>
+          {/* Question Navigation */}
+          <div className="mb-6 flex flex-wrap gap-2">
+            {questions.map((_, index) => {
+              const questionId = questions[index].id;
+              const answer = userAnswers[questionId];
+              const hasAnswer = answer?.answer.trim();
+              const isSaved = answer?.isSaved;
 
-              <div className="flex justify-between">
+              return (
                 <button
-                  onClick={handlePreviousQuestion}
-                  disabled={currentQuestionIndex === 0 || isSubmitting}
-                  className="px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  key={index}
+                  onClick={() => goToQuestion(index)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    index === currentQuestionIndex
+                      ? "bg-blue-600 text-white"
+                      : hasAnswer
+                        ? isSaved
+                          ? "bg-green-100 text-green-800 hover:bg-green-200"
+                          : "bg-orange-100 text-orange-800 hover:bg-orange-200"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {index + 1}
+                  {hasAnswer && (
+                    <i
+                      className={`ml-1 fas ${isSaved ? "fa-check" : "fa-edit"}`}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Current Question */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="mb-6">
+              <div className="text-sm text-gray-500 mb-2">
+                Pytanie {currentQuestionIndex + 1} z {questions.length}
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">
+                {currentQuestion.content}
+              </h3>
+            </div>
+
+            <div className="mb-6">
+              <textarea
+                value={currentAnswer?.answer || ""}
+                onChange={(e) =>
+                  handleAnswerChange(currentQuestion.id, e.target.value)
+                }
+                placeholder="Napisz swoją odpowiedź..."
+                className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={4}
+                disabled={isSubmitting}
+              />
+              {currentAnswer &&
+                !currentAnswer.isSaved &&
+                currentAnswer.answer.trim() && (
+                  <p className="text-sm text-orange-600 mt-2">
+                    <i className="fas fa-exclamation-triangle mr-1"></i>
+                    Ta odpowiedź nie została jeszcze zapisana
+                  </p>
+                )}
+            </div>
+
+            <div className="flex flex-wrap gap-3 justify-between">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => goToQuestion(currentQuestionIndex - 1)}
+                  disabled={currentQuestionIndex === 0}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <i className="fas fa-arrow-left mr-2"></i>Poprzednie
                 </button>
 
                 <button
-                  onClick={handleAnswerSubmit}
-                  disabled={isSubmitting || !currentAnswer.trim()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => goToQuestion(currentQuestionIndex + 1)}
+                  disabled={currentQuestionIndex === questions.length - 1}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Następne<i className="fas fa-arrow-right ml-2"></i>
+                </button>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleSaveAnswer(currentQuestion.id)}
+                  disabled={
+                    isSubmitting ||
+                    !currentAnswer?.answer.trim() ||
+                    currentAnswer.isSaved
+                  }
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSubmitting ? (
                     <>
                       <i className="fas fa-spinner fa-spin mr-2"></i>
-                      Zapisywanie...
+                      Zapisuję...
                     </>
-                  ) : currentQuestionIndex === questions.length - 1 ? (
+                  ) : currentAnswer?.isSaved ? (
                     <>
-                      <i className="fas fa-check mr-2"></i>Zakończ
+                      <i className="fas fa-check mr-2"></i>Zapisane
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-arrow-right mr-2"></i>Następne
+                      <i className="fas fa-save mr-2"></i>Zapisz
                     </>
                   )}
                 </button>
+
+                {unsavedCount > 0 && (
+                  <button
+                    onClick={handleSaveAllAnswers}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Zapisuję wszystkie...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-save mr-2"></i>
+                        Zapisz wszystkie ({unsavedCount})
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="mb-6">
-                <i className="fas fa-check-circle text-green-500 text-6xl mb-4"></i>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                  Gratulacje!
-                </h3>
-                <p className="text-gray-600">
-                  Ukończyłeś wszystkie pytania. Twoje odpowiedzi zostały
-                  zapisane.
-                </p>
-              </div>
+          </div>
 
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-gray-800 mb-3">
-                  Podsumowanie Twoich odpowiedzi:
-                </h4>
-                <div className="space-y-3 text-left">
-                  {questions.map((question) => {
-                    const answer = answers.find(
-                      (a) => a.questionId === question.id,
-                    );
-                    return (
-                      <div
-                        key={question.id}
-                        className="border-l-4 border-blue-500 pl-4"
-                      >
-                        <p className="font-medium text-gray-800">
-                          {question.content}
-                        </p>
-                        <p className="text-gray-600 text-sm mt-1">
-                          {answer?.answer || "Brak odpowiedzi"}
-                        </p>
-                      </div>
-                    );
-                  })}
+          {/* Summary */}
+          {getTotalAnsweredCount() === questions.length &&
+            unsavedCount === 0 && (
+              <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <i className="fas fa-check-circle text-green-500 text-xl mr-3"></i>
+                  <div>
+                    <h4 className="font-semibold text-green-800">
+                      Wszystkie pytania zostały ukończone!
+                    </h4>
+                    <p className="text-green-600 text-sm">
+                      Odpowiedziałeś na wszystkie pytania i wszystko zostało
+                      zapisane.
+                    </p>
+                  </div>
                 </div>
               </div>
-
-              <button
-                onClick={() => window.location.reload()}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                <i className="fas fa-redo mr-2"></i>Rozpocznij ponownie
-              </button>
-            </div>
-          )}
+            )}
         </div>
       </Background>
     </div>
