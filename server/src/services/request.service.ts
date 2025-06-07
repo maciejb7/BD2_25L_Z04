@@ -53,7 +53,7 @@ const extractPathParameter = async (
   },
   validator?: Validator,
 ): Promise<string> => {
-  const value = request.params.name;
+  const value = request.params[name];
 
   if (value === undefined || value === null || value === "") {
     throw new FieldValidationError({
