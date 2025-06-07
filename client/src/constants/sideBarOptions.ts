@@ -14,6 +14,7 @@ export interface SideBarOption {
  */
 const options: SideBarOption[] = [
   { name: "Dashboard", icon: "fas fa-home", link: "/dashboard" },
+  { name: "Eksploruj", icon: "fas fa-compass", link: "/explore" },
   {
     name: "Pytania",
     icon: "fas fa-question-circle",

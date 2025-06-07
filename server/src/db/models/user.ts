@@ -122,7 +122,6 @@ export class User extends Model {
   public toJSON(): object {
     const userData = this.get({ plain: true });
 
-    //delete userData.userId;
     delete userData.password;
     delete userData.sessions;
     delete userData.isActive;
