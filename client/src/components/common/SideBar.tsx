@@ -66,7 +66,7 @@ function SideBar({ options }: SideBarOptions) {
       >
         {/* Header */}
         <div
-          className={`flex items-center p-4 border-b 
+          className={`flex items-center p-4 border-b
           ${isOpen ? "justify-between" : "justify-center"}`}
         >
           {/* Logo and Toggle Button */}
@@ -115,16 +115,14 @@ function SideBar({ options }: SideBarOptions) {
                 key={option.link}
                 to={option.link}
                 title={option.name}
-                className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md ${
-                  option.active
+                className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md ${option.active
                     ? "bg-blue-100 text-blue-600 font-semibold"
                     : "text-gray-700 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <i
-                  className={`${option.icon} ${
-                    isOpen ? "text-base sm:text-lg" : "text-sm sm:text-base"
-                  }`}
+                  className={`${option.icon} ${isOpen ? "text-base sm:text-lg" : "text-sm sm:text-base"
+                    }`}
                 ></i>
                 {isOpen && <span>{option.name}</span>}
               </Link>
@@ -136,9 +134,8 @@ function SideBar({ options }: SideBarOptions) {
                 className={`flex items-center ${isOpen ? "gap-3 px-4" : "justify-center px-2"} py-2 rounded-md text-left text-gray-700 hover:bg-gray-100`}
               >
                 <i
-                  className={`${option.icon} ${
-                    isOpen ? "text-base sm:text-lg" : "text-sm sm:text-base"
-                  }`}
+                  className={`${option.icon} ${isOpen ? "text-base sm:text-lg" : "text-sm sm:text-base"
+                    }`}
                 ></i>
                 {isOpen && <span>{option.name}</span>}
               </button>

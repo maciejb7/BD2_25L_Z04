@@ -19,6 +19,11 @@ const options: SideBarOption[] = [
     link: "/account-settings",
   },
   {
+    name: "Hobby",
+    icon: "fas fa-futbol",
+    link: "/hobbies",
+  },
+  {
     name: "Wyloguj",
     icon: "fas fa-sign-out-alt",
     onClick: async () => await logout(),
