@@ -20,6 +20,7 @@ function AccountInfo() {
   const [avatar, setAvatar] = useState<string>("");
   const [userInfo, setUserInfo] = useState<User>(
     getUserFromStorage() ?? {
+      userId: "",
       nickname: "",
       name: "",
       surname: "",

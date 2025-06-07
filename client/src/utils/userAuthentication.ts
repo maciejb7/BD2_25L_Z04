@@ -30,6 +30,7 @@ export const isUserValid = (user: User): boolean => {
     user.name &&
     user.surname &&
     user.nickname &&
+    user.userId &&
     user.email &&
     user.birthDate &&
     user.createdAt &&
