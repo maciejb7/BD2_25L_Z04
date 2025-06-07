@@ -7,7 +7,7 @@ interface getUserHobbies{
   userId: string;
 }
 
-interface Hobby {
+export interface Hobby {
   id: number;
   hobby_name: string;
   hobby_description: string;
@@ -20,9 +20,17 @@ interface Hobby {
   };
 }
 
+export interface Category {
+  id: number;
+  category_name: string;
+  category_description: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
 export const getUserHobbies = async (userId: string): Promise<Hobby[]> => {
   try {
-    const response = await api.get<Hobby[]>(`/api/hobbies/${userId}`);
+    const response = await api.get<Hobby[]>(`/api/hobbies/${userId}/hobbies`);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -32,9 +40,9 @@ export const getUserHobbies = async (userId: string): Promise<Hobby[]> => {
   }
 };
 
-export const getAllHobbyCategories = async (): Promise<User[]> => {
+export const getAllHobbyCategories = async (): Promise<Category[]> => {
   try {
-    const response = await api.get<User[]>(`/api/hobbies/categories`);
+    const response = await api.get<Category[]>(`/api/hobbies/categories`);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -44,14 +52,27 @@ export const getAllHobbyCategories = async (): Promise<User[]> => {
   }
 };
 
-export const getHobbyBycategory = async (category: number): Promise<UserResponse> => {
+export const getHobbyBycategory = async (category: number): Promise<Hobby[]> => {
+  try{
+    const response = await api.get<Hobby[]>(`api/hobbies/categories/${category}/hobbies`);
+    return response.data;
+  }
+  catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas pobierania hobby. Spróbuj ponownie.",
+    );
+  }
+}
+
+export const getAllHobby = async (): Promise<Hobby[]> => {
   try {
-    const response = await api.get<User[]>(`/hobbies/categories/${category}/hobbies`);
+    const response = await api.get<Hobby[]>(`/api/hobbies/hobbies`);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
       error,
-      "Wystąpił błąd podczas pobierania hobby. Spróbuj ponownie.",
+      "Wystąpił błąd podczas pobierania wszystkich hobby. Spróbuj ponownie.",
     );
   }
 }
