@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { refresh } from "../api/api.auth";
 import { getUserFromAPI } from "../api/api.user";
 import { User } from "../types/others";

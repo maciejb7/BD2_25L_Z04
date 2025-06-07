@@ -5,9 +5,9 @@ import { AuthMiddleware } from "../middlewares/auth.middleware";
 const router = Router();
 
 router.get(
-  "/random",
+  "/",
   AuthMiddleware.authenticateUser(),
-  QuestionController.getRandom,
+  QuestionController.getAllQuestions,
 );
 router.get(
   "/answers",
@@ -28,6 +28,11 @@ router.post(
   "/answer",
   AuthMiddleware.authenticateUser(),
   QuestionController.postAnswer,
+);
+router.post(
+  "/user-answers-for-questions",
+  AuthMiddleware.authenticateUser(),
+  QuestionController.getCurrentUserAnswersForQuestions,
 );
 
 export default router;

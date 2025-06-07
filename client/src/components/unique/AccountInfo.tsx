@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { useEffect, useState } from "react";
 import { User } from "../../types/others";
 import { deleteUserAvatar, getUserAvatar } from "../../api/api.user";
