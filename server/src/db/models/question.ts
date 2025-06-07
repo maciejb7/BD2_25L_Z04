@@ -39,7 +39,6 @@ export class Question extends Model {
   declare answers: Answer[];
 }
 
-// Initial questions data for seeding
 export const questionsData = [
   {
     id: "q1",

@@ -52,7 +52,6 @@ function QuestionsPage() {
   const [userId, setUserId] = useState<string>("");
   const [error, setError] = useState<string>("");
 
-  // Match preferences state
   const [matchTypes, setMatchTypes] = useState<MatchType[]>([]);
   const [selectedMatchTypes, setSelectedMatchTypes] = useState<string[]>([]);
   const [isMatchPreferencesLoading, setIsMatchPreferencesLoading] =
@@ -63,12 +62,10 @@ function QuestionsPage() {
 
   const { showAlert } = useAlert();
 
-  // Używamy useRef do zapewnienia jednokrotnej inicjalizacji
   const initializationRef = useRef(false);
 
   // Load questions, answers and match preferences on component mount
   useEffect(() => {
-    // Sprawdzamy czy inicjalizacja już się wykonała
     if (initializationRef.current) {
       return;
     }
