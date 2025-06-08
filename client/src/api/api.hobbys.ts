@@ -28,11 +28,23 @@ export interface Category {
   updatedAt: string; // ISO date string
 }
 
-export const getUserHobbies = async (userId: string): Promise<Hobby[]> => {
+export interface UserHobby {
+  id: string;
+  userId: string;
+  hobbyId: number;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
+  hobby: Hobby;
+}
+
+export const getUserHobbies = async (userId?: string): Promise<UserHobby[]> => {
   try {
-    const response = await api.get<Hobby[]>(`/api/user/hobbies`);
+    // Endpoint dla aktualnego użytkownika - backend automatycznie pobiera userId z tokenu
+    const response = await api.get<UserHobby[]>(`/api/user/hobbies`);
     return response.data;
   } catch (error: unknown) {
+    console.error("API Error getUserHobbies:", error);
     throw handleApiError(
       error,
       "Wystąpił błąd podczas pobierania hobby użytkownika. Spróbuj ponownie.",
@@ -76,3 +88,32 @@ export const getAllHobby = async (): Promise<Hobby[]> => {
     );
   }
 }
+
+// Nowa funkcja do oceniania hobby
+export const rateHobby = async (hobbyId: number, rating: number): Promise<any> => {
+  try {
+    const response = await api.post(`/api/user/hobbies/rate`, {
+      hobbyId,
+      rating
+    });
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas oceniania hobby. Spróbuj ponownie.",
+    );
+  }
+};
+
+// Nowa funkcja do usuwania oceny hobby
+export const removeHobbyRating = async (hobbyId: number): Promise<any> => {
+  try {
+    const response = await api.delete(`/api/user/hobbies/${hobbyId}`);
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas usuwania oceny hobby. Spróbuj ponownie.",
+    );
+  }
+};
