@@ -32,13 +32,19 @@ const generateAccessToken = (user: User): string => {
  * @param user The user for whom to generate the refresh token.
  * @returns The generated refresh token as a string.
  */
-const generateRefreshToken = async (user: User): Promise<string> => {
+const generateRefreshToken = async (
+  user: User,
+  userIpAdress: string | null,
+  deviceInfo: string | null,
+): Promise<string> => {
   const token = randomUUID().toString();
   const hashedToken = createHash("sha256").update(token).digest("hex");
   const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
   await Session.create({
     refreshToken: hashedToken,
     expiresAt: expiresAt,
+    ipAdress: userIpAdress,
+    deviceInfo: deviceInfo,
     userId: user.userId,
   });
   return token;

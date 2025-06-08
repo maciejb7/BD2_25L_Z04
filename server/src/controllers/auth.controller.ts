@@ -26,6 +26,7 @@ import {
   ActivationLinkNotFoundError,
   UserNotFoundError,
 } from "../errors/errors";
+import requestIp from "request-ip";
 
 /**
  * Registers a new user.
@@ -160,6 +161,10 @@ const login = handleRequest(async (req: Request, res: Response) => {
       getUserLoginValidator(loggerMetaData),
     );
 
+  const ip = requestIp.getClientIp(req);
+
+  const deviceInfo = RequestService.extractDeviceInfo(req);
+
   const user = await AuthService.getAuthenticatedUser(
     nicknameOrEmail,
     password,
@@ -167,7 +172,11 @@ const login = handleRequest(async (req: Request, res: Response) => {
   );
 
   const accessToken = TokenService.generateAccessToken(user);
-  const refreshToken = await TokenService.generateRefreshToken(user);
+  const refreshToken = await TokenService.generateRefreshToken(
+    user,
+    ip,
+    deviceInfo,
+  );
 
   logger.info(`Użytkownik ${user.nickname} zalogował się pomyślnie.`, {
     service: "login",

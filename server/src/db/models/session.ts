@@ -5,6 +5,7 @@ import {
   DataType,
   ForeignKey,
   PrimaryKey,
+  CreatedAt,
 } from "sequelize-typescript";
 import { User } from "./user";
 
@@ -24,14 +25,41 @@ export class Session extends Model {
   })
   declare refreshToken: string;
 
+  @CreatedAt
+  @Column({
+    type: DataType.DATE,
+  })
+  declare createdAt: Date;
+
   @Column({
     type: DataType.DATE,
   })
   declare expiresAt: Date;
+
+  @Column({
+    type: DataType.INET,
+    allowNull: true,
+  })
+  declare ipAddress: string;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  declare deviceInfo: string;
 
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
   })
   declare userId: string;
+
+  public toJSON(): object {
+    const sessionData = this.get({ plain: true });
+
+    delete sessionData.refreshToken;
+    delete sessionData.userId;
+
+    return sessionData;
+  }
 }

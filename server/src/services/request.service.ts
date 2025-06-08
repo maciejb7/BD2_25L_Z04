@@ -7,6 +7,7 @@ import {
 import { AuthenticatedUserPayload } from "../middlewares/auth.middleware";
 import { Validator } from "../types/validators";
 import { services } from "../constants/services";
+import { UAParser } from "ua-parser-js";
 
 /**
  * Extracts the authenticated user payload from the request object.
@@ -141,9 +142,36 @@ const extractRequestFields = async <T>(
   return Object.fromEntries(entries) as T;
 };
 
+/**
+ * Extracts device information from the request headers.
+ * @param req - The Express request object.
+ * @returns A string containing the device information or null if not available.
+ */
+const extractDeviceInfo = (req: Request): string | null => {
+  const userAgent = req.headers["user-agent"];
+
+  if (userAgent === null) return null;
+
+  const parser = new UAParser(userAgent);
+  const os = parser.getOS();
+  const browser = parser.getBrowser();
+  const device = parser.getDevice();
+
+  const osStr = os.name ? `${os.name} ${os.version}` : "Unknown OS";
+  const browserStr = browser.name
+    ? `${browser.name} ${browser.version}`
+    : "Unknown Browser";
+  const deviceType = device.type
+    ? device.type.charAt(0).toUpperCase() + device.type.slice(1)
+    : "Desktop";
+
+  return `${osStr} - ${browserStr} - ${deviceType}`;
+};
+
 export const RequestService = {
   extractAuthenticatedUserPayload,
   extractPathParameter,
   extractRefreshToken,
   extractRequestFields,
+  extractDeviceInfo,
 };

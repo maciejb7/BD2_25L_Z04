@@ -140,4 +140,21 @@ export class User extends Model {
 
     return userData;
   }
+
+  public toJSONAdmin(): object {
+    const userData = this.get({ plain: true });
+
+    delete userData.password;
+    delete userData.accountActivationLink;
+    delete userData.isActive;
+    delete userData.matchPreferences;
+    delete userData.givenLikes;
+    delete userData.receivedLikes;
+    delete userData.location;
+
+    userData.sessions =
+      this.sessions?.map((session: Session) => session.toJSON()) ?? [];
+
+    return userData;
+  }
 }

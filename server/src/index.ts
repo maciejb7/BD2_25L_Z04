@@ -18,6 +18,8 @@ import path from "path";
 import fs from "fs";
 import userRouter from "./routers/user.router";
 import { errorHandler } from "./middlewares/error.handler";
+import helmet from "helmet";
+import hpp from "hpp";
 
 export const connectToDatabase = async () => {
   try {
@@ -33,14 +35,21 @@ export const connectToDatabase = async () => {
 export const initializeExpress = async (): Promise<Express> => {
   const app = express();
 
-  app.use(express.json());
+  app.use(helmet());
+
   app.use(
     cors({
       origin: config.CLIENT_URL,
       credentials: true,
     }),
   );
+
+  app.use(hpp());
+
   app.use(cookieParser());
+
+  app.use(express.json());
+
   addRouters(app);
 
   app.use(errorHandler);
@@ -75,6 +84,7 @@ const startServer = async () => {
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
+  app.use("/api/admin", authRouter);
   app.use("/api/match-preferences", matchPreferenceRouter);
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/interactions", userInteractionRouter);

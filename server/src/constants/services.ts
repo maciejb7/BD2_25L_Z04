@@ -8,6 +8,7 @@ export const services = {
   refresh: "refresh_access_token",
   getUserDetailsByUser: "get_user_details_by_user",
   getUserDetailsByAdmin: "get_user_details_by_admin",
+  getUsersDetailsByAdmin: "get_users_details_by_admin",
   getUserAvatarByUser: "get_user_avatar_by_user",
   getUserAvatarByAdmin: "get_user_avatar_by_admin",
   uploadUserAvatarByUser: "upload_user_avatar_by_user",

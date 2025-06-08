@@ -12,6 +12,8 @@ export const getloggerMessage = (service: string | undefined) => {
       "Wystąpił błąd podczas pobierania danych użytkownika przez użytkownika",
     get_user_details_by_admin:
       "Wystąpił błąd podczas pobierania danych użytkownika przez administratora",
+    get_users_details_by_admin:
+      "Wystąpił błąd podczas pobierania danych wszystkich użytkowników przez administratora",
     get_user_avatar_by_user:
       "Wystąpił błąd podczas pobierania awatara użytkownika przez użytkownika",
     get_user_avatar_by_admin:
