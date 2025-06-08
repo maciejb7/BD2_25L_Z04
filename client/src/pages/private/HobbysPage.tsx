@@ -4,7 +4,7 @@ import { getSideBarOptions } from "../../constants/sideBarOptions";
 import { useState, useEffect, useRef } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 import { getUser } from "../../utils/userAuthentication";
-import { getAllHobby, getAllHobbyCategories, getHobbyByCategory, getUserHobbies } from "../../api/api.hobbys";
+import { getAllHobby, getAllHobbyCategories, getHobbyByCategory, getUserHobbies, rateHobby, removeHobbyRating } from "../../api/api.hobbys";
 import { Hobby, Category } from "../../api/api.hobbys";
 
 // Typ dla hobby użytkownika z oceną
@@ -27,6 +27,7 @@ function HobbyPage() {
   const [selectedCategoryName, setSelectedCategoryName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>("");
+  const [ratingsInProgress, setRatingsInProgress] = useState<{ [key: number]: boolean }>({});
   const { showAlert } = useAlert();
   const initializationRef = useRef(false);
 
@@ -109,16 +110,66 @@ function HobbyPage() {
   };
 
   // Funkcja do renderowania gwiazdek na podstawie oceny
-  const renderStars = (rating: number) => {
+  const renderStars = (rating: number, interactive = false, hobbyId?: number) => {
     const stars = [];
     for (let i = 1; i <= 10; i++) {
       stars.push(
-        <span key={i} className={i <= rating ? "text-yellow-400" : "text-gray-300"}>
+        <span
+          key={i}
+          className={`${i <= rating ? "text-yellow-400" : "text-gray-300"} ${interactive ? "cursor-pointer hover:text-yellow-500 text-lg" : ""}`}
+          onClick={interactive && hobbyId ? () => handleRateHobby(hobbyId, i) : undefined}
+        >
           ★
         </span>
       );
     }
     return stars;
+  };
+
+  // Funkcja do obsługi oceniania hobby
+  const handleRateHobby = async (hobbyId: number, rating: number) => {
+    try {
+      setRatingsInProgress(prev => ({ ...prev, [hobbyId]: true }));
+
+      await rateHobby(hobbyId, rating);
+
+      // Odświeżenie listy hobby użytkownika
+      const updatedUserHobbies = await getUserHobbies();
+      setUserHobbies(updatedUserHobbies);
+
+      showAlert(`Hobby zostało ocenione na ${rating}/10!`, "success");
+    } catch (error: any) {
+      console.error("Błąd podczas oceniania hobby:", error);
+      showAlert("Wystąpił błąd podczas oceniania hobby. Spróbuj ponownie.", "error");
+    } finally {
+      setRatingsInProgress(prev => ({ ...prev, [hobbyId]: false }));
+    }
+  };
+
+  // Funkcja do usuwania oceny hobby
+  const handleRemoveRating = async (hobbyId: number) => {
+    try {
+      setRatingsInProgress(prev => ({ ...prev, [hobbyId]: true }));
+
+      await removeHobbyRating(hobbyId);
+
+      // Odświeżenie listy hobby użytkownika
+      const updatedUserHobbies = await getUserHobbies();
+      setUserHobbies(updatedUserHobbies);
+
+      showAlert("Ocena hobby została usunięta!", "success");
+    } catch (error: any) {
+      console.error("Błąd podczas usuwania oceny hobby:", error);
+      showAlert("Wystąpił błąd podczas usuwania oceny hobby. Spróbuj ponownie.", "error");
+    } finally {
+      setRatingsInProgress(prev => ({ ...prev, [hobbyId]: false }));
+    }
+  };
+
+  // Funkcja do sprawdzenia czy użytkownik już ocenił dane hobby
+  const getUserRatingForHobby = (hobbyId: number): number | null => {
+    const userHobby = userHobbies.find(uh => uh.hobbyId === hobbyId);
+    return userHobby ? userHobby.rating : null;
   };
 
   if (isLoading) {
@@ -135,106 +186,154 @@ function HobbyPage() {
   }
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-full">
       <Background blur="lg">
-        <div className="flex h-full">
+        <div className="flex min-h-screen">
           <SideBar options={getSideBarOptions("Hobby")} />
-          <main className="flex-1 overflow-y-auto px-4 py-6 space-y-10 ml-12 sm:ml-16">
-            <h2 className="flex flex-row items-center justify-start gap-4 text-2xl font-bold text-gray-800 mb-6">
-              <i className="fas fa-palette"></i>Twoje Hobby
-            </h2>
-            <hr className="my-6" />
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Twoje hobby</h2>
+          <main className="flex-1 px-4 py-6 ml-12 sm:ml-16 max-w-none">
+            <div className="space-y-10 pb-10">
+              <h2 className="flex flex-row items-center justify-start gap-4 text-2xl font-bold text-gray-800 mb-6">
+                <i className="fas fa-palette"></i>Twoje Hobby
+              </h2>
+              <hr className="my-6" />
 
-              {userHobbies.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userHobbies.map((userHobby) => (
-                    <div
-                      key={userHobby.id}
-                      className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-md p-4 border border-gray-200"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {userHobby.hobby.hobby_name}
-                        </h3>
-                        <span className="text-sm text-gray-500">
-                          {userHobby.hobby.category.hobby_category_name}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 text-sm mb-3">{userHobby.hobby.hobby_description}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1">
-                          <span className="text-sm font-medium text-gray-700">Ocena:</span>
-                          <div className="flex">{renderStars(userHobby.rating)}</div>
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Twoje hobby</h2>
+
+                {userHobbies.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                    {userHobbies.map((userHobby) => (
+                      <div
+                        key={userHobby.id}
+                        className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-md p-4 border border-gray-200"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            {userHobby.hobby.hobby_name}
+                          </h3>
+                          <span className="text-sm text-gray-500">
+                            {userHobby.hobby.category.hobby_category_name}
+                          </span>
                         </div>
-                        <span className="text-sm font-bold text-blue-600">{userHobby.rating}/10</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-md p-8 text-center">
-                  <p className="text-gray-600 text-lg">
-                    Nie masz jeszcze żadnych ocenionych hobby.
-                  </p>
-                  <p className="text-gray-500 text-sm mt-2">
-                    Wybierz kategorię poniżej, aby przeglądać dostępne hobby i dodać swoje oceny.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Separator */}
-            <hr className="border-gray-300 max-w-4xl mx-auto" />
-
-            {/* Przeglądaj hobby */}
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Przeglądaj hobby</h2>
-
-              <div className="flex flex-col items-center space-y-4">
-                <label htmlFor="category-select" className="text-sm font-medium text-gray-700">
-                  Wybierz kategorię
-                </label>
-
-                <select
-                  id="category-select"
-                  value={selectedCategory ?? ""}
-                  onChange={handleCategoryChange}
-                  className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-200"
-                >
-                  <option value="" disabled>
-                    -- Wybierz kategorię --
-                  </option>
-                  {allCategories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.hobby_category_name}
-                    </option>
-                  ))}
-                </select>
-
-                {selectedCategoryName && (
-                  <div className="text-md font-semibold text-gray-800">
-                    Wybrana kategoria: <span className="text-blue-600">{selectedCategoryName}</span>
-                  </div>
-                )}
-
-                {selectedHobby.length > 0 && (
-                  <div className="mt-4 w-full max-w-2xl">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Hobby w tej kategorii:</h3>
-                    <div className="grid grid-cols-1 gap-3">
-                      {selectedHobby.map((hobby) => (
-                        <div
-                          key={hobby.id}
-                          className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg p-4 border border-gray-200"
+                        <p className="text-gray-600 text-sm mb-3">{userHobby.hobby.hobby_description}</p>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-1">
+                            <span className="text-sm font-medium text-gray-700">Ocena:</span>
+                            <div className="flex">{renderStars(userHobby.rating)}</div>
+                          </div>
+                          <span className="text-sm font-bold text-blue-600">{userHobby.rating}/10</span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveRating(userHobby.hobbyId)}
+                          disabled={ratingsInProgress[userHobby.hobbyId]}
+                          className="w-full mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <h4 className="font-semibold text-gray-800">{hobby.hobby_name}</h4>
-                          <p className="text-gray-600 text-sm mt-1">{hobby.hobby_description}</p>
-                        </div>
-                      ))}
-                    </div>
+                          {ratingsInProgress[userHobby.hobbyId] ? "Usuwanie..." : "Usuń ocenę"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white bg-opacity-80 backdrop-blur-sm rounded-lg shadow-md p-8 text-center mb-8">
+                    <p className="text-gray-600 text-lg">
+                      Nie masz jeszcze żadnych ocenionych hobby.
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Wybierz kategorię poniżej, aby przeglądać dostępne hobby i dodać swoje oceny.
+                    </p>
                   </div>
                 )}
+              </div>
+
+              {/* Separator */}
+              <hr className="border-gray-300 max-w-4xl mx-auto" />
+
+              {/* Przeglądaj hobby */}
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Przeglądaj hobby</h2>
+
+                <div className="flex flex-col items-center space-y-4">
+                  <label htmlFor="category-select" className="text-sm font-medium text-gray-700">
+                    Wybierz kategorię
+                  </label>
+
+                  <select
+                    id="category-select"
+                    value={selectedCategory ?? ""}
+                    onChange={handleCategoryChange}
+                    className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-blue-200"
+                  >
+                    <option value="" disabled>
+                      -- Wybierz kategorię --
+                    </option>
+                    {allCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.hobby_category_name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {selectedCategoryName && (
+                    <div className="text-md font-semibold text-gray-800">
+                      Wybrana kategoria: <span className="text-blue-600">{selectedCategoryName}</span>
+                    </div>
+                  )}
+
+                  {selectedHobby.length > 0 && (
+                    <div className="mt-4 w-full max-w-2xl">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Hobby w tej kategorii:</h3>
+                      <div className="grid grid-cols-1 gap-3">
+                        {selectedHobby.map((hobby) => {
+                          const userRating = getUserRatingForHobby(hobby.id);
+                          return (
+                            <div
+                              key={hobby.id}
+                              className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg p-4 border border-gray-200"
+                            >
+                              <h4 className="font-semibold text-gray-800">{hobby.hobby_name}</h4>
+                              <p className="text-gray-600 text-sm mt-1 mb-3">{hobby.hobby_description}</p>
+
+                              <div className="border-t pt-3">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-medium text-gray-700">
+                                    {userRating ? "Twoja ocena:" : "Oceń to hobby:"}
+                                  </span>
+                                  {userRating && (
+                                    <span className="text-sm font-bold text-blue-600">{userRating}/10</span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center justify-center space-x-1 mb-2">
+                                  {renderStars(userRating || 0, true, hobby.id)}
+                                </div>
+
+                                {userRating && (
+                                  <button
+                                    onClick={() => handleRemoveRating(hobby.id)}
+                                    disabled={ratingsInProgress[hobby.id]}
+                                    className="w-full mt-2 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {ratingsInProgress[hobby.id] ? "Usuwanie..." : "Usuń ocenę"}
+                                  </button>
+                                )}
+
+                                {ratingsInProgress[hobby.id] && (
+                                  <div className="text-center text-sm text-gray-500 mt-2">
+                                    Przetwarzanie...
+                                  </div>
+                                )}
+
+                                <div className="text-xs text-gray-500 mt-2 text-center">
+                                  Kliknij na gwiazdkę, aby ocenić (1-10)
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </main>

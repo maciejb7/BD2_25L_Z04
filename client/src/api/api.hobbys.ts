@@ -41,7 +41,7 @@ export interface UserHobby {
 export const getUserHobbies = async (userId?: string): Promise<UserHobby[]> => {
   try {
     // Endpoint dla aktualnego użytkownika - backend automatycznie pobiera userId z tokenu
-    const response = await api.get<UserHobby[]>(`/api/user/hobbies`);
+    const response = await api.get<UserHobby[]>(`/api/hobbies/user/hobbies`);
     return response.data;
   } catch (error: unknown) {
     console.error("API Error getUserHobbies:", error);
@@ -66,7 +66,7 @@ export const getAllHobbyCategories = async (): Promise<Category[]> => {
 
 export const getHobbyByCategory = async (category: number): Promise<Hobby[]> => {
   try{
-    const response = await api.get<Hobby[]>(`api/hobbies/categories/${category}/hobbies`);
+    const response = await api.get<Hobby[]>(`/api/hobbies/categories/${category}/hobbies`);
     return response.data;
   }
   catch (error: unknown) {
@@ -92,7 +92,7 @@ export const getAllHobby = async (): Promise<Hobby[]> => {
 // Nowa funkcja do oceniania hobby
 export const rateHobby = async (hobbyId: number, rating: number): Promise<any> => {
   try {
-    const response = await api.post(`/api/user/hobbies/rate`, {
+    const response = await api.post(`/api/hobbies/user/hobbies/rate`, {
       hobbyId,
       rating
     });
@@ -108,7 +108,7 @@ export const rateHobby = async (hobbyId: number, rating: number): Promise<any> =
 // Nowa funkcja do usuwania oceny hobby
 export const removeHobbyRating = async (hobbyId: number): Promise<any> => {
   try {
-    const response = await api.delete(`/api/user/hobbies/${hobbyId}`);
+    const response = await api.delete(`/api/hobbies/user/hobbies/${hobbyId}`);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
