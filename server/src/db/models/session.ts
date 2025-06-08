@@ -58,7 +58,6 @@ export class Session extends Model {
     const sessionData = this.get({ plain: true });
 
     delete sessionData.refreshToken;
-    delete sessionData.userId;
 
     return sessionData;
   }

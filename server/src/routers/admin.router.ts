@@ -1,18 +1,17 @@
 import { Router } from "express";
-import authRouter from "./auth.router";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { AdminController } from "../controllers/admin.controller";
 
 const adminRouter = Router();
 
-authRouter.get(
+adminRouter.get(
   "/user/:userId",
   AuthMiddleware.authenticateUser(),
   AuthMiddleware.authorizeRole("admin"),
   AdminController.getUserDetailsByAdmin,
 );
 
-authRouter.get(
+adminRouter.get(
   "/users",
   AuthMiddleware.authenticateUser(),
   AuthMiddleware.authorizeRole("admin"),

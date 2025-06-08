@@ -10,7 +10,6 @@ export const getUserFromStorage = (): User | null => {
   let user;
   try {
     user = userString ? JSON.parse(userString) : null;
-    console.log(user);
   } catch {
     return null;
   }

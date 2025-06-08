@@ -8,6 +8,7 @@ export const genderMap = new Map<string, string>([
 export const roleMap = new Map<string, string>([
   ["user", "Użytkownik"],
   ["admin", "Administrator"],
+  ["banned", "Zbanowany"],
 ]);
 
 export const twoWayGenderMap = getTwoWayMap<string, string>(genderMap);

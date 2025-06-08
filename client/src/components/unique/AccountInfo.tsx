@@ -22,6 +22,7 @@ function AccountInfo() {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [avatar, setAvatar] = useState<string>("");
   const [userInfo, setUserInfo] = useState<User>({
+    userId: "",
     nickname: "",
     name: "",
     surname: "",

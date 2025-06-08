@@ -43,7 +43,7 @@ const generateRefreshToken = async (
   await Session.create({
     refreshToken: hashedToken,
     expiresAt: expiresAt,
-    ipAdress: userIpAdress,
+    ipAddress: userIpAdress,
     deviceInfo: deviceInfo,
     userId: user.userId,
   });

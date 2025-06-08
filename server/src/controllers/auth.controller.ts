@@ -161,7 +161,11 @@ const login = handleRequest(async (req: Request, res: Response) => {
       getUserLoginValidator(loggerMetaData),
     );
 
-  const ip = requestIp.getClientIp(req);
+  let ip = requestIp.getClientIp(req);
+
+  if (ip && ip.startsWith("::ffff:")) {
+    ip = ip.substring(7);
+  }
 
   const deviceInfo = RequestService.extractDeviceInfo(req);
 
@@ -170,6 +174,11 @@ const login = handleRequest(async (req: Request, res: Response) => {
     password,
     loggerMetaData,
   );
+
+  user.lastIp = ip;
+  user.lastDevice = deviceInfo;
+  user.lastLogin = new Date();
+  await user.save();
 
   const accessToken = TokenService.generateAccessToken(user);
   const refreshToken = await TokenService.generateRefreshToken(

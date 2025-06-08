@@ -1,6 +1,7 @@
 import AdminChecker from "../../components/common/AdminChecker";
 import Background from "../../components/common/Background";
 import SideBar from "../../components/common/SideBar";
+import UsersList from "../../components/unique/UsersList";
 import { getSideBarOptions } from "../../constants/sideBarOptions";
 
 function UsersListPage() {
@@ -14,6 +15,7 @@ function UsersListPage() {
               <i className="fas fa-user-cog"></i>Użytkownicy
             </h2>
             <hr className="my-6" />
+            <UsersList />
           </div>
         </Background>
       </AdminChecker>

@@ -27,12 +27,6 @@ const options: SideBarOption[] = [
     admin: true,
   },
   {
-    name: "Zgłoszenia",
-    icon: "fas fa-receipt",
-    link: "/tickets",
-    admin: true,
-  },
-  {
     name: "Wyloguj",
     icon: "fas fa-sign-out-alt",
     onClick: async () => await logout(),

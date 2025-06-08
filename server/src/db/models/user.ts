@@ -22,6 +22,7 @@ export enum Gender {
 export enum Role {
   ADMIN = "admin",
   USER = "user",
+  BANNED = "banned",
 }
 
 @Table({
@@ -96,6 +97,24 @@ export class User extends Model {
   })
   declare isActive: boolean;
 
+  @Column({
+    type: DataType.INET,
+    allowNull: true,
+  })
+  declare lastIp: string | null;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  declare lastDevice: string | null;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  declare lastLogin: Date | null;
+
   @HasMany(() => Session, {
     onDelete: "CASCADE",
     foreignKey: "userId",
@@ -129,8 +148,12 @@ export class User extends Model {
   public toJSON(): object {
     const userData = this.get({ plain: true });
 
-    delete userData.userId;
     delete userData.password;
+    delete userData.accountActivationLink;
+    delete userData.passwordResetLinks;
+    delete userData.lastIp;
+    delete userData.lastDevice;
+    delete userData.lastLogin;
     delete userData.sessions;
     delete userData.isActive;
     delete userData.matchPreferences;
@@ -142,18 +165,21 @@ export class User extends Model {
   }
 
   public toJSONAdmin(): object {
+    const sessions =
+      this.sessions?.map((session: Session) => session.toJSON()) ?? [];
+
     const userData = this.get({ plain: true });
 
     delete userData.password;
     delete userData.accountActivationLink;
+    delete userData.passwordResetLinks;
     delete userData.isActive;
     delete userData.matchPreferences;
     delete userData.givenLikes;
     delete userData.receivedLikes;
     delete userData.location;
 
-    userData.sessions =
-      this.sessions?.map((session: Session) => session.toJSON()) ?? [];
+    userData.sessions = sessions;
 
     return userData;
   }

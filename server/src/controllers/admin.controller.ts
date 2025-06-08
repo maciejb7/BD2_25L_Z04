@@ -5,6 +5,7 @@ import { RequestService } from "../services/request.service";
 import { User } from "../db/models/user";
 import { UserNotFoundError } from "../errors/errors";
 import { services } from "../constants/services";
+import { Session } from "../db/models/session";
 
 const getUserDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
@@ -30,7 +31,7 @@ const getUserDetailsByAdmin = handleRequest(
 
 const getUsersDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
-    const users = await User.findAll();
+    const users = await User.findAll({ include: [Session] });
 
     if (!users || users.length === 0) {
       throw new UserNotFoundError({
@@ -42,7 +43,7 @@ const getUsersDetailsByAdmin = handleRequest(
       });
     }
 
-    res.status(200).json({ users: users.map((user) => user.toJSON()) });
+    res.status(200).json({ users: users.map((user) => user.toJSONAdmin()) });
   },
 );
 

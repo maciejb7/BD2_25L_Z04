@@ -20,6 +20,7 @@ import userRouter from "./routers/user.router";
 import { errorHandler } from "./middlewares/error.handler";
 import helmet from "helmet";
 import hpp from "hpp";
+import adminRouter from "./routers/admin.router";
 
 export const connectToDatabase = async () => {
   try {
@@ -84,7 +85,7 @@ const startServer = async () => {
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
-  app.use("/api/admin", authRouter);
+  app.use("/api/admin", adminRouter);
   app.use("/api/match-preferences", matchPreferenceRouter);
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/interactions", userInteractionRouter);
