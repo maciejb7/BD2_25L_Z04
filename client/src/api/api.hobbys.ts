@@ -22,15 +22,15 @@ export interface Hobby {
 
 export interface Category {
   id: number;
-  category_name: string;
-  category_description: string;
+  hobby_category_name: string;
+  hobby_category_description: string;
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
 }
 
 export const getUserHobbies = async (userId: string): Promise<Hobby[]> => {
   try {
-    const response = await api.get<Hobby[]>(`/api/hobbies/${userId}/hobbies`);
+    const response = await api.get<Hobby[]>(`/api/user/hobbies`);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -52,7 +52,7 @@ export const getAllHobbyCategories = async (): Promise<Category[]> => {
   }
 };
 
-export const getHobbyBycategory = async (category: number): Promise<Hobby[]> => {
+export const getHobbyByCategory = async (category: number): Promise<Hobby[]> => {
   try{
     const response = await api.get<Hobby[]>(`api/hobbies/categories/${category}/hobbies`);
     return response.data;
