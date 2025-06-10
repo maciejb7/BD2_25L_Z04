@@ -1,9 +1,30 @@
-export type MovieGenre = {
-  id: number;
-  movie_genre_name: string;
-};
+import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
+import { Movie } from "./movies";
 
-export const movieGenres: MovieGenre[] = [
+@Table({
+  tableName: "movie_genres",
+})
+export class MovieGenre extends Model {
+  @Column({
+    primaryKey: true,
+    type: DataType.INTEGER,
+    autoIncrement: true,
+  })
+  declare id: number;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: false,
+    unique: true,
+  })
+  declare movie_genre_name: string;
+
+  @HasMany(() => Movie)
+  declare movies: Movie[];
+}
+
+// Initial movie genres
+export const movieGenres = [
   {
     id: 1,
     movie_genre_name: "Akcja",
