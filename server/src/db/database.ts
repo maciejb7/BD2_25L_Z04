@@ -15,6 +15,13 @@ import { MusicAlbum } from "./models/music_album";
 import { MusicTrack } from "./models/music_track";
 import { UserMusic } from "./models/user_music";
 import { UserLocation } from "./models/user_location";
+import { MovieGenre } from "./models/movie_genre";
+import { Movie } from "./models/movies";
+import { UserMovie } from "./models/user_movie";
+import { BookAuthor } from "./models/book_author";
+import { Book } from "./models/book";
+import { UserBook } from "./models/user_books";
+
 const models = [
   User,
   Session,
@@ -31,6 +38,12 @@ const models = [
   MusicTrack,
   UserMusic,
   UserLocation,
+  MovieGenre,
+  Movie,
+  UserMovie,
+  BookAuthor,
+  Book,
+  UserBook,
 ];
 
 export const database = new Sequelize({

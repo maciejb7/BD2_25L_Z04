@@ -22,7 +22,7 @@ export class UserMovie extends Model {
 
   @ForeignKey(() => User)
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.UUID,
     allowNull: false,
   })
   declare user_id: number;
