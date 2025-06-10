@@ -5,8 +5,10 @@ import UserPagination from "./UserPagination";
 import {
   deleteUserAccountByAdmin,
   getUsersFromAPIAdmin,
+  unbanUserAccount,
 } from "../../api/api.admin";
 import { useAlert } from "../../contexts/AlertContext";
+import BanUserModal from "../modals/BanUserModal";
 
 const PAGE_SIZE = 10;
 
@@ -14,22 +16,22 @@ function UsersList() {
   const { showAlert } = useAlert();
 
   const [users, setUsers] = useState<UserWithSessions[]>([]);
+  const [isBanUserModalOpen, setIsBanUserModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const fetchUsers = async () => {
+    try {
+      const response = await getUsersFromAPIAdmin();
+      const users = response.users;
+      setUsers(users);
+    } catch (error: any) {
+      showAlert(error.message, "error");
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getUsersFromAPIAdmin();
-        const users = response.users;
-        setUsers(users);
-
-        console.log("Pobrano użytkowników:", users);
-      } catch (error: any) {
-        showAlert(error.message, "error");
-      }
-    };
-
     fetchUsers();
   }, []);
 
@@ -48,9 +50,17 @@ function UsersList() {
     try {
       const response = await deleteUserAccountByAdmin(userId);
       showAlert(response.message, "success");
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user.userId !== userId),
-      );
+      await fetchUsers();
+    } catch (error: any) {
+      showAlert(error.message, "error");
+    }
+  };
+
+  const onUserUnban = async (userId: string) => {
+    try {
+      const response = await unbanUserAccount(userId);
+      showAlert(response.message, "success");
+      await fetchUsers();
     } catch (error: any) {
       showAlert(error.message, "error");
     }
@@ -58,6 +68,17 @@ function UsersList() {
 
   return (
     <div>
+      <BanUserModal
+        userId={selectedUserId}
+        isOpen={isBanUserModalOpen}
+        onBan={() => {
+          fetchUsers();
+        }}
+        onClose={() => {
+          setIsBanUserModalOpen(false);
+          setSelectedUserId("");
+        }}
+      ></BanUserModal>
       <div className="p-6 bg-[rgba(255,255,255,0.8)] rounded shadow">
         <h2 className="text-xl font-bold mb-4">Lista Użytkowników</h2>
 
@@ -94,8 +115,11 @@ function UsersList() {
               key={user.userId}
               user={user}
               onShowDetails={() => {}}
-              onBan={() => {}}
-              onUnban={() => {}}
+              onBan={() => {
+                setSelectedUserId(user.userId);
+                setIsBanUserModalOpen(true);
+              }}
+              onUnban={() => onUserUnban(user.userId)}
               onDelete={() => onUserDelete(user.userId)}
             />
           ))

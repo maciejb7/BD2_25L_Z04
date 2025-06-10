@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { twoWayRoleMap } from "../../constants/maps";
 import { UserWithSessions } from "../../types/others";
 import { getDateFormatter } from "../../utils/formatters";
@@ -17,6 +18,7 @@ function UserRow({
   onUnban,
   onDelete,
 }: UserRowProps) {
+  const [isLoading, setIsLoading] = useState(false);
   const isAdmin = user.role === "admin";
   const isBanned = user.role === "banned";
 
@@ -30,7 +32,9 @@ function UserRow({
         hover:bg-gray-100 transition-colors
       "
     >
-      <div className="font-medium text-gray-800 flex items-center justify-center mb-1 md:mb-0">
+      <div
+        className={`font-medium text-gray-800 flex items-center justify-center mb-1 md:mb-0 ${user.role === "banned" ? "line-through" : ""}`}
+      >
         {user.nickname}
       </div>
       <div className="text-gray-600 flex items-center justify-center mb-1 md:mb-0">
@@ -61,17 +65,27 @@ function UserRow({
           <>
             {isBanned ? (
               <button
-                onClick={() => onUnban(user)}
+                onClick={() => {
+                  setIsLoading(true);
+                  onUnban(user);
+                  setIsLoading(false);
+                }}
                 className="text-green-500 hover:text-green-700 transition-colors"
                 title="Odbanuj"
+                disabled={isLoading}
               >
                 <i className="fas fa-unlock text-lg"></i>
               </button>
             ) : (
               <button
-                onClick={() => onBan(user)}
+                onClick={() => {
+                  setIsLoading(true);
+                  onBan(user);
+                  setIsLoading(false);
+                }}
                 className="text-yellow-500 hover:text-yellow-700 transition-colors"
                 title="Zbanuj"
+                disabled={isLoading}
               >
                 <i className="fas fa-ban text-lg"></i>
               </button>

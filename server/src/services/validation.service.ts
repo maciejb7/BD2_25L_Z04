@@ -62,6 +62,7 @@ const checkIfValueIsValid = (
   maxLength = 500,
   forbiddenNumbers = false,
   forbiddenSpecialChars = false,
+  forbiddenSpaces = true,
 ) => {
   name = capitalizeFirstLetter(name);
   let fieldSchema = z
@@ -72,12 +73,15 @@ const checkIfValueIsValid = (
     .min(minLength, {
       message: `${name} musi mieć co najmniej ${minLength} znaków.`,
     })
-    .regex(/^\S*$/, {
-      message: `${name} nie może zawierać spacji.`,
-    })
     .max(maxLength, {
       message: `${name} nie może mieć więcej niż ${maxLength} znaków.`,
     });
+
+  if (forbiddenSpaces) {
+    fieldSchema = fieldSchema.regex(/^\S*$/, {
+      message: `${name} nie może zawierać spacji.`,
+    });
+  }
 
   if (forbiddenNumbers) {
     fieldSchema = fieldSchema.regex(/^[^\d]*$/, {

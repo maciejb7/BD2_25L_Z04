@@ -10,6 +10,8 @@ import logger from "../logger";
 import { UserBanRequest, userBanRequestFields } from "../types/requests";
 import { getUserBanValidator } from "../types/validators";
 import { AccountBan } from "../db/models/account-ban";
+import { EmailService } from "../services/email.service";
+import { DateTime } from "luxon";
 
 const getUserDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
@@ -151,12 +153,21 @@ const banUserAccount = handleRequest(async (req: Request, res: Response) => {
   }
 
   userToBan.role = Role.BANNED;
+  await userToBan.save();
 
   await AccountBan.upsert({
     givenTo: userToBan.userId,
     givenBy: userId,
     reason: reason,
   });
+
+  await EmailService.sendBanEmail(
+    userToBan.email,
+    userToBan.nickname,
+    userNickname,
+    DateTime.now().toISODate(),
+    reason,
+  );
 
   logger.info(
     `Użytkownik ${userNickname} zbanował konto użytkownika ${userToBan.nickname}.`,
@@ -217,8 +228,15 @@ const unbanUserAccount = handleRequest(async (req: Request, res: Response) => {
   }
 
   userToUnban.role = Role.USER;
-
+  await userToUnban.save();
   await ban.destroy();
+
+  await EmailService.sendUnbanEmail(
+    userToUnban.email,
+    userToUnban.nickname,
+    userNickname,
+  );
+
   logger.info(
     `Użytkownik ${userNickname} odblokował konto użytkownika ${userToUnban.nickname}.`,
     {

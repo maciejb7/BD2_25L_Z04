@@ -15,12 +15,12 @@ const renderEmailTemplate = (name: string, context: Record<string, string>) => {
 };
 
 const sendPasswordResetEmail = async (
-  username: string,
+  userName: string,
   email: string,
   resetLink: string,
 ) => {
   const html = renderEmailTemplate("password-reset", {
-    username,
+    userName,
     resetLink,
   });
 
@@ -33,12 +33,12 @@ const sendPasswordResetEmail = async (
 };
 
 const sendActivationEmail = async (
-  username: string,
+  userName: string,
   email: string,
   activationLink: string,
 ) => {
   const html = renderEmailTemplate("account-activation", {
-    username,
+    userName,
     activationLink,
   });
 
@@ -50,7 +50,47 @@ const sendActivationEmail = async (
   });
 };
 
+const sendBanEmail = async (
+  email: string,
+  userName: string,
+  adminName: string,
+  banDate: string,
+  banReason: string,
+) => {
+  const html = renderEmailTemplate("account-ban", {
+    userName,
+    adminName,
+    banDate,
+    banReason,
+  });
+  await transporter.sendMail({
+    from: `"ClingClang" <${config.EMAIL_USER}>`,
+    to: email,
+    subject: "Zablokowano Konto",
+    html,
+  });
+};
+
+const sendUnbanEmail = async (
+  email: string,
+  userName: string,
+  adminName: string,
+) => {
+  const html = renderEmailTemplate("account-unban", {
+    userName,
+    adminName,
+  });
+  await transporter.sendMail({
+    from: `"ClingClang" <${config.EMAIL_USER}>`,
+    to: email,
+    subject: "Odblokowano Konto",
+    html,
+  });
+};
+
 export const EmailService = {
   sendPasswordResetEmail,
   sendActivationEmail,
+  sendBanEmail,
+  sendUnbanEmail,
 };

@@ -173,6 +173,9 @@ export const getUserBanValidator = (metaData = {}): Validator => {
         metaData,
         1,
         500,
+        false,
+        false,
+        false,
       );
     },
   };

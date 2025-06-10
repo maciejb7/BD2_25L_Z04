@@ -6,7 +6,6 @@ import {
   Model,
   PrimaryKey,
   Table,
-  Unique,
 } from "sequelize-typescript";
 import { User } from "./user";
 
@@ -32,10 +31,10 @@ export class AccountBan extends Model {
   })
   declare givenAt: Date;
 
-  @Unique
   @ForeignKey(() => User)
   @Column({
     type: DataType.UUID,
+    unique: true,
   })
   declare givenTo: string;
 
