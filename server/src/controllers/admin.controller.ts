@@ -2,11 +2,14 @@ import { Request, Response } from "express";
 import { handleRequest } from "../utils/handle-request";
 import { ValidationService } from "../services/validation.service";
 import { RequestService } from "../services/request.service";
-import { User } from "../db/models/user";
+import { Role, User } from "../db/models/user";
 import { ForbiddenActionError, UserNotFoundError } from "../errors/errors";
 import { services } from "../constants/services";
 import { Session } from "../db/models/session";
 import logger from "../logger";
+import { UserBanRequest, userBanRequestFields } from "../types/requests";
+import { getUserBanValidator } from "../types/validators";
+import { AccountBan } from "../db/models/account-ban";
 
 const getUserDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
@@ -109,8 +112,134 @@ const deleteUserAccountByAdmin = handleRequest(
   },
 );
 
+const banUserAccount = handleRequest(async (req: Request, res: Response) => {
+  const loggerMetadata = {
+    service: services.banUserAccount,
+  };
+
+  const { userId, userNickname } =
+    RequestService.extractAuthenticatedUserPayload(req, loggerMetadata);
+
+  const { userToBanId, reason } =
+    await RequestService.extractRequestFields<UserBanRequest>(
+      req.body,
+      userBanRequestFields,
+      loggerMetadata,
+      getUserBanValidator(loggerMetadata),
+    );
+
+  const userToBan = await User.findByPk(userToBanId);
+
+  if (!userToBan) {
+    throw new UserNotFoundError({
+      metaData: {
+        ...loggerMetadata,
+        userId: userId,
+      },
+    });
+  }
+
+  if (userToBan.role === "admin") {
+    throw new ForbiddenActionError({
+      message: "Nie możesz zbanować konta administratora.",
+      metaData: {
+        ...loggerMetadata,
+        userId: userId,
+      },
+      loggerMessage: `Próba zbanowania konta administratora ${userToBan.nickname} przez użytkownika ${userNickname}.`,
+    });
+  }
+
+  userToBan.role = Role.BANNED;
+
+  await AccountBan.upsert({
+    givenTo: userToBan.userId,
+    givenBy: userId,
+    reason: reason,
+  });
+
+  logger.info(
+    `Użytkownik ${userNickname} zbanował konto użytkownika ${userToBan.nickname}.`,
+    {
+      ...loggerMetadata,
+      userId: userId,
+      userNickname: userNickname,
+      userToBanId: userToBan.userId,
+      userToBanNickname: userToBan.nickname,
+      reason: reason,
+    },
+  );
+
+  res.status(200).json({
+    message: "Konto użytkownika zostało pomyślnie zbanowane.",
+    userToBanId: userToBan.userId,
+    userToBanNickname: userToBan.nickname,
+  });
+});
+
+const unbanUserAccount = handleRequest(async (req: Request, res: Response) => {
+  const loggerMetadata = {
+    service: services.unbanUserAccount,
+  };
+  const { userId, userNickname } =
+    RequestService.extractAuthenticatedUserPayload(req, loggerMetadata);
+  const userToUnbanId = await RequestService.extractPathParameter(
+    req,
+    "userToUnbanId",
+    loggerMetadata,
+  );
+  ValidationService.checkIfUUIDIsValid(userToUnbanId, "ID użytkownika");
+
+  const userToUnban = await User.findByPk(userToUnbanId);
+
+  if (!userToUnban) {
+    throw new UserNotFoundError({
+      metaData: {
+        ...loggerMetadata,
+        userId: userId,
+      },
+    });
+  }
+
+  const ban = await AccountBan.findOne({
+    where: { givenTo: userToUnban.userId },
+  });
+
+  if (!ban) {
+    throw new UserNotFoundError({
+      message: "Użytkownik nie jest zbanowany.",
+      metaData: {
+        ...loggerMetadata,
+        userId: userId,
+        userToUnbanId: userToUnban.userId,
+      },
+    });
+  }
+
+  userToUnban.role = Role.USER;
+
+  await ban.destroy();
+  logger.info(
+    `Użytkownik ${userNickname} odblokował konto użytkownika ${userToUnban.nickname}.`,
+    {
+      ...loggerMetadata,
+      userId: userId,
+      userNickname: userNickname,
+      userToUnbanId: userToUnban.userId,
+      userToUnbanNickname: userToUnban.nickname,
+    },
+  );
+  res.status(200).json({
+    message: "Konto użytkownika zostało pomyślnie odblokowane.",
+    userToUnbanId: userToUnban.userId,
+    userToUnbanNickname: userToUnban.nickname,
+  });
+});
+
 export const AdminController = {
   getUserDetailsByAdmin,
   getUsersDetailsByAdmin,
   deleteUserAccountByAdmin,
+  banUserAccount,
+  unbanUserAccount,
 };

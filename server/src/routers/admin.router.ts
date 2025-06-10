@@ -25,4 +25,18 @@ adminRouter.delete(
   AdminController.deleteUserAccountByAdmin,
 );
 
+adminRouter.post(
+  "/user/ban",
+  AuthMiddleware.authenticateUser(),
+  AuthMiddleware.authorizeRole("admin"),
+  AdminController.banUserAccount,
+);
+
+adminRouter.delete(
+  "/user/unban/:userToUnbanId",
+  AuthMiddleware.authenticateUser(),
+  AuthMiddleware.authorizeRole("admin"),
+  AdminController.unbanUserAccount,
+);
+
 export default adminRouter;

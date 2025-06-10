@@ -22,6 +22,8 @@ export const services = {
   changeUserPasswordByAdmin: "change_user_password_by_admin",
   deleteAccountByUser: "delete_account_by_user",
   deleteAccountByAdmin: "delete_account_by_admin",
+  banUserAccount: "ban_user_account",
+  unbanUserAccount: "unban_user_account",
   extractUserPayload: "request_extract_authenticated_user_payload",
   extractPathParameter: "request_extract_path_parameter",
   extractToken: "request_extract_refresh_token",

@@ -160,3 +160,20 @@ export const getEmailValidator = (metaData = {}): Validator => {
     },
   };
 };
+
+export const getUserBanValidator = (metaData = {}): Validator => {
+  return {
+    userId: (value: string) => {
+      ValidationService.checkIfUUIDIsValid(value, "ID użytkownika", metaData);
+    },
+    reason: (value: string) => {
+      ValidationService.checkIfValueIsValid(
+        "Powód bana",
+        value,
+        metaData,
+        1,
+        500,
+      );
+    },
+  };
+};

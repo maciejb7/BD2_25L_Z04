@@ -40,6 +40,8 @@ export const getloggerMessage = (service: string | undefined) => {
       "Wystąpił błąd podczas usuwania konta użytkownika przez użytkownika",
     delete_account_by_admin:
       "Wystąpił błąd podczas usuwania konta użytkownika przez administratora",
+    ban_user_account: "Wystąpił błąd podczas banowania konta użytkownika",
+    unban_user_account: "Wystąpił błąd podczas odbanowywania konta użytkownika",
     extract_user_payload: "Wystąpił błąd w funkcji extract_user_payload",
     extract_path_parameter: "Wystąpił błąd w funkcji extract_path_parameter",
     extract_token: "Wystąpił błąd w funkcji extract_token",

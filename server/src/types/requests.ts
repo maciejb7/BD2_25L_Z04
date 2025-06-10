@@ -1,7 +1,3 @@
-import { Validator } from "./validators";
-import { FieldValidationError } from "../errors/errors";
-import { loggerMessages } from "../errors/loggerMessages";
-
 export interface RegisterRequest {
   nickname: string;
   email: string;
@@ -74,4 +70,14 @@ export interface PasswordResetRequest {
 export const passwordResetRequestFields: (keyof PasswordResetRequest)[] = [
   "passwordResetLinkId",
   "password",
+];
+
+export interface UserBanRequest {
+  userToBanId: string;
+  reason: string;
+}
+
+export const userBanRequestFields: (keyof UserBanRequest)[] = [
+  "userToBanId",
+  "reason",
 ];
