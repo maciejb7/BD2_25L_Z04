@@ -6,6 +6,8 @@ export interface AuthenticatedUserPayload {
   userId: string;
   userNickname: string;
   userRole: string;
+  isActive: boolean;
+  isBanned: boolean;
 }
 
 /**
@@ -28,6 +30,30 @@ export const authenticateUser = () => {
         accessToken,
         config.ACCESS_TOKEN_SECRET as string,
       ) as AuthenticatedUserPayload;
+
+      if (!tokenPayload.isActive) {
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: false,
+        });
+        res.status(403).send({
+          message: "Nie możesz tego zrobić. Twoje konto jest nieaktywne.",
+        });
+        return;
+      }
+
+      if (tokenPayload.isBanned) {
+        res.clearCookie("refreshToken", {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: false,
+        });
+        res.status(403).send({
+          message: "Nie możesz tego zrobić. Twoje konto jest zablokowane.",
+        });
+        return;
+      }
 
       req.user = tokenPayload;
 

@@ -9,6 +9,8 @@ import {
   UserNotFoundError,
 } from "../errors/errors";
 import { services } from "../constants/services";
+import { AccountBan } from "../db/models/account-ban";
+import { DateTime } from "luxon";
 
 /**
  * Retrieves an authenticated user based on their nickname or email and password.
@@ -46,6 +48,8 @@ const getAuthenticatedUser = async (
     });
   }
 
+  await checkIfUserIsBanned(user, metaData);
+
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
   if (!isPasswordCorrect) {
@@ -57,6 +61,33 @@ const getAuthenticatedUser = async (
   }
 
   return user;
+};
+
+const checkIfUserIsBanned = async (
+  user: User,
+  metaData: Record<string, unknown> = {
+    service: services.getAuthenticatedUser,
+  },
+) => {
+  const isBanned = await AccountBan.findOne({
+    where: { givenTo: user.userId },
+  });
+
+  if (isBanned) {
+    const admin = await User.findOne({
+      where: { userId: isBanned.givenBy },
+    });
+
+    throw new UserNotActiveError({
+      message: `Twoje konto zostało zablokowane przez ${admin?.nickname}.\nPowód: ${isBanned.reason}\nNadano: ${DateTime.fromJSDate(isBanned.givenAt).toISODate()}`,
+      statusCode: 403,
+      metaData: {
+        ...metaData,
+        userId: user.userId,
+      },
+      loggerMessage: `Użytkownik ${user.nickname} próbuje wykonać akcję, ale jest zbanowany.`,
+    });
+  }
 };
 
 /**
@@ -99,6 +130,7 @@ const isEmailTaken = async (email: string, metaData = { service: "" }) => {
 
 export const AuthService = {
   getAuthenticatedUser,
+  checkIfUserIsBanned,
   isNicknameTaken,
   isEmailTaken,
 };

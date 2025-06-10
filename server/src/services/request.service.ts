@@ -27,13 +27,17 @@ const extractAuthenticatedUserPayload = (
     !request.user ||
     !request.user.userId ||
     !request.user.userNickname ||
-    !request.user.userRole
+    !request.user.userRole ||
+    !request.user.isActive ||
+    request.user.isBanned
   )
     throw new NoAuthenticationError({ metaData: metaData });
   return {
     userId: request.user.userId,
     userNickname: request.user.userNickname,
     userRole: request.user.userRole,
+    isActive: request.user.isActive,
+    isBanned: request.user.isBanned,
   };
 };
 

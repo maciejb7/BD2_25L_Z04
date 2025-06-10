@@ -18,4 +18,11 @@ adminRouter.get(
   AdminController.getUsersDetailsByAdmin,
 );
 
+adminRouter.delete(
+  "/user/delete/:userId",
+  AuthMiddleware.authenticateUser(),
+  AuthMiddleware.authorizeRole("admin"),
+  AdminController.deleteUserAccountByAdmin,
+);
+
 export default adminRouter;

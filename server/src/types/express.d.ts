@@ -6,6 +6,8 @@ declare module "express-serve-static-core" {
       userId: string;
       userNickname: string;
       userRole: string;
+      isActive: boolean;
+      isBanned: boolean;
     };
   }
 }

@@ -37,4 +37,5 @@ export const services = {
   getDateTimeFromDate: "get_date_time_from_date",
   checkIfAgeBetween: "check_if_age_between",
   checkIfUUIDIsValid: "check_if_uuid_is_valid",
+  fileUpload: "file_upload",
 };

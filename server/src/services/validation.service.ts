@@ -272,7 +272,11 @@ const checkIfAgeBetween = (
  * @param fieldName The name of the field being validated, used for error messages.
  * @throws FieldValidationError If the UUID is not valid.
  */
-const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
+const checkIfUUIDIsValid = (
+  uuid: string,
+  fieldName: string,
+  metaData: Record<string, unknown> = { service: services.checkIfUUIDIsValid },
+) => {
   const uuidSchema = z
     .string()
     .nonempty({ message: `${fieldName} nie może być pusty.` })
@@ -282,7 +286,7 @@ const checkIfUUIDIsValid = (uuid: string, fieldName: string) => {
   if (!isValid.success) {
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
-      metaData: { field: fieldName, value: uuid },
+      metaData: { ...metaData, field: fieldName, value: uuid },
       loggerMessage: "Użytkownik podał niepoprawny UUID.",
     });
   }

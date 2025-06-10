@@ -3,9 +3,10 @@ import { handleRequest } from "../utils/handle-request";
 import { ValidationService } from "../services/validation.service";
 import { RequestService } from "../services/request.service";
 import { User } from "../db/models/user";
-import { UserNotFoundError } from "../errors/errors";
+import { ForbiddenActionError, UserNotFoundError } from "../errors/errors";
 import { services } from "../constants/services";
 import { Session } from "../db/models/session";
+import logger from "../logger";
 
 const getUserDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
@@ -47,7 +48,69 @@ const getUsersDetailsByAdmin = handleRequest(
   },
 );
 
+const deleteUserAccountByAdmin = handleRequest(
+  async (req: Request, res: Response) => {
+    const loggerMetadata = {
+      service: services.deleteAccountByAdmin,
+    };
+
+    const { userNickname } = RequestService.extractAuthenticatedUserPayload(
+      req,
+      loggerMetadata,
+    );
+    const userId = await RequestService.extractPathParameter(
+      req,
+      "userId",
+      loggerMetadata,
+    );
+
+    ValidationService.checkIfUUIDIsValid(userId, "ID użytkownika");
+
+    const user = await User.findByPk(userId);
+
+    if (!user) {
+      throw new UserNotFoundError({
+        metaData: {
+          ...loggerMetadata,
+          adminNickname: userNickname,
+          userToDeleteId: userId,
+        },
+      });
+    }
+
+    if (user.role === "admin") {
+      throw new ForbiddenActionError({
+        message: "Nie możesz usunąć konta administratora.",
+        metaData: {
+          ...loggerMetadata,
+          adminNickname: userNickname,
+          userToDeleteId: userId,
+        },
+        loggerMessage: `Administrator ${userNickname} próbował usunąć konto administratora ${user.nickname}.`,
+      });
+    }
+
+    await user.destroy();
+
+    logger.info(
+      `Administrator ${userNickname} usunął konto użytkownika ${user.nickname}.`,
+      {
+        ...loggerMetadata,
+        adminNickname: userNickname,
+        deletedUserId: userId,
+        deletedUserNickname: user.nickname,
+      },
+    );
+
+    res.status(200).json({
+      message: "Konto użytkownika zostało pomyślnie usunięte.",
+      userId: userId,
+    });
+  },
+);
+
 export const AdminController = {
   getUserDetailsByAdmin,
   getUsersDetailsByAdmin,
+  deleteUserAccountByAdmin,
 };

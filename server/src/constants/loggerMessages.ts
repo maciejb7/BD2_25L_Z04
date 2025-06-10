@@ -63,6 +63,7 @@ export const getloggerMessage = (service: string | undefined) => {
       "Wystąpił błąd podczas pobierania daty i godziny z daty",
     check_if_age_between:
       "Wystąpił błąd podczas sprawdzania, czy wiek jest pomiędzy określonymi wartościami",
+    file_upload: "Wystąpił błąd podczas przesyłania pliku",
   };
 
   return (

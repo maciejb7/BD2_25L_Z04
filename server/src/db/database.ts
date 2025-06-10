@@ -17,6 +17,7 @@ import { UserMusic } from "./models/user-music";
 import { UserLocation } from "./models/user-location";
 import { PasswordResetLink } from "./models/password-reset-link";
 import { AccountActivationLink } from "./models/account-activation-link";
+import { AccountBan } from "./models/account-ban";
 const models = [
   User,
   Session,
@@ -35,6 +36,7 @@ const models = [
   UserLocation,
   PasswordResetLink,
   AccountActivationLink,
+  AccountBan,
 ];
 
 export const database = new Sequelize({

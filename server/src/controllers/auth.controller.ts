@@ -180,7 +180,7 @@ const login = handleRequest(async (req: Request, res: Response) => {
   user.lastLogin = new Date();
   await user.save();
 
-  const accessToken = TokenService.generateAccessToken(user);
+  const accessToken = await TokenService.generateAccessToken(user);
   const refreshToken = await TokenService.generateRefreshToken(
     user,
     ip,

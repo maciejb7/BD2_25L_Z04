@@ -7,19 +7,31 @@ import {
   ExpiredRefreshTokenError,
   InvalidRefreshTokenError,
   NoRefreshTokenError,
+  UserNotActiveError,
   UserNotFoundError,
 } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
 import { services } from "../constants/services";
+import { AccountBan } from "../db/models/account-ban";
+import { AuthService } from "./auth.service";
 
 /**
  * Generates an access token for the given user.
  * @param user The user for whom to generate the access token.
  * @returns The generated access token as a string.
  */
-const generateAccessToken = (user: User): string => {
+const generateAccessToken = async (user: User): Promise<string> => {
+  const isBanned = await AccountBan.findOne({
+    where: { givenTo: user.userId },
+  });
   return jwt.sign(
-    { userId: user.userId, userNickname: user.nickname, userRole: user.role },
+    {
+      userId: user.userId,
+      userNickname: user.nickname,
+      userRole: user.role,
+      isActive: user.isActive,
+      isBanned: isBanned ? true : false,
+    },
     config.ACCESS_TOKEN_SECRET as string,
     {
       expiresIn: "15m",
@@ -90,6 +102,20 @@ const refreshAccessToken = async (
       metaData: { ...metaData },
       makeLog: false,
     });
+
+  if (!user.isActive) {
+    throw new UserNotActiveError({
+      message: "Twoje konto jest nieaktywne.",
+      metaData: { ...metaData, userId: user.userId },
+      statusCode: 403,
+      loggerMessage: `Użytkownik ${user.nickname} próbował wykonać akcję, ale jego konto jest nieaktywne.`,
+    });
+  }
+
+  AuthService.checkIfUserIsBanned(user, {
+    service: services.refresh,
+    userId: user.userId,
+  });
 
   return generateAccessToken(user);
 };

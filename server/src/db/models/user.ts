@@ -13,6 +13,7 @@ import { UserLike } from "./user-like";
 import { UserLocation } from "./user-location";
 import { PasswordResetLink } from "./password-reset-link";
 import { AccountActivationLink } from "./account-activation-link";
+import { AccountBan } from "./account-ban";
 
 export enum Gender {
   M = "male",
@@ -132,6 +133,18 @@ export class User extends Model {
     onDelete: "CASCADE",
   })
   declare accountActivationLink: AccountActivationLink;
+
+  @HasMany(() => AccountBan, {
+    foreignKey: "givenBy",
+    onDelete: "CASCADE",
+  })
+  declare accountBans: AccountBan[];
+
+  @HasOne(() => AccountBan, {
+    foreignKey: "givenTo",
+    onDelete: "CASCADE",
+  })
+  declare accountBan: AccountBan;
 
   @HasMany(() => UserMatchPreference)
   declare matchPreferences: UserMatchPreference[];

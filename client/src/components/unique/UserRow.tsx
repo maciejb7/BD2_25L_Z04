@@ -7,7 +7,7 @@ interface UserRowProps {
   onShowDetails: (user: UserWithSessions) => void;
   onBan: (user: UserWithSessions) => void;
   onUnban: (user: UserWithSessions) => void;
-  onDelete: (user: UserWithSessions) => void;
+  onDelete: () => void;
 }
 
 function UserRow({
@@ -78,7 +78,7 @@ function UserRow({
             )}
 
             <button
-              onClick={() => onDelete(user)}
+              onClick={() => onDelete()}
               className="text-red-500 hover:text-red-700 transition-colors"
               title="Usuń"
             >

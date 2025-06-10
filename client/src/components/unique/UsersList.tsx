@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import UserRow from "./UserRow";
 import { UserWithSessions } from "../../types/others";
 import UserPagination from "./UserPagination";
-import { getUsersFromAPIAdmin } from "../../api/api.admin";
+import {
+  deleteUserAccountByAdmin,
+  getUsersFromAPIAdmin,
+} from "../../api/api.admin";
 import { useAlert } from "../../contexts/AlertContext";
 
 const PAGE_SIZE = 10;
@@ -41,55 +44,69 @@ function UsersList() {
     currentPage * PAGE_SIZE,
   );
 
-  return (
-    <div className="p-6 bg-[rgba(255,255,255,0.8)] rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Lista Użytkowników</h2>
+  const onUserDelete = async (userId: string) => {
+    try {
+      const response = await deleteUserAccountByAdmin(userId);
+      showAlert(response.message, "success");
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.userId !== userId),
+      );
+    } catch (error: any) {
+      showAlert(error.message, "error");
+    }
+  };
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Szukaj po nicku..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="w-full md:w-1/3 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+  return (
+    <div>
+      <div className="p-6 bg-[rgba(255,255,255,0.8)] rounded shadow">
+        <h2 className="text-xl font-bold mb-4">Lista Użytkowników</h2>
+
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Szukaj po nicku..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full md:w-1/3 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-300"
+          />
+        </div>
+
+        <div className="hidden md:grid grid-cols-[1fr_1fr_8rem_10rem_10rem_10rem_8rem] px-4 py-2 border-b bg-gray-100 font-semibold text-gray-700">
+          <div className="text-center">Nick</div>
+          <div className="text-center">Email</div>
+          <div className="text-center">Rola</div>
+          <div className="text-center">Rejestracja</div>
+          <div className="text-center">Ostatnie Logowanie</div>
+          <div className="text-center">Ostatnie IP</div>
+          <div className="text-center">Akcje</div>
+        </div>
+
+        {filteredUsers.length === 0 ? (
+          <p className="text-center text-gray-500 py-6">
+            Brak pasujących użytkowników.
+          </p>
+        ) : (
+          paginatedUsers.map((user) => (
+            <UserRow
+              key={user.userId}
+              user={user}
+              onShowDetails={() => {}}
+              onBan={() => {}}
+              onUnban={() => {}}
+              onDelete={() => onUserDelete(user.userId)}
+            />
+          ))
+        )}
+
+        <UserPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
         />
       </div>
-
-      <div className="hidden md:grid grid-cols-[1fr_1fr_8rem_10rem_10rem_10rem_8rem] px-4 py-2 border-b bg-gray-100 font-semibold text-gray-700">
-        <div className="text-center">Nick</div>
-        <div className="text-center">Email</div>
-        <div className="text-center">Rola</div>
-        <div className="text-center">Rejestracja</div>
-        <div className="text-center">Ostatnie Logowanie</div>
-        <div className="text-center">Ostatnie IP</div>
-        <div className="text-center">Akcje</div>
-      </div>
-
-      {filteredUsers.length === 0 ? (
-        <p className="text-center text-gray-500 py-6">
-          Brak pasujących użytkowników.
-        </p>
-      ) : (
-        paginatedUsers.map((user) => (
-          <UserRow
-            key={user.userId}
-            user={user}
-            onShowDetails={() => {}}
-            onBan={() => {}}
-            onUnban={() => {}}
-            onDelete={() => {}}
-          />
-        ))
-      )}
-
-      <UserPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
     </div>
   );
 }
