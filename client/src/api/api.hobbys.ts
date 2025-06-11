@@ -1,6 +1,3 @@
-import { User } from "../types/others";
-import { ResetPasswordFormData } from "../types/requests";
-import { CommonResponse, UserResponse } from "../types/responses";
 import api, { handleApiError } from "./api";
 
 interface getUserHobbies{
@@ -40,7 +37,6 @@ export interface UserHobby {
 
 export const getUserHobbies = async (userId?: string): Promise<UserHobby[]> => {
   try {
-    // Endpoint dla aktualnego użytkownika - backend automatycznie pobiera userId z tokenu
     const response = await api.get<UserHobby[]>(`/api/hobbies/user/hobbies`);
     return response.data;
   } catch (error: unknown) {
@@ -89,7 +85,6 @@ export const getAllHobby = async (): Promise<Hobby[]> => {
   }
 }
 
-// Nowa funkcja do oceniania hobby
 export const rateHobby = async (hobbyId: number, rating: number): Promise<any> => {
   try {
     const response = await api.post(`/api/hobbies/user/hobbies/rate`, {
@@ -105,7 +100,6 @@ export const rateHobby = async (hobbyId: number, rating: number): Promise<any> =
   }
 };
 
-// Nowa funkcja do usuwania oceny hobby
 export const removeHobbyRating = async (hobbyId: number): Promise<any> => {
   try {
     const response = await api.delete(`/api/hobbies/user/hobbies/${hobbyId}`);

@@ -3,6 +3,7 @@ import DashboardPage from "../pages/private/DashBoardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AccountSettings from "../pages/private/AccountSettings";
 import HobbyPage from "../pages/private/HobbysPage";
+import MediaPage from "../pages/private/MediaPage";
 
 function PrivateRouter() {
   return (
@@ -13,6 +14,7 @@ function PrivateRouter() {
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="/hobbies" element={<HobbyPage />} />
+      <Route path="/media" element={< MediaPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
