@@ -4,6 +4,12 @@ import transporter from "../transporter";
 import handlebars from "handlebars";
 import fs from "fs";
 
+/**
+ *  Renders an email template using Handlebars.
+ * @param name  - The name of the template file (without extension).
+ * @param context  - The context object containing variables to replace in the template.
+ * @returns  The rendered HTML string of the email template.
+ */
 const renderEmailTemplate = (name: string, context: Record<string, string>) => {
   const templatePath = path.resolve(
     "./src/email-templates/",

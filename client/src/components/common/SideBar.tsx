@@ -28,23 +28,24 @@ function SideBar({ options }: SideBarOptions) {
   });
   const [avatar, setAvatar] = useState<string>("");
 
-  // Load user informations (name etc.) to the sidbebar top.
-  useEffect(() => {
-    const fetchUser = async () => {
-      const currentUser = await getUserFromAPI();
-      const { name, surname, nickname } = currentUser;
-      setUserInfo({ name, surname, nickname });
-      setIsLoading(false);
-    };
-    fetchUser();
-  }, []);
+  const fetchUser = async () => {
+    const currentUser = await getUserFromAPI();
+    const { name, surname, nickname } = currentUser;
+    setUserInfo({ name, surname, nickname });
+    setIsLoading(false);
+  };
 
-  // Load user avatar to the sidebar top.
-  useEffect(() => {
-    const fetchAvatar = async () => {
+  const fetchAvatar = async () => {
+    try {
       const avatarUrl = await getUserAvatar();
-      setAvatar(avatarUrl ?? "");
-    };
+      setAvatar(avatarUrl);
+    } catch {
+      setAvatar("");
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
     fetchAvatar();
   }, []);
 

@@ -12,12 +12,18 @@ export const getUserFromAPI = async (): Promise<User> => {
 };
 
 export const getUserAvatar = async (): Promise<string> => {
-  const response = await api.get(`/api/user/avatar`, {
-    responseType: "blob",
-    withCredentials: true,
-  });
-  if (response.status !== 200) return "";
-  return URL.createObjectURL(response.data);
+  try {
+    const response = await api.get(`/api/user/avatar`, {
+      responseType: "blob",
+      withCredentials: true,
+    });
+    return URL.createObjectURL(response.data);
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas pobierania zdjęcia profilowego. Spróbuj ponownie.",
+    );
+  }
 };
 
 export const uploadUserAvatar = async (file: File): Promise<CommonResponse> => {

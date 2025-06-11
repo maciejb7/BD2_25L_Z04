@@ -6,6 +6,9 @@ interface AccountBanInfoProps {
   userId: string;
 }
 
+/**
+ * AccountBanInfo is a component that displays the ban status of a user account.
+ */
 function AccountBanInfo({ userId }: AccountBanInfoProps) {
   const [banStatus, setIsBanStatus] = useState({
     isBanned: false,

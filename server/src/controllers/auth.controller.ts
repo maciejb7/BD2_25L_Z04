@@ -291,9 +291,6 @@ const logoutFromAllDevices = handleRequest(
   },
 );
 
-/**
- * Controller for handling user registration, login, sessions and logout.
- */
 export const AuthController = {
   register,
   activateUserAccount,

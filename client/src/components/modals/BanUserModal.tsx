@@ -10,6 +10,9 @@ interface BanUserModalProps {
   onClose: () => void;
 }
 
+/**
+ * BanUserModal is a modal component that allows administrators to ban a user account.
+ */
 function BanUserModal({ userId, isOpen, onBan, onClose }: BanUserModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const { showAlert } = useAlert();

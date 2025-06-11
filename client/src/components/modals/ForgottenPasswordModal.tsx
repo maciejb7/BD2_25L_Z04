@@ -9,6 +9,9 @@ interface ForgottenPasswordModalProps {
   onClose: () => void;
 }
 
+/**
+ * ForgottenPasswordModal is a modal component that allows users to request a password reset link.
+ */
 function ForgottenPasswordModal({
   modalTitle,
   isOpen,

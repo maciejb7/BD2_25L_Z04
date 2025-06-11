@@ -13,6 +13,9 @@ import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 10;
 
+/**
+ * UsersList component displays a list of users with options to search, ban, unban, and delete user accounts.
+ */
 function UsersList() {
   const { showAlert } = useAlert();
   const navigate = useNavigate();

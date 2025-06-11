@@ -40,4 +40,6 @@ export const services = {
   checkIfAgeBetween: "check_if_age_between",
   checkIfUUIDIsValid: "check_if_uuid_is_valid",
   fileUpload: "file_upload",
+  deleteUnactivePasswordResets: "delete_unactive_password_resets",
+  deleteUnactiveAccounts: "delete_unactive_accounts",
 };

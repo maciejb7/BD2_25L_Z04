@@ -28,6 +28,9 @@ import { EmailService } from "../services/email.service";
 import { DateTime } from "luxon";
 import { FileService } from "../services/file.service";
 
+/**
+ * Retrieves user details by admin.
+ */
 const getUserDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const userId = await RequestService.extractPathParameter(req, "userId", {
@@ -51,6 +54,9 @@ const getUserDetailsByAdmin = handleRequest(
   },
 );
 
+/**
+ * Retrieves details of all users by admin.
+ */
 const getUsersDetailsByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const users = await User.findAll();
@@ -66,6 +72,9 @@ const getUsersDetailsByAdmin = handleRequest(
   },
 );
 
+/**
+ * Retrieves the ban details of a user by admin.
+ */
 const getUserBanByAdmin = handleRequest(async (req: Request, res: Response) => {
   const bannedUserId = await RequestService.extractPathParameter(
     req,
@@ -97,6 +106,9 @@ const getUserBanByAdmin = handleRequest(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Retrieves the avatar of a user by admin.
+ */
 const getUserAvatarByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const userId = await RequestService.extractPathParameter(req, "userId", {
@@ -117,6 +129,9 @@ const getUserAvatarByAdmin = handleRequest(
   },
 );
 
+/**
+ * Uploads a new avatar for a user by admin.
+ */
 const uploadUserAvatarByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
@@ -163,6 +178,9 @@ const uploadUserAvatarByAdmin = handleRequest(
   },
 );
 
+/**
+ * Deletes the avatar of a user by admin.
+ */
 const deleteUserAvatarByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
@@ -211,6 +229,9 @@ const deleteUserAvatarByAdmin = handleRequest(
   },
 );
 
+/**
+ * Deletes a user account by admin.
+ */
 const deleteUserAccountByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {
@@ -272,6 +293,9 @@ const deleteUserAccountByAdmin = handleRequest(
   },
 );
 
+/**
+ * Bans a user account by admin.
+ */
 const banUserAccount = handleRequest(async (req: Request, res: Response) => {
   const loggerMetaData = {
     service: services.banUserAccount,
@@ -346,6 +370,9 @@ const banUserAccount = handleRequest(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Unbans a user account by admin.
+ */
 const unbanUserAccount = handleRequest(async (req: Request, res: Response) => {
   const loggerMetaData = {
     service: services.unbanUserAccount,
@@ -412,6 +439,9 @@ const unbanUserAccount = handleRequest(async (req: Request, res: Response) => {
   });
 });
 
+/**
+ * Changes a specific field of user details by admin.
+ */
 export const changeDetailsFieldByAdmin = handleRequest(
   async (req: Request, res: Response) => {
     const loggerMetaData = {

@@ -63,6 +63,12 @@ const getAuthenticatedUser = async (
   return user;
 };
 
+/**
+ * Checks if a user is banned.
+ * @param user - The user to check.
+ * @param metaData - Optional metadata for error handling.
+ * @throws UserNotActiveError if the user is banned.
+ */
 const checkIfUserIsBanned = async (
   user: User,
   metaData: Record<string, unknown> = {

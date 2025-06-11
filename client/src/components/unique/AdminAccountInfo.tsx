@@ -18,7 +18,7 @@ interface AdminAccountInfoProps {
 }
 
 /**
- * AccountInfo component displays user information and allows editing it (avatar, name, surname, nickname, email).
+ * AdminAccountInfo component displays user information and allows editing it (avatar, name, surname, nickname, email).
  */
 function AdminAccountInfo({ userId }: AdminAccountInfoProps) {
   const { showAlert } = useAlert();

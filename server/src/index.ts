@@ -21,6 +21,8 @@ import { errorHandler } from "./middlewares/error.handler";
 import helmet from "helmet";
 import hpp from "hpp";
 import adminRouter from "./routers/admin.router";
+import { scheduleDeleteExpiredPasswordResetLinks } from "./tasks/delete-expired-password-resets";
+import { scheduleDeleteUnactiveExpiredAccounts } from "./tasks/delete-expired-unactive-accounts";
 
 export const connectToDatabase = async () => {
   try {
@@ -66,6 +68,8 @@ const onStart = async () => {
 
   await HobbyService.initializeHobbyData();
   logger.info("Zainicjalizowano dane hobby.");
+
+  scheduleCronTasks();
 };
 
 const startExpress = (app: Express) => {
@@ -93,6 +97,15 @@ const addRouters = (app: express.Application) => {
   app.use("/api/hobbies", hobbyRouter);
   app.use("/api/music", musicRouter);
   app.use("/api/location", locationRouter);
+};
+
+/**
+ * Schedules cron tasks for deleting expired password reset links
+ * and deleting unactive expired accounts.
+ */
+const scheduleCronTasks = () => {
+  scheduleDeleteExpiredPasswordResetLinks();
+  scheduleDeleteUnactiveExpiredAccounts();
 };
 
 /**

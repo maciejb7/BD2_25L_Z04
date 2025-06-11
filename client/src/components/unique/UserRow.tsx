@@ -11,6 +11,9 @@ interface UserRowProps {
   onDelete: () => void;
 }
 
+/**
+ * UserRow is a component that displays a single user in the user management table.
+ */
 function UserRow({
   user,
   onShowDetails,

@@ -1,4 +1,4 @@
-import { User } from "./others";
+import { User, UserWithSessions } from "./others";
 
 export interface CommonResponse {
   message: string;
@@ -10,6 +10,14 @@ export interface ErrorResponse {
 
 export interface UserResponse {
   user: User;
+}
+
+export interface UsersWithSessionsResponse {
+  users: UserWithSessions[];
+}
+
+export interface UserWithSessionsResponse {
+  user: UserWithSessions;
 }
 
 export interface RefreshResponse {

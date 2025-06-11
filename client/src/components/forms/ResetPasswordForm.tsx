@@ -8,6 +8,9 @@ interface ResetPasswordFormProps {
   linkId: string;
 }
 
+/**
+ * ResetPasswordForm is a form component that allows users to reset their password.
+ */
 function ResetPasswordForm({ linkId }: ResetPasswordFormProps) {
   const navigate = useNavigate();
   const { showAlert } = useAlert();

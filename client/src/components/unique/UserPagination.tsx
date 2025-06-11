@@ -4,6 +4,9 @@ interface UserPaginationProps {
   onPageChange: (page: number) => void;
 }
 
+/**
+ * UserPagination is a component that displays pagination controls for user lists.
+ */
 function UserPagination({
   currentPage,
   totalPages,

@@ -3,6 +3,9 @@ import { useAlert } from "../../contexts/AlertContext";
 import { useEffect } from "react";
 import { isUserAdmin } from "../../utils/userAuthentication";
 
+/**
+ * AdminChecker is a component that checks if the user is an admin.
+ */
 function AdminChecker({ children }: { children: React.ReactNode }) {
   const { showAlert } = useAlert();
   const navigation = useNavigate();

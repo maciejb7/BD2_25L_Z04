@@ -46,8 +46,12 @@ function AccountInfo() {
   };
 
   const fetchAvatar = async () => {
-    const avatarUrl = await getUserAvatar();
-    setAvatar(avatarUrl ?? "");
+    try {
+      const avatarUrl = await getUserAvatar();
+      setAvatar(avatarUrl);
+    } catch {
+      setAvatar("");
+    }
   };
 
   useEffect(() => {

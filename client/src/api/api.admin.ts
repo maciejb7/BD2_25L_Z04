@@ -1,14 +1,10 @@
-import { UserWithSessions } from "../types/others";
-import { BanResponse, CommonResponse } from "../types/responses";
+import {
+  BanResponse,
+  CommonResponse,
+  UsersWithSessionsResponse,
+  UserWithSessionsResponse,
+} from "../types/responses";
 import api, { handleApiError } from "./api";
-
-interface UsersWithSessionsResponse {
-  users: UserWithSessions[];
-}
-
-interface UserWithSessionsResponse {
-  user: UserWithSessions;
-}
 
 export const getUserFromAPIAdmin = async (
   userId: string,
