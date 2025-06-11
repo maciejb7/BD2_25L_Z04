@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { User } from "../db/models/user";
 import { handleRequest } from "../utils/handle-request";
 import { QuestionService } from "../services/question.service";
-import { AuthService } from "../services/auth.service";
+import { RequestService } from "../services/request.service";
 
 /**
  * Get all questions in random order
@@ -152,7 +152,7 @@ export const getAllAnswersController = handleRequest(
 export const getCurrentUserAnswersForQuestions = handleRequest(
   async (req: Request, res: Response) => {
     try {
-      const { userId } = AuthService.extractAuthenticatedUserPayload(req);
+      const { userId } = RequestService.extractAuthenticatedUserPayload(req);
       const { questionIds } = req.body;
 
       if (!Array.isArray(questionIds)) {

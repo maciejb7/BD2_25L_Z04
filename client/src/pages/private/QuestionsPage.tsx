@@ -13,7 +13,7 @@ import {
   updateUserMatchPreferences,
 } from "../../api/api.match_preferences";
 import { useAlert } from "../../contexts/AlertContext";
-import { getUser } from "../../utils/userAuthentication";
+import { getUserFromAPI } from "../../api/api.user";
 
 interface Question {
   id: string;
@@ -78,7 +78,7 @@ function QuestionsPage() {
         setError("");
 
         // Get user ID
-        const user = await getUser();
+        const user = await getUserFromAPI();
         if (!user || !user.userId) {
           throw new Error("Nie udało się pobrać ID użytkownika");
         }
