@@ -18,6 +18,8 @@ import path from "path";
 import fs from "fs";
 import userRouter from "./routers/user.router";
 import { errorHandler } from "./middlewares/error.handler";
+import movieRouter from "./routers/movie.router";
+import bookRouter from "./routers/book.router";
 
 export const connectToDatabase = async () => {
   try {
@@ -81,6 +83,8 @@ const addRouters = (app: express.Application) => {
   app.use("/api/questions", questionRouter);
   app.use("/api/hobbies", hobbyRouter);
   app.use("/api/music", musicRouter);
+  app.use("/api/movies", movieRouter);
+  app.use("/api/books", bookRouter);
   app.use("/api/location", locationRouter);
 };
 
