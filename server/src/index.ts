@@ -20,6 +20,8 @@ import userRouter from "./routers/user.router";
 import { errorHandler } from "./middlewares/error.handler";
 import movieRouter from "./routers/movie.router";
 import bookRouter from "./routers/book.router";
+import { MoviesService } from "./services/movie.service";
+import { BooksService } from "./services/book.service";
 
 export const connectToDatabase = async () => {
   try {
@@ -58,6 +60,12 @@ const onStart = async () => {
 
   await HobbyService.initializeHobbyData();
   logger.info("Zainicjalizowano dane hobby.");
+
+  await MoviesService.initializeMoviesData();
+  logger.info("Zainicjalizowano dane filmów.");
+
+  await BooksService.initializeBookData();
+  logger.info("Zainicjalizowano dane książek.");
 };
 
 const startExpress = (app: Express) => {

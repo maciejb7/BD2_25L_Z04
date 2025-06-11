@@ -1,5 +1,5 @@
-import { Movie } from "../db/models/movies";
-import { MovieGenre } from "../db/models/movie_genre";
+import { Movie, movies } from "../db/models/movies";
+import { MovieGenre, movieGenres } from "../db/models/movie_genre";
 import { UserMovie } from "../db/models/user_movie";
 import { Op } from "sequelize";
 import { database } from "../db/database";
@@ -21,6 +21,30 @@ interface UpdateUserMovieData {
   rating?: number;
   is_favorite?: boolean;
 }
+
+const initializeMoviesData = async (): Promise<void> => {
+  const transaction = await database.transaction();
+  try {
+    const genreCount = await MovieGenre.count();
+    if (genreCount === 0) {
+      logger.info("Initializing movie genre data");
+      await MovieGenre.bulkCreate(movieGenres, { transaction });
+    }
+
+    const movieCount = await Movie.count();
+    if (movieCount === 0) {
+      logger.info("Initializing movies data");
+      await Movie.bulkCreate(movies, { transaction });
+    }
+
+    await transaction.commit();
+    logger.info("Movies data initialized successfully");
+  } catch (error) {
+    await transaction.rollback();
+    logger.error("Error initializing movies data", error);
+    throw error;
+  }
+};
 
 /**
  * Get movies with optional filtering
@@ -308,4 +332,5 @@ export const MoviesService = {
   getUserMovies,
   getUserFavoriteMovies,
   getMovieGenres,
+  initializeMoviesData,
 };

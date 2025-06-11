@@ -1,7 +1,7 @@
-mport { Transaction, Op } from "sequelize";
 import { Book, books } from "../db/models/book";
 import { BookAuthor, bookAuthors } from "../db/models/book_author";
 import { UserBook } from "../db/models/user_books";
+import { Op } from "sequelize";
 import { database } from "../db/database";
 import logger from "../logger";
 
@@ -16,18 +16,23 @@ interface AddUserBookData {
   bookId: number;
   rating?: number;
   is_favorite?: boolean;
-  reading_status?: 'to_read' | 'reading' | 'read';
+  reading_status?: "to_read" | "reading" | "finished" | "abandoned";
+  current_page?: number;
+  notes?: string;
+  started_reading_at?: Date;
+  finished_reading_at?: Date;
 }
 
 interface UpdateUserBookData {
   rating?: number;
   is_favorite?: boolean;
-  reading_status?: 'to_read' | 'reading' | 'read';
+  reading_status?: "to_read" | "reading" | "finished" | "abandoned";
+  current_page?: number;
+  notes?: string;
+  started_reading_at?: Date;
+  finished_reading_at?: Date;
 }
 
-/**
- * Initialize book data in the database
- */
 const initializeBookData = async (): Promise<void> => {
   const transaction = await database.transaction();
   try {
@@ -70,9 +75,18 @@ const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
     ];
 
     if (filters.search) {
-      where.book_title = {
-        [Op.iLike]: `%${filters.search}%`,
-      };
+      where[Op.or] = [
+        {
+          book_title: {
+            [Op.iLike]: `%${filters.search}%`,
+          },
+        },
+        {
+          book_description: {
+            [Op.iLike]: `%${filters.search}%`,
+          },
+        },
+      ];
     }
 
     if (filters.year) {
@@ -93,13 +107,13 @@ const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
       };
     }
 
-    const booksResult = await Book.findAll({
+    const books = await Book.findAll({
       where,
       include,
       order: [["publication_year", "DESC"]],
     });
 
-    return booksResult;
+    return books;
   } catch (error) {
     logger.error("Error getting books", error);
     throw error;
@@ -130,47 +144,7 @@ const getBookDetails = async (bookId: number): Promise<Book | null> => {
 };
 
 /**
- * Get all book authors
- * @returns Promise with all book authors
- */
-const getAllAuthors = async (): Promise<BookAuthor[]> => {
-  try {
-    const authors = await BookAuthor.findAll({
-      order: [["author_name", "ASC"]],
-    });
-
-    return authors;
-  } catch (error) {
-    logger.error("Error getting book authors", error);
-    throw error;
-  }
-};
-
-/**
- * Get author details by ID
- * @param authorId Author ID
- * @returns Promise with author details or null
- */
-const getAuthorDetails = async (authorId: number): Promise<BookAuthor | null> => {
-  try {
-    const author = await BookAuthor.findByPk(authorId, {
-      include: [
-        {
-          model: Book,
-          as: "books",
-        },
-      ],
-    });
-
-    return author;
-  } catch (error) {
-    logger.error("Error getting author details", error);
-    throw error;
-  }
-};
-
-/**
- * Add book to user's list
+ * Add book to user's library
  * @param userId User ID
  * @param data Book data
  * @returns Promise with created UserBook entry
@@ -182,12 +156,10 @@ const addUserBook = async (
   const transaction = await database.transaction();
 
   try {
-    // Check if book exists
     const book = await Book.findByPk(data.bookId);
     if (!book) {
       throw new Error("Book not found");
     }
-
     const existingUserBook = await UserBook.findOne({
       where: {
         user_id: userId,
@@ -196,11 +168,15 @@ const addUserBook = async (
     });
 
     if (existingUserBook) {
-      throw new Error("Book is already in user's list");
+      throw new Error("Book is already in user's library");
     }
 
     if (data.rating !== undefined && (data.rating < 1 || data.rating > 5)) {
       throw new Error("Rating must be between 1 and 5");
+    }
+
+    if (data.current_page !== undefined && data.current_page < 0) {
+      throw new Error("Current page must be non-negative");
     }
 
     const userBook = await UserBook.create(
@@ -209,7 +185,11 @@ const addUserBook = async (
         book_id: data.bookId,
         rating: data.rating,
         is_favorite: data.is_favorite || false,
-        reading_status: data.reading_status || 'to_read',
+        reading_status: data.reading_status || "to_read",
+        current_page: data.current_page,
+        notes: data.notes,
+        started_reading_at: data.started_reading_at,
+        finished_reading_at: data.finished_reading_at,
       },
       { transaction },
     );
@@ -236,9 +216,12 @@ const updateUserBook = async (
   data: UpdateUserBookData,
 ): Promise<boolean> => {
   try {
-    // Validate rating if provided
     if (data.rating !== undefined && (data.rating < 1 || data.rating > 5)) {
       throw new Error("Rating must be between 1 and 5");
+    }
+
+    if (data.current_page !== undefined && data.current_page < 0) {
+      throw new Error("Current page must be non-negative");
     }
 
     const [updatedCount] = await UserBook.update(data, {
@@ -256,7 +239,7 @@ const updateUserBook = async (
 };
 
 /**
- * Remove book from user's list
+ * Remove book from user's library
  * @param userId User ID
  * @param bookId Book ID
  * @returns Promise<boolean> True if removed
@@ -288,12 +271,10 @@ const removeUserBook = async (
  */
 const getUserBooks = async (
   userId: string,
-  status?: 'to_read' | 'reading' | 'read',
-): Promise<
-  Array<{ userBook: UserBook; book: Book; author: BookAuthor }>
-> => {
+  status?: "to_read" | "reading" | "finished" | "abandoned",
+): Promise<Array<{ userBook: UserBook; book: Book; author: BookAuthor }>> => {
   try {
-    const where: any = { user_id: userId };
+    const where: Record<string, unknown> = { user_id: userId };
 
     if (status) {
       where.reading_status = status;
@@ -333,9 +314,7 @@ const getUserBooks = async (
  */
 const getUserFavoriteBooks = async (
   userId: string,
-): Promise<
-  Array<{ userBook: UserBook; book: Book; author: BookAuthor }>
-> => {
+): Promise<Array<{ userBook: UserBook; book: Book; author: BookAuthor }>> => {
   try {
     const favoriteBooks = await UserBook.findAll({
       where: {
@@ -368,94 +347,109 @@ const getUserFavoriteBooks = async (
 };
 
 /**
- * Get books by genre
- * @param genre Book genre
- * @returns Promise with books of specific genre
+ * Get all book authors
+ * @returns Promise with all book authors
  */
-const getBooksByGenre = async (genre: string): Promise<Book[]> => {
+const getBookAuthors = async (): Promise<BookAuthor[]> => {
   try {
-    const books = await Book.findAll({
-      where: {
-        book_genre: {
-          [Op.iLike]: `%${genre}%`,
-        },
-      },
-      include: [
-        {
-          model: BookAuthor,
-          as: "author",
-        },
-      ],
-      order: [["publication_year", "DESC"]],
+    const authors = await BookAuthor.findAll({
+      order: [["author_name", "ASC"]],
     });
 
-    return books;
+    return authors;
   } catch (error) {
-    logger.error("Error getting books by genre", error);
+    logger.error("Error getting book authors", error);
     throw error;
   }
 };
 
 /**
- * Get books by author
- * @param authorId Author ID
- * @returns Promise with books by specific author
- */
-const getBooksByAuthor = async (authorId: number): Promise<Book[]> => {
-  try {
-    const books = await Book.findAll({
-      where: {
-        author_id: authorId,
-      },
-      include: [
-        {
-          model: BookAuthor,
-          as: "author",
-        },
-      ],
-      order: [["publication_year", "DESC"]],
-    });
-
-    return books;
-  } catch (error) {
-    logger.error("Error getting books by author", error);
-    throw error;
-  }
-};
-
-/**
- * Get unique book genres
- * @returns Promise with unique book genres
+ * Get all unique book genres
+ * @returns Promise with all book genres
  */
 const getBookGenres = async (): Promise<string[]> => {
   try {
-    const books = await Book.findAll({
-      attributes: ['book_genre'],
-      group: ['book_genre'],
-      order: [['book_genre', 'ASC']],
+    const genres = await Book.findAll({
+      attributes: ["book_genre"],
+      where: {
+        book_genre: {
+          [Op.not]: null,
+        },
+      },
+      group: ["book_genre"],
+      order: [["book_genre", "ASC"]],
     });
 
-    return books
-      .map(book => book.book_genre)
-      .filter(genre => genre && genre.trim() !== '');
+    return genres.map((book) => book.book_genre).filter(Boolean);
   } catch (error) {
     logger.error("Error getting book genres", error);
     throw error;
   }
 };
 
-export const BookService = {
-  initializeBookData,
+/**
+ * Get user's reading statistics
+ * @param userId User ID
+ * @returns Promise with reading statistics
+ */
+const getUserReadingStats = async (
+  userId: string,
+): Promise<{
+  totalBooks: number;
+  finishedBooks: number;
+  currentlyReading: number;
+  toRead: number;
+  abandoned: number;
+  averageRating: number;
+}> => {
+  try {
+    const userBooks = await UserBook.findAll({
+      where: { user_id: userId },
+    });
+
+    const stats = {
+      totalBooks: userBooks.length,
+      finishedBooks: userBooks.filter(
+        (book) => book.reading_status === "finished",
+      ).length,
+      currentlyReading: userBooks.filter(
+        (book) => book.reading_status === "reading",
+      ).length,
+      toRead: userBooks.filter((book) => book.reading_status === "to_read")
+        .length,
+      abandoned: userBooks.filter((book) => book.reading_status === "abandoned")
+        .length,
+      averageRating: 0,
+    };
+
+    const ratedBooks = userBooks.filter((book) => book.rating !== null);
+    if (ratedBooks.length > 0) {
+      const totalRating = ratedBooks.reduce(
+        (sum, book) => sum + (book.rating || 0),
+        0,
+      );
+      stats.averageRating = Number(
+        (totalRating / ratedBooks.length).toFixed(2),
+      );
+    }
+
+    return stats;
+  } catch (error) {
+    logger.error("Error getting user reading stats", error);
+    throw error;
+  }
+};
+
+export const BooksService = {
   getBooks,
   getBookDetails,
-  getAllAuthors,
-  getAuthorDetails,
   addUserBook,
   updateUserBook,
   removeUserBook,
   getUserBooks,
   getUserFavoriteBooks,
-  getBooksByGenre,
-  getBooksByAuthor,
+  getBookAuthors,
   getBookGenres,
+  getUserReadingStats,
+  initializeBookData,
 };
