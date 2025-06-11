@@ -42,4 +42,5 @@ export const services = {
   fileUpload: "file_upload",
   deleteUnactivePasswordResets: "delete_unactive_password_resets",
   deleteUnactiveAccounts: "delete_unactive_accounts",
+  deleteAvatars: "delete_avatars",
 };

@@ -24,6 +24,7 @@ import hpp from "hpp";
 import adminRouter from "./routers/admin.router";
 import { scheduleDeleteExpiredPasswordResetLinks } from "./tasks/delete-expired-password-resets";
 import { scheduleDeleteUnactiveExpiredAccounts } from "./tasks/delete-expired-unactive-accounts";
+import { scheduleDeleteAvatars } from "./tasks/delete-avatars";
 
 export const connectToDatabase = async () => {
   try {
@@ -110,6 +111,7 @@ const addRouters = (app: express.Application) => {
 const scheduleCronTasks = () => {
   scheduleDeleteExpiredPasswordResetLinks();
   scheduleDeleteUnactiveExpiredAccounts();
+  scheduleDeleteAvatars();
 };
 
 /**
