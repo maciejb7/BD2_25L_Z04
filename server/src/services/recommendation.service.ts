@@ -1,8 +1,8 @@
 import { Op } from "sequelize";
 import { User } from "../db/models/user";
-import { UserMatchPreference } from "../db/models/user_match_preference";
-import { MatchType } from "../db/models/match_type";
-import { UserLike } from "../db/models/user_like";
+import { UserMatchPreference } from "../db/models/user-match-preference";
+import { MatchType } from "../db/models/match-type";
+import { UserLike } from "../db/models/user-like";
 
 /**
  * Get recommended users for a user.

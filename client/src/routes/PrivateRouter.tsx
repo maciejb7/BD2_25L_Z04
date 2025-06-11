@@ -1,12 +1,16 @@
-/* eslint-disable prettier/prettier */
 import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardPage from "../pages/private/DashBoardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AccountSettings from "../pages/private/AccountSettings";
+import { isUserAdminByStorage } from "../utils/userAuthentication";
+import UsersListPage from "../pages/admin/UsersListPage";
+import AdminAccountSettings from "../pages/admin/AdminAccountSettings";
 import QuestionsPage from "../pages/private/QuestionsPage";
 import ExplorePage from "../pages/private/ExplorePage";
 
 function PrivateRouter() {
+  const isUserAdmin = isUserAdminByStorage();
+
   return (
     <Routes>
       <Route path="/" element={<DashboardPage />} />
@@ -17,6 +21,15 @@ function PrivateRouter() {
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="*" element={<NotFoundPage />} />
+      {isUserAdmin && (
+        <>
+          <Route path="/users-management" element={<UsersListPage />} />
+          <Route
+            path="/account-settings/:userId"
+            element={<AdminAccountSettings />}
+          />
+        </>
+      )}
     </Routes>
   );
 }

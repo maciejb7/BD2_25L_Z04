@@ -7,9 +7,9 @@ import {
   BelongsTo,
   HasMany,
 } from "sequelize-typescript";
-import { MusicArtist } from "./music_artist";
-import { MusicGenre } from "./music_genre";
-import { MusicTrack } from "./music_track";
+import { MusicArtist } from "./music-artist";
+import { MusicGenre } from "./music-genre";
+import { MusicTrack } from "./music-track";
 
 @Table({
   tableName: "music_albums",

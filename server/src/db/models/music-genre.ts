@@ -1,5 +1,5 @@
 import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
-import { MusicAlbum } from "./music_album";
+import { MusicAlbum } from "./music-album";
 
 @Table({
   tableName: "music_genres",

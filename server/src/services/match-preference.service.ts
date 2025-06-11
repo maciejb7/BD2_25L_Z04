@@ -1,5 +1,5 @@
-import { MatchType } from "../db/models/match_type";
-import { UserMatchPreference } from "../db/models/user_match_preference";
+import { MatchType } from "../db/models/match-type";
+import { UserMatchPreference } from "../db/models/user-match-preference";
 import { Transaction } from "sequelize";
 
 /**

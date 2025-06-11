@@ -7,7 +7,7 @@ import {
   BelongsTo,
 } from "sequelize-typescript";
 import { User } from "./user";
-import { MatchType } from "./match_type";
+import { MatchType } from "./match-type";
 
 @Table({
   tableName: "user_match_preferences",

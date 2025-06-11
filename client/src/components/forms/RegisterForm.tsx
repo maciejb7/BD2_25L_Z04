@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { RegisterFormData } from "../../types/requests";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { register } from "../../api/api.auth";
 import { useAlert } from "../../contexts/AlertContext";
 import FormField from "../inputs/FormField";
@@ -22,6 +22,7 @@ function RegisterForm() {
 
   const [confirmPassword, setConfirmPassword] = useState<string>("");
 
+  const navigate = useNavigate();
   const { showAlert } = useAlert();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +59,9 @@ function RegisterForm() {
     }
 
     try {
-      await register(registerFormData);
+      const response = await register(registerFormData);
+      showAlert(response.message, "success");
+      navigate("/login");
     } catch (error: any) {
       showAlert(error.message, "error");
     } finally {

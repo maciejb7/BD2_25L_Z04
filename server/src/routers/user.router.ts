@@ -1,51 +1,61 @@
 import { Router } from "express";
-import {
-  authenticateUser,
-  AuthMiddleware,
-} from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { UserController } from "../controllers/user.controller";
-import { uploadSingleFile } from "../middlewares/file.middleware";
+import { FileMiddleware } from "../middlewares/file.middleware";
 
 const userRouter = Router();
 
 userRouter.get(
   "/",
   AuthMiddleware.authenticateUser(),
-  UserController.getUserInfo,
+  UserController.getUserDetailsByUser,
 );
 
 userRouter.get(
   "/avatar",
   AuthMiddleware.authenticateUser(),
-  UserController.getUserAvatar,
+  UserController.getUserAvatarByUser,
 );
 
 userRouter.post(
   "/avatar/upload",
-  authenticateUser(),
-  uploadSingleFile({
+  AuthMiddleware.authenticateUser(),
+  FileMiddleware.uploadSingleFile({
     formField: "avatar",
     allowedMimeTypes: ["image/jpeg"],
   }),
-  UserController.uploadUserAvatar,
+  UserController.uploadUserAvatarByUser,
 );
 
 userRouter.delete(
   "/avatar/delete",
   AuthMiddleware.authenticateUser(),
-  UserController.deleteUserAvatar,
+  UserController.deleteUserAvatarByUser,
 );
 
 userRouter.post(
   "/change-info",
   AuthMiddleware.authenticateUser(),
-  UserController.changeUserInfoField,
+  UserController.changeDetailsFieldByUser,
 );
+
+userRouter.post("/reset-password-link", UserController.createResetPasswordLink);
+userRouter.get(
+  "/reset-password-link/:passwordResetLinkId",
+  UserController.checkIfPasswordResetLinkExists,
+);
+userRouter.post("/reset-password", UserController.resetUserPasswordByUser);
 
 userRouter.post(
   "/change-password",
   AuthMiddleware.authenticateUser(),
-  UserController.changeUserPassword,
+  UserController.changeUserPasswordbyUser,
+);
+
+userRouter.post(
+  "/delete-account",
+  AuthMiddleware.authenticateUser(),
+  UserController.deleteAccountByUser,
 );
 
 export default userRouter;

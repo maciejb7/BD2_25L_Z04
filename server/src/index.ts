@@ -19,6 +19,11 @@ import path from "path";
 import fs from "fs";
 import userRouter from "./routers/user.router";
 import { errorHandler } from "./middlewares/error.handler";
+import helmet from "helmet";
+import hpp from "hpp";
+import adminRouter from "./routers/admin.router";
+import { scheduleDeleteExpiredPasswordResetLinks } from "./tasks/delete-expired-password-resets";
+import { scheduleDeleteUnactiveExpiredAccounts } from "./tasks/delete-expired-unactive-accounts";
 
 export const connectToDatabase = async () => {
   try {
@@ -34,14 +39,21 @@ export const connectToDatabase = async () => {
 export const initializeExpress = async (): Promise<Express> => {
   const app = express();
 
-  app.use(express.json());
+  app.use(helmet());
+
   app.use(
     cors({
       origin: config.CLIENT_URL,
       credentials: true,
     }),
   );
+
+  app.use(hpp());
+
   app.use(cookieParser());
+
+  app.use(express.json());
+
   addRouters(app);
 
   app.use(errorHandler);
@@ -57,6 +69,8 @@ const onStart = async () => {
 
   await HobbyService.initializeHobbyData();
   logger.info("Zainicjalizowano dane hobby.");
+
+  scheduleCronTasks();
 
   await QuestionService.initializeQuestionsData();
   logger.info("Zainicjalizowano pytania.");
@@ -79,6 +93,7 @@ const startServer = async () => {
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
+  app.use("/api/admin", adminRouter);
   app.use("/api/match-preferences", matchPreferenceRouter);
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/interactions", userInteractionRouter);
@@ -86,6 +101,15 @@ const addRouters = (app: express.Application) => {
   app.use("/api/hobbies", hobbyRouter);
   app.use("/api/music", musicRouter);
   app.use("/api/location", locationRouter);
+};
+
+/**
+ * Schedules cron tasks for deleting expired password reset links
+ * and deleting unactive expired accounts.
+ */
+const scheduleCronTasks = () => {
+  scheduleDeleteExpiredPasswordResetLinks();
+  scheduleDeleteUnactiveExpiredAccounts();
 };
 
 /**

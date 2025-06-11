@@ -5,6 +5,10 @@ import { AuthController } from "../controllers/auth.controller";
 const authRouter = Router();
 
 authRouter.post("/register", AuthController.register);
+authRouter.post(
+  "/activate-account/:accountActivationLinkId",
+  AuthController.activateUserAccount,
+);
 authRouter.post("/login", AuthController.login);
 authRouter.delete(
   "/logout",
@@ -12,11 +16,6 @@ authRouter.delete(
   AuthController.logout,
 );
 authRouter.post("/refresh", AuthController.refresh);
-authRouter.post(
-  "/delete-account",
-  AuthMiddleware.authenticateUser(),
-  AuthController.deleteAccount,
-);
 authRouter.delete(
   "/logout-from-all-devices",
   AuthMiddleware.authenticateUser(),

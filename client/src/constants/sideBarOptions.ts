@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { logout } from "../api/api.auth";
+import { isUserAdminByStorage } from "../utils/userAuthentication";
 
 export interface SideBarOption {
   name: string;
@@ -7,6 +8,7 @@ export interface SideBarOption {
   link?: string;
   onClick?: () => void;
   active?: boolean;
+  admin?: boolean;
 }
 
 /**
@@ -26,6 +28,12 @@ const options: SideBarOption[] = [
     link: "/account-settings",
   },
   {
+    name: "Użytkownicy",
+    icon: "fas fa-user-cog",
+    link: "/users-management",
+    admin: true,
+  },
+  {
     name: "Wyloguj",
     icon: "fas fa-sign-out-alt",
     onClick: async () => await logout(),
@@ -43,5 +51,10 @@ export const getSideBarOptions = (activeOption?: string) => {
     else option.active = false;
   });
 
-  return options;
+  return options.filter((option) => {
+    if (option.admin && !isUserAdminByStorage()) {
+      return false;
+    }
+    return true;
+  });
 };

@@ -1,8 +1,7 @@
 import { EnumLike, z } from "zod";
 import { FieldValidationError } from "../errors/errors";
 import { DateTime } from "luxon";
-import { validationErrorLoggerMessages } from "../errors/loggerMessages";
-import { emptyMetaData } from "../types/others";
+import { services } from "../constants/services";
 
 /**
  * Capitalizes the first letter of a string.
@@ -19,13 +18,15 @@ export const capitalizeFirstLetter = (string: string): string => {
  * @param value The value to check against the enum.
  * @param enumObject The enum object to validate against.
  * @param metaData Additional metadata for error handling.
- * @throws {FieldValidationError} If the value does not match the enum.
+ * @throws FieldValidationError If the value does not match the enum.
  */
 const checkIfValueMatchesEnum = (
   name: string,
   value: string,
   enumObject: EnumLike,
-  metaData = emptyMetaData,
+  metaData: Record<string, unknown> = {
+    service: services.checkIfValueMatchesEnum,
+  },
 ) => {
   name = capitalizeFirstLetter(name);
   const enumSchema = z.nativeEnum(enumObject);
@@ -37,7 +38,7 @@ const checkIfValueMatchesEnum = (
     throw new FieldValidationError({
       message: errorMessage,
       metaData: { ...metaData, field: name, value: value },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${errorMessage}`,
+      loggerMessage: `${errorMessage}`,
     });
   }
 };
@@ -51,16 +52,17 @@ const checkIfValueMatchesEnum = (
  * @param maxLength Maximum length of the string.
  * @param forbiddenNumbers Whether numbers are forbidden in the string.
  * @param forbiddenSpecialChars Whether special characters are forbidden in the string.
- * @throws {FieldValidationError} If the value does not meet validation criteria.
+ * @throws FieldValidationError If the value does not meet validation criteria.
  */
 const checkIfValueIsValid = (
   name: string,
   value: string,
-  metaData = emptyMetaData,
+  metaData: Record<string, unknown> = { service: services.checkIfValueIsValid },
   minLength = 1,
   maxLength = 500,
   forbiddenNumbers = false,
   forbiddenSpecialChars = false,
+  forbiddenSpaces = true,
 ) => {
   name = capitalizeFirstLetter(name);
   let fieldSchema = z
@@ -71,12 +73,15 @@ const checkIfValueIsValid = (
     .min(minLength, {
       message: `${name} musi mieć co najmniej ${minLength} znaków.`,
     })
-    .regex(/^\S*$/, {
-      message: `${name} nie może zawierać spacji.`,
-    })
     .max(maxLength, {
       message: `${name} nie może mieć więcej niż ${maxLength} znaków.`,
     });
+
+  if (forbiddenSpaces) {
+    fieldSchema = fieldSchema.regex(/^\S*$/, {
+      message: `${name} nie może zawierać spacji.`,
+    });
+  }
 
   if (forbiddenNumbers) {
     fieldSchema = fieldSchema.regex(/^[^\d]*$/, {
@@ -96,13 +101,10 @@ const checkIfValueIsValid = (
   const isValid = fieldSchema.safeParse(value);
 
   if (!isValid.success) {
-    console.log(
-      `Validation error for field "${name}": ${isValid.error.errors[0].message}`,
-    );
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: name, value: value },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${isValid.error.errors[0].message}`,
+      loggerMessage: `${isValid.error.errors[0].message}`,
     });
   }
 };
@@ -111,9 +113,12 @@ const checkIfValueIsValid = (
  * Validates an email address.
  * @param email The email address to validate.
  * @param metaData Additional metadata for error handling.
- * @throws {FieldValidationError} If the email is invalid.
+ * @throws FieldValidationError If the email is invalid.
  */
-const isEmailValid = (email: string, metaData = emptyMetaData) => {
+const chekcIfEmailIsValid = (
+  email: string,
+  metaData: Record<string, unknown> = { service: services.checkIfEmailIsValid },
+) => {
   const emailSchema = z
     .string()
     .nonempty({ message: "Email nie może być pusty." })
@@ -126,7 +131,7 @@ const isEmailValid = (email: string, metaData = emptyMetaData) => {
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: "Email", value: email },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${isValid.error.errors[0].message}`,
+      loggerMessage: `${isValid.error.errors[0].message}`,
     });
   }
 };
@@ -135,9 +140,14 @@ const isEmailValid = (email: string, metaData = emptyMetaData) => {
  * Validates a password against security criteria.
  * @param password The password to validate.
  * @param metaData Additional metadata for error handling.
- * @throws {FieldValidationError} If the password does not meet validation criteria.
+ * @throws FieldValidationError If the password does not meet validation criteria.
  */
-const isPasswordValid = (password: string, metaData = emptyMetaData) => {
+const checkIfPasswordIsValid = (
+  password: string,
+  metaData: Record<string, unknown> = {
+    service: services.checkIfPasswordIsValid,
+  },
+) => {
   const passwordSchema = z
     .string()
     .nonempty({
@@ -159,7 +169,7 @@ const isPasswordValid = (password: string, metaData = emptyMetaData) => {
     throw new FieldValidationError({
       message: isValid.error.errors[0].message,
       metaData: { ...metaData, field: "Hasło" },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${isValid.error.errors[0].message}`,
+      loggerMessage: `${isValid.error.errors[0].message}`,
     });
   }
 };
@@ -169,11 +179,11 @@ const isPasswordValid = (password: string, metaData = emptyMetaData) => {
  * @param date The date string to convert.
  * @param metaData Additional metadata for error handling.
  * @returns A DateTime object representing the date.
- * @throws {FieldValidationError} If the date is invalid or in the wrong format.
+ * @throws FieldValidationError If the date is invalid or in the wrong format.
  */
 const getDateTimeFromDate = (
   date: string,
-  metaData = emptyMetaData,
+  metaData: Record<string, unknown> = { service: services.getDateTimeFromDate },
 ): DateTime => {
   const dateSchema = z
     .string()
@@ -189,7 +199,7 @@ const getDateTimeFromDate = (
     throw new FieldValidationError({
       message: dateValidationResult.error.errors[0].message,
       metaData: { ...metaData, field: "Data", value: date },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: ${dateValidationResult.error.errors[0].message}`,
+      loggerMessage: `${dateValidationResult.error.errors[0].message}`,
     });
   }
 
@@ -199,7 +209,7 @@ const getDateTimeFromDate = (
     throw new FieldValidationError({
       message: `Format daty ${date} jest niepoprawny.`,
       metaData: { ...metaData, field: "Data", value: date },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Format daty ${date} jest niepoprawny.`,
+      loggerMessage: `Format daty ${date} jest niepoprawny.`,
     });
   }
 
@@ -212,11 +222,11 @@ const getDateTimeFromDate = (
  * @param metaData Additional metadata for error handling.
  * @param yearsMin Minimum age in years.
  * @param yearsMax Maximum age in years.
- * @throws {FieldValidationError} If the date is not within the specified age range.
+ * @throws FieldValidationError If the date is not within the specified age range.
  */
 const checkIfAgeBetween = (
   date: string | DateTime,
-  metaData = emptyMetaData,
+  metaData: Record<string, unknown> = { service: services.checkIfAgeBetween },
   yearsMin = 13,
   yearsMax = 105,
 ) => {
@@ -230,30 +240,69 @@ const checkIfAgeBetween = (
     throw new FieldValidationError({
       message: "Nie mogłeś urodzić się w przyszłości.",
       metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Nie mogłeś urodzić się w przyszłości.`,
+      loggerMessage: `Użytkownik próbuje ustawić datę urodzenia w przyszłości.`,
     });
 
   if (date <= maximalDate)
     throw new FieldValidationError({
       message: `Nie możesz mieć więcej niż ${yearsMax} lat.`,
-      metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Nie możesz mieć więcej niż ${yearsMax} lat.`,
+      metaData: {
+        ...metaData,
+        field: "Data urodzenia",
+        value: date.toISO(),
+        yearsMax: yearsMax,
+      },
+      loggerMessage:
+        "Użytkownik próbuje ustawić datę urodzenia, która przekracza maksymalny wiek.",
     });
 
   if (date >= minimalDate)
     throw new FieldValidationError({
       message: `Musisz mieć co najmniej ${yearsMin} lat.`,
-      metaData: { ...metaData, field: "Data urodzenia", value: date.toISO() },
-      loggerMessage: `${validationErrorLoggerMessages(metaData.service)}: Musisz mieć co najmniej ${yearsMin} lat.`,
+      metaData: {
+        ...metaData,
+        field: "Data urodzenia",
+        value: date.toISO(),
+        yearsMin: yearsMin,
+      },
+      loggerMessage:
+        "Użytkownik próbuje ustawić datę urodzenia, która jest poniżej minimalnego wieku.",
     });
+};
+
+/**
+ *  Checks if a UUID is valid.
+ * @param uuid The UUID string to validate.
+ * @param fieldName The name of the field being validated, used for error messages.
+ * @throws FieldValidationError If the UUID is not valid.
+ */
+const checkIfUUIDIsValid = (
+  uuid: string,
+  fieldName: string,
+  metaData: Record<string, unknown> = { service: services.checkIfUUIDIsValid },
+) => {
+  const uuidSchema = z
+    .string()
+    .nonempty({ message: `${fieldName} nie może być pusty.` })
+    .uuid({ message: `${fieldName} musi być poprawnym UUID.` });
+
+  const isValid = uuidSchema.safeParse(uuid);
+  if (!isValid.success) {
+    throw new FieldValidationError({
+      message: isValid.error.errors[0].message,
+      metaData: { ...metaData, field: fieldName, value: uuid },
+      loggerMessage: "Użytkownik podał niepoprawny UUID.",
+    });
+  }
 };
 
 export const ValidationService = {
   checkIfValueMatchesEnum,
   checkIfValueIsValid,
-  isEmailValid,
-  isPasswordValid,
+  chekcIfEmailIsValid,
+  checkIfPasswordIsValid,
   getDateTimeFromDate,
   checkIfAgeBetween,
+  checkIfUUIDIsValid,
   capitalizeFirstLetter,
 };

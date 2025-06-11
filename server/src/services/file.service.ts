@@ -2,8 +2,7 @@ import sharp from "sharp";
 import { FileUploadError } from "../errors/errors";
 import path from "path";
 import fs from "fs";
-import { emptyMetaData } from "../types/others";
-import { loggerMessages } from "../errors/loggerMessages";
+import { services } from "../constants/services";
 
 export const avatarsPath = path.join(
   __dirname,
@@ -13,18 +12,40 @@ export const avatarsPath = path.join(
   "avatars",
 );
 
+/**
+ * Returns the path to the user's avatar image.
+ * @param userId - The ID of the user.
+ * @returns The path to the user's avatar image.
+ */
 const getUserAvatarPath = (userId: string): string => {
   return path.join(avatarsPath, `${userId}.jpg`);
 };
 
+/**
+ * Checks if the user's avatar image exists and returns its path if it does.
+ * @param userId - The ID of the user.
+ * @returns The path to the user's avatar image if it exists, otherwise null.
+ */
 const getUserAvatarPathVerified = (userId: string): string | null => {
   const avatarFilePath = getUserAvatarPath(userId);
   return fs.existsSync(avatarFilePath) ? avatarFilePath : null;
 };
 
+/**
+ * Checks if the uploaded image has the correct size.
+ * @param file - The uploaded image file.
+ * @param metaData - Optional metadata for error handling, such as service name and nickname.
+ * @param minWidth - Minimum width of the image.
+ * @param minHeight - Minimum height of the image.
+ * @param maxWidth - Maximum width of the image.
+ * @param maxHeight - Maximum height of the image.
+ * @param square - Whether the image should be square (width must equal height).
+ */
 const checkIfImageHasCorrectSize = async (
   file: Express.Multer.File,
-  metaData = emptyMetaData,
+  metaData: Record<string, unknown> = {
+    service: services.checkIfImageHasCorrectSize,
+  },
   minWidth = 256,
   minHeight = 256,
   maxWidth = 1024,
@@ -47,7 +68,7 @@ const checkIfImageHasCorrectSize = async (
         maxWidth: maxWidth,
         maxHeight: maxHeight,
       },
-      loggerMessage: `${loggerMessages(metaData.service)}: Obraz jest zbyt mały.`,
+      loggerMessage: "Obraz jest zbyt mały.",
       statusCode: 400,
     });
   }
@@ -63,7 +84,7 @@ const checkIfImageHasCorrectSize = async (
         maxWidth: maxWidth,
         maxHeight: maxHeight,
       },
-      loggerMessage: `${loggerMessages(metaData.service)}: Obraz jest zbyt duży.`,
+      loggerMessage: "Obraz jest zbyt duży.",
     });
   }
   if (square && width !== height) {
@@ -74,7 +95,7 @@ const checkIfImageHasCorrectSize = async (
         width: width,
         height: height,
       },
-      loggerMessage: `${loggerMessages(metaData.service)}: Obraz musi być kwadratowy.`,
+      loggerMessage: "Obraz musi być kwadratowy.",
     });
   }
 };

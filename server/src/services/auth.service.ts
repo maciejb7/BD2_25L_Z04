@@ -3,58 +3,14 @@ import { User } from "../db/models/user";
 import bcrypt from "bcrypt";
 import {
   InvalidPasswordError,
-  NoAuthenticationError,
-  NoRefreshTokenError,
   UserAlreadyExistsByEmailError,
   UserAlreadyExistsByNicknameError,
+  UserNotActiveError,
   UserNotFoundError,
 } from "../errors/errors";
-import { Request } from "express";
-import { AuthenticatedUserPayload } from "../middlewares/auth.middleware";
-import { emptyMetaData } from "../types/others";
-import { loggerMessages } from "../errors/loggerMessages";
-
-/**
- * Extracts the authenticated user payload from the request object.
- * @param request - The Express request object containing user information.
- * @param metaData - Optional metadata for error handling.
- * @returns An object containing the authenticated user's ID, nickname, and role.
- * @throws NoAuthenticationError if the user is not authenticated.
- */
-const extractAuthenticatedUserPayload = (
-  request: Request,
-  metaData = emptyMetaData,
-): AuthenticatedUserPayload => {
-  if (!request.user)
-    throw new NoAuthenticationError({ metaData: { ...metaData } });
-  return {
-    userId: request.user.userId,
-    userNickname: request.user.userNickname,
-    userRole: request.user.userRole,
-  };
-};
-
-/**
- * Extracts the access token from the request object.
- * @param request - The Express request object containing the access token.
- * @param metaData - Optional metadata for error handling.
- * @returns The access token as a string.
- * @throws NoAuthenticationError if the access token is not found in the request.
- */
-const extractRefreshToken = (
-  request: Request,
-  metaData = emptyMetaData,
-): string => {
-  const refreshToken = request.cookies?.refreshToken;
-
-  if (!refreshToken)
-    throw new NoRefreshTokenError({
-      metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Brak tokenu odświeżającego.`,
-    });
-
-  return refreshToken;
-};
+import { services } from "../constants/services";
+import { AccountBan } from "../db/models/account-ban";
+import { DateTime } from "luxon";
 
 /**
  * Retrieves an authenticated user based on their nickname or email and password.
@@ -68,7 +24,7 @@ const extractRefreshToken = (
 const getAuthenticatedUser = async (
   nicknameOrEmail: string,
   password: string,
-  metaData = emptyMetaData,
+  metaData = { service: services.getAuthenticatedUser },
 ): Promise<User> => {
   const user = await User.findOne({
     where: {
@@ -81,9 +37,18 @@ const getAuthenticatedUser = async (
       message: "Nieprawidłowy login lub hasło.",
       statusCode: 401,
       metaData: { ...metaData, nicknameOrEmail },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika.`,
     });
   }
+
+  if (!user.isActive) {
+    throw new UserNotActiveError({
+      statusCode: 403,
+      metaData: { ...metaData, nicknameOrEmail },
+      loggerMessage: `Użytkownik ${user.nickname} próbuje wykonać akcję, ale jego konto nie jest aktywne.`,
+    });
+  }
+
+  await checkIfUserIsBanned(user, metaData);
 
   const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
@@ -92,11 +57,43 @@ const getAuthenticatedUser = async (
       message: "Nieprawidłowy login lub hasło.",
       statusCode: 401,
       metaData: { ...metaData, nicknameOrEmail },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nieprawidłowe hasło.`,
     });
   }
 
   return user;
+};
+
+/**
+ * Checks if a user is banned.
+ * @param user - The user to check.
+ * @param metaData - Optional metadata for error handling.
+ * @throws UserNotActiveError if the user is banned.
+ */
+const checkIfUserIsBanned = async (
+  user: User,
+  metaData: Record<string, unknown> = {
+    service: services.getAuthenticatedUser,
+  },
+) => {
+  const isBanned = await AccountBan.findOne({
+    where: { givenTo: user.userId },
+  });
+
+  if (isBanned) {
+    const admin = await User.findOne({
+      where: { userId: isBanned.givenBy },
+    });
+
+    throw new UserNotActiveError({
+      message: `Twoje konto zostało zablokowane przez ${admin?.nickname}.\nPowód: ${isBanned.reason}\nNadano: ${DateTime.fromJSDate(isBanned.givenAt).toISODate()}`,
+      statusCode: 403,
+      metaData: {
+        ...metaData,
+        userId: user.userId,
+      },
+      loggerMessage: `Użytkownik ${user.nickname} próbuje wykonać akcję, ale jest zbanowany.`,
+    });
+  }
 };
 
 /**
@@ -105,7 +102,10 @@ const getAuthenticatedUser = async (
  * @param metaData - Optional metadata for error handling.
  * @throws UserAlreadyExistsByNicknameError if a user with the given nickname already exists.
  */
-const isNicknameTaken = async (nickname: string, metaData = emptyMetaData) => {
+const isNicknameTaken = async (
+  nickname: string,
+  metaData = { service: services.isNicknameTaken },
+) => {
   const existingUserByNickname = await User.findOne({
     where: { nickname: nickname },
   });
@@ -113,7 +113,6 @@ const isNicknameTaken = async (nickname: string, metaData = emptyMetaData) => {
   if (existingUserByNickname) {
     throw new UserAlreadyExistsByNicknameError({
       metaData: { ...metaData, nickname: nickname },
-      loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym nicku już istnieje.`,
     });
   }
 };
@@ -123,7 +122,7 @@ const isNicknameTaken = async (nickname: string, metaData = emptyMetaData) => {
  * @param email - The email to check.
  * @param metaData  - Optional metadata for error handling.
  */
-const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
+const isEmailTaken = async (email: string, metaData = { service: "" }) => {
   const existingUserByEmail = await User.findOne({
     where: { email: email },
   });
@@ -131,15 +130,13 @@ const isEmailTaken = async (email: string, metaData = emptyMetaData) => {
   if (existingUserByEmail) {
     throw new UserAlreadyExistsByEmailError({
       metaData: { ...metaData, email: email },
-      loggerMessage: `${loggerMessages(metaData.service)}: Użytkownik o podanym adresie e-mail już istnieje.`,
     });
   }
 };
 
 export const AuthService = {
-  extractAuthenticatedUserPayload,
-  extractRefreshToken,
   getAuthenticatedUser,
+  checkIfUserIsBanned,
   isNicknameTaken,
   isEmailTaken,
 };

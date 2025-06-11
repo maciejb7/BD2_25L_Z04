@@ -33,6 +33,9 @@ services:
       TEST_MODE: false
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
       CLIENT_URL: ${CLIENT_URL}
+      EMAIL_SERVICE: ${EMAIL_SERVICE}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:

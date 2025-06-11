@@ -1,10 +1,6 @@
 import api, { handleApiError } from "./api";
 import { getAuthObserver } from "../utils/AuthObserver";
-import {
-  ConfirmFormData,
-  LoginFormData,
-  RegisterFormData,
-} from "../types/requests";
+import { LoginFormData, RegisterFormData } from "../types/requests";
 import {
   AuthResponse,
   CommonResponse,
@@ -25,15 +21,29 @@ export const login = async (data: LoginFormData): Promise<AuthResponse> => {
 
 export const register = async (
   data: RegisterFormData,
-): Promise<AuthResponse> => {
+): Promise<CommonResponse> => {
   try {
-    const response = await api.post<AuthResponse>("/api/auth/register", data);
-    localStorage.setItem("accessToken", response.data.accessToken);
-    localStorage.setItem("user", JSON.stringify(response.data.user));
-    getAuthObserver().emitLogin(response.data.message, "success");
+    const response = await api.post<CommonResponse>("/api/auth/register", data);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd rejestracji. Spróbuj ponownie.");
+  }
+};
+
+export const activateAccount = async (
+  accountActivationLinkId: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      `/api/auth/activate-account/${accountActivationLinkId}`,
+      {},
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd aktywacji konta. Sprawdź link aktywacyjny lub skontaktuj się z administratorem.",
+    );
   }
 };
 
@@ -58,26 +68,6 @@ export const logout = async (): Promise<CommonResponse> => {
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(error, "Wystąpił błąd wylogowania. Spróbuj ponownie.");
-  }
-};
-
-export const deleteAccount = async (
-  data: ConfirmFormData,
-): Promise<CommonResponse> => {
-  try {
-    const response = await api.post<CommonResponse>(
-      "/api/auth/delete-account",
-      data,
-    );
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    getAuthObserver().emitLogout(response.data.message, "success");
-    return response.data;
-  } catch (error: unknown) {
-    throw handleApiError(
-      error,
-      "Wystąpił błąd podczas usuwania konta. Spróbuj ponownie.",
-    );
   }
 };
 

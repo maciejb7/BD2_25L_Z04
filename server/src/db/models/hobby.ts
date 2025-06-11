@@ -7,8 +7,8 @@ import {
   BelongsTo,
   HasMany,
 } from "sequelize-typescript";
-import { HobbyCategory } from "./hobby_category";
-import { UserHobby } from "./user_hobby";
+import { HobbyCategory } from "./hobby-category";
+import { UserHobby } from "./user-hobby";
 
 @Table({
   tableName: "hobbies",
