@@ -13,6 +13,13 @@ adminRouter.get(
 );
 
 adminRouter.get(
+  "/user/ban-status/:bannedUserId",
+  AuthMiddleware.authenticateUser(),
+  AuthMiddleware.authorizeRole("admin"),
+  AdminController.getUserBanByAdmin,
+);
+
+adminRouter.get(
   "/user/avatar/:userId",
   AuthMiddleware.authenticateUser(),
   AuthMiddleware.authorizeRole("admin"),

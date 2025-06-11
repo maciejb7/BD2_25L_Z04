@@ -3,6 +3,7 @@ import SideBar from "../../components/common/SideBar";
 import { getSideBarOptions } from "../../constants/sideBarOptions";
 import { useParams } from "react-router-dom";
 import AdminAccountInfo from "../../components/unique/AdminAccountInfo";
+import AccountBanInfo from "../../components/unique/AccountBanInfo";
 
 function AdminAccountSettings() {
   const { userId } = useParams();
@@ -17,6 +18,8 @@ function AdminAccountSettings() {
           </h2>
           <hr className="my-6" />
           <AdminAccountInfo userId={userId!} />
+          <hr className="my-6" />
+          <AccountBanInfo userId={userId!} />
         </div>
       </Background>
     </div>

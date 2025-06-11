@@ -22,3 +22,9 @@ export interface AuthResponse {
   accessToken: string;
   user: User;
 }
+
+export interface BanResponse {
+  givenBy: string;
+  reason: string;
+  givenAt: string;
+}

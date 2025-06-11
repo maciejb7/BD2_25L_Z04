@@ -93,7 +93,7 @@ const getUserBanByAdmin = handleRequest(async (req: Request, res: Response) => {
   res.status(200).json({
     givenBy: bannedBy?.nickname || "Nieznany",
     reason: ban.reason,
-    givenAt: DateTime.fromJSDate(ban.createdAt).toISODate(),
+    givenAt: ban.givenAt,
   });
 });
 

@@ -1,5 +1,5 @@
 import { UserWithSessions } from "../types/others";
-import { CommonResponse } from "../types/responses";
+import { BanResponse, CommonResponse } from "../types/responses";
 import api, { handleApiError } from "./api";
 
 interface UsersWithSessionsResponse {
@@ -22,6 +22,22 @@ export const getUserFromAPIAdmin = async (
     throw handleApiError(
       error,
       "Wystąpił błąd podczas pobierania danych użytkownika. Spróbuj ponownie później.",
+    );
+  }
+};
+
+export const getUserBanStatusAdmin = async (
+  bannedUserId: string,
+): Promise<BanResponse> => {
+  try {
+    const response = await api.get<BanResponse>(
+      `/api/admin/user/ban-status/${bannedUserId}`,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas sprawdzania statusu bana użytkownika. Spróbuj ponownie później.",
     );
   }
 };

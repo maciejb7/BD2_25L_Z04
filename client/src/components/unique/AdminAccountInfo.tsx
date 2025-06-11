@@ -11,6 +11,7 @@ import {
   getUserAvatarAdmin,
   getUserFromAPIAdmin,
 } from "../../api/api.admin";
+import { useNavigate } from "react-router-dom";
 
 interface AdminAccountInfoProps {
   userId: string;
@@ -21,6 +22,7 @@ interface AdminAccountInfoProps {
  */
 function AdminAccountInfo({ userId }: AdminAccountInfoProps) {
   const { showAlert } = useAlert();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [avatar, setAvatar] = useState<string>("");
   const [cropAvatar, setCropAvatar] = useState<string>("");
@@ -51,8 +53,8 @@ function AdminAccountInfo({ userId }: AdminAccountInfoProps) {
       if (mappedGender) fetchedUser.gender = mappedGender;
       if (mappedRole) fetchedUser.role = mappedRole;
       setUser(fetchedUser);
-    } catch (error: any) {
-      showAlert(error.message, "error");
+    } catch {
+      navigate("/users-management");
     } finally {
       setIsLoading(false);
     }
@@ -168,7 +170,7 @@ function AdminAccountInfo({ userId }: AdminAccountInfoProps) {
           isLoading={isLoading}
           type="select"
           options={["Użytkownik", "Administrator"]}
-          editable={user.role !== "Administrator"}
+          editable={user.role !== "Administrator" && user.role !== "Zbanowany"}
           inputMap={twoWayRoleMap}
           userId={userId}
         />
