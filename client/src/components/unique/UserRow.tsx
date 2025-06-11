@@ -5,9 +5,9 @@ import { getDateFormatter } from "../../utils/formatters";
 
 interface UserRowProps {
   user: UserWithSessions;
-  onShowDetails: (user: UserWithSessions) => void;
-  onBan: (user: UserWithSessions) => void;
-  onUnban: (user: UserWithSessions) => void;
+  onShowDetails: () => void;
+  onBan: () => void;
+  onUnban: () => void;
   onDelete: () => void;
 }
 
@@ -54,7 +54,7 @@ function UserRow({
       </div>
       <div className="flex justify-center items-center space-x-3 mt-2 md:mt-0">
         <button
-          onClick={() => onShowDetails(user)}
+          onClick={() => onShowDetails()}
           className="text-blue-500 hover:text-blue-700 transition-colors"
           title="Szczegóły"
         >
@@ -67,7 +67,7 @@ function UserRow({
               <button
                 onClick={() => {
                   setIsLoading(true);
-                  onUnban(user);
+                  onUnban();
                   setIsLoading(false);
                 }}
                 className="text-green-500 hover:text-green-700 transition-colors"
@@ -80,7 +80,7 @@ function UserRow({
               <button
                 onClick={() => {
                   setIsLoading(true);
-                  onBan(user);
+                  onBan();
                   setIsLoading(false);
                 }}
                 className="text-yellow-500 hover:text-yellow-700 transition-colors"

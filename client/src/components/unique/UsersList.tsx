@@ -9,11 +9,13 @@ import {
 } from "../../api/api.admin";
 import { useAlert } from "../../contexts/AlertContext";
 import BanUserModal from "../modals/BanUserModal";
+import { useNavigate } from "react-router-dom";
 
 const PAGE_SIZE = 10;
 
 function UsersList() {
   const { showAlert } = useAlert();
+  const navigate = useNavigate();
 
   const [users, setUsers] = useState<UserWithSessions[]>([]);
   const [isBanUserModalOpen, setIsBanUserModalOpen] = useState(false);
@@ -114,7 +116,7 @@ function UsersList() {
             <UserRow
               key={user.userId}
               user={user}
-              onShowDetails={() => {}}
+              onShowDetails={() => navigate(`/account-settings/${user.userId}`)}
               onBan={() => {
                 setSelectedUserId(user.userId);
                 setIsBanUserModalOpen(true);

@@ -3,17 +3,24 @@ import { useState } from "react";
 import { getCroppedImg } from "../../utils/cropImage";
 import { getUserAvatar, uploadUserAvatar } from "../../api/api.user";
 import { useAlert } from "../../contexts/AlertContext";
+import { getUserAvatarAdmin, uploadUserAvatarAdmin } from "../../api/api.admin";
 
 interface AvatarCropModalProps {
   imageSrc: string;
   onClose: () => void;
   onSave: (url: string) => void;
+  userId?: string;
 }
 
 /**
  * AvatarCropModal component that allows users to crop their avatar image.
  */
-function AvatarCropModal({ imageSrc, onClose, onSave }: AvatarCropModalProps) {
+function AvatarCropModal({
+  imageSrc,
+  onClose,
+  onSave,
+  userId = "",
+}: AvatarCropModalProps) {
   const { showAlert } = useAlert();
 
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -37,10 +44,17 @@ function AvatarCropModal({ imageSrc, onClose, onSave }: AvatarCropModalProps) {
       const blob = await getCroppedImg(imageSrc, croppedAreaPixels);
       const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
 
-      const response = await uploadUserAvatar(file);
-      showAlert(response.message, "success");
+      let response;
+      let avatarUrl = "";
 
-      const avatarUrl = await getUserAvatar();
+      if (userId) {
+        response = await uploadUserAvatarAdmin(userId, file);
+        avatarUrl = await getUserAvatarAdmin(userId);
+      } else {
+        response = await uploadUserAvatar(file);
+        avatarUrl = await getUserAvatar();
+      }
+      showAlert(response.message, "success");
       onSave(avatarUrl);
     } catch (error: any) {
       showAlert(

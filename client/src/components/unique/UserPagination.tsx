@@ -9,7 +9,28 @@ function UserPagination({
   totalPages,
   onPageChange,
 }: UserPaginationProps) {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const getPagesToShow = () => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    const pages = new Set<number>();
+
+    pages.add(1);
+    pages.add(totalPages);
+
+    if (currentPage === 1 || currentPage === 2) {
+      pages.add(2);
+    } else if (currentPage === totalPages || currentPage === totalPages - 1) {
+      pages.add(totalPages - 1);
+    } else {
+      pages.add(currentPage);
+    }
+
+    return Array.from(pages).sort((a, b) => a - b);
+  };
+
+  const pages = getPagesToShow();
 
   return (
     <div className="flex justify-center mt-6 space-x-2">
@@ -21,19 +42,26 @@ function UserPagination({
         {"<"}
       </button>
 
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-1 border rounded ${
-            page === currentPage
-              ? "bg-blue-500 text-white"
-              : "text-gray-700 hover:bg-gray-100"
-          }`}
-        >
-          {page}
-        </button>
-      ))}
+      {pages.map((page, idx) => {
+        const prev = pages[idx - 1];
+        const showDots = prev && page - prev > 1;
+
+        return (
+          <span key={page} className="flex items-center">
+            {showDots && <span className="px-2">...</span>}
+            <button
+              onClick={() => onPageChange(page)}
+              className={`px-3 py-1 border rounded ${
+                page === currentPage
+                  ? "bg-blue-500 text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {page}
+            </button>
+          </span>
+        );
+      })}
 
       <button
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { changeUserInfoField, getUserFromAPI } from "../../api/api.user";
+import { changeUserInfoField } from "../../api/api.user";
 import { TwoWayMap } from "../../utils/formatters";
+import { changeUserInfoFieldAdmin } from "../../api/api.admin";
 
 interface EditableFieldProps {
   label: string;
@@ -9,6 +10,7 @@ interface EditableFieldProps {
   value: string;
   onConfirm: (name: string, value: string) => void;
   isLoading: boolean;
+  userId?: string;
   editable?: boolean;
   type?: "text" | "date" | "select";
   options?: string[];
@@ -25,6 +27,7 @@ export default function EditableField({
   value,
   onConfirm,
   isLoading,
+  userId = "",
   type = "text",
   options = [],
   editable = true,
@@ -52,8 +55,12 @@ export default function EditableField({
 
     try {
       const valueToSend = inputMap?.from(fieldValue) ?? fieldValue;
-      const result = await changeUserInfoField(name, valueToSend);
-      await getUserFromAPI();
+
+      let result;
+
+      if (userId)
+        result = await changeUserInfoFieldAdmin(name, valueToSend, userId);
+      else result = await changeUserInfoField(name, valueToSend);
       onConfirm(name, fieldValue);
       showAlert(result.message, "success");
     } catch (error: any) {
@@ -120,7 +127,7 @@ export default function EditableField({
         </div>
       ) : (
         <div className="flex items-center gap-3 w-full">
-          <span className="text-gray-800 truncate">
+          <span className="text-gray-800 break-all w-full">
             {!isLoading ? value : "Ładowanie..."}
           </span>
           {editable && (

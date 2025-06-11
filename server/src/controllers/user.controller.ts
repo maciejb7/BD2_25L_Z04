@@ -70,7 +70,9 @@ const getUserDetailsByUser = handleRequest(
  */
 const getUserAvatarByUser = handleRequest(
   async (req: Request, res: Response) => {
-    const userId = req.user!.userId;
+    const { userId } = RequestService.extractAuthenticatedUserPayload(req, {
+      service: services.getUserAvatarByUser,
+    });
 
     const avatarFilePath = FileService.getUserAvatarPathVerified(userId);
 
@@ -191,6 +193,14 @@ const changeDetailsFieldByUser = handleRequest(
         message: "Nie można zmienić hasła w ten sposób. Użyj innej metody.",
         metaData: loggerMetaData,
         loggerMessage: `Użytkownik ${userNickname} próbował zmienić hasło przez zwykłą zmianę informacji o sobie, co jest niedozwolone.`,
+      });
+    }
+
+    if (name === "role") {
+      throw new ForbiddenActionError({
+        message: "Nie możesz zmienić swojej roli.",
+        metaData: loggerMetaData,
+        loggerMessage: `Użytkownik ${userNickname} próbował zmienić swoją rolę na: ${value}.`,
       });
     }
 

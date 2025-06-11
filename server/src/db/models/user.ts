@@ -169,6 +169,8 @@ export class User extends Model {
     delete userData.lastLogin;
     delete userData.sessions;
     delete userData.isActive;
+    delete userData.accountBans;
+    delete userData.accountBan;
     delete userData.matchPreferences;
     delete userData.givenLikes;
     delete userData.receivedLikes;

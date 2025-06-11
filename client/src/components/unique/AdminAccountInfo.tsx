@@ -1,28 +1,31 @@
 import { useEffect, useState } from "react";
-import { User } from "../../types/others";
-import {
-  deleteUserAvatar,
-  getUserAvatar,
-  getUserFromAPI,
-} from "../../api/api.user";
+import { UserWithSessions } from "../../types/others";
 import EditableField from "../inputs/EditableField";
 import Avatar from "../common/Avatar";
 import AvatarCropModal from "../modals/CropAvatarModal";
 import { useAlert } from "../../contexts/AlertContext";
 import { twoWayGenderMap, twoWayRoleMap } from "../../constants/maps";
 import { getDateFormatter } from "../../utils/formatters";
+import {
+  deleteUserAvatarAdmin,
+  getUserAvatarAdmin,
+  getUserFromAPIAdmin,
+} from "../../api/api.admin";
+
+interface AdminAccountInfoProps {
+  userId: string;
+}
 
 /**
  * AccountInfo component displays user information and allows editing it (avatar, name, surname, nickname, email).
  */
-function AccountInfo() {
+function AdminAccountInfo({ userId }: AdminAccountInfoProps) {
   const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [avatar, setAvatar] = useState<string>("");
   const [cropAvatar, setCropAvatar] = useState<string>("");
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
-
-  const [user, setUser] = useState<User>({
+  const [user, setUser] = useState<UserWithSessions>({
     userId: "",
     nickname: "",
     name: "",
@@ -32,27 +35,37 @@ function AccountInfo() {
     role: "",
     birthDate: "",
     createdAt: "",
+    lastIp: null,
+    lastDevice: null,
+    lastLogin: null,
+    sessions: [],
   });
 
-  const fetchUser = async () => {
-    setIsLoading(true);
-    const user = await getUserFromAPI();
-    const mappedGender = twoWayGenderMap.to(user.gender);
-    const mappedRole = twoWayRoleMap.to(user.role);
-    if (mappedGender) user.gender = mappedGender;
-    if (mappedRole) user.role = mappedRole;
-    setUser(user);
-    setIsLoading(false);
+  const fetchUser = async (userId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await getUserFromAPIAdmin(userId);
+      const fetchedUser = response.user;
+      const mappedGender = twoWayGenderMap.to(fetchedUser.gender);
+      const mappedRole = twoWayRoleMap.to(fetchedUser.role);
+      if (mappedGender) fetchedUser.gender = mappedGender;
+      if (mappedRole) fetchedUser.role = mappedRole;
+      setUser(fetchedUser);
+    } catch (error: any) {
+      showAlert(error.message, "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const fetchAvatar = async () => {
-    const avatarUrl = await getUserAvatar();
+  const fetchAvatar = async (userId: string) => {
+    const avatarUrl = await getUserAvatarAdmin(userId);
     setAvatar(avatarUrl ?? "");
   };
 
   useEffect(() => {
-    fetchUser();
-    fetchAvatar();
+    fetchUser(userId);
+    fetchAvatar(userId);
   }, []);
 
   const onConfirm = (fieldName: string, newValue: string) =>
@@ -79,14 +92,14 @@ function AccountInfo() {
     e.target.value = "";
   };
 
-  const handleAvatarDelete = async () => {
+  const handleAvatarDelete = async (userId: string) => {
     if (!avatar) {
       showAlert("Nie masz zdjęcia profilowego do usunięcia.", "info");
       return;
     }
 
     try {
-      const response = await deleteUserAvatar();
+      const response = await deleteUserAvatarAdmin(userId);
       showAlert(response.message, "success");
       setAvatar("");
       setCropAvatar("");
@@ -103,7 +116,7 @@ function AccountInfo() {
           size="large"
           editable={true}
           onEditClick={handleAvatarChangeClick}
-          onDeleteClick={handleAvatarDelete}
+          onDeleteClick={() => handleAvatarDelete(userId)}
         />
         <input
           type="file"
@@ -121,6 +134,7 @@ function AccountInfo() {
           value={user.name}
           onConfirm={onConfirm}
           isLoading={isLoading}
+          userId={userId}
         />
         <EditableField
           label="Nazwisko"
@@ -128,6 +142,7 @@ function AccountInfo() {
           value={user.surname}
           onConfirm={onConfirm}
           isLoading={isLoading}
+          userId={userId}
         />
         <EditableField
           label="Nick"
@@ -135,6 +150,7 @@ function AccountInfo() {
           value={user.nickname}
           onConfirm={onConfirm}
           isLoading={isLoading}
+          userId={userId}
         />
         <EditableField
           label="Mail"
@@ -142,6 +158,7 @@ function AccountInfo() {
           value={user.email}
           onConfirm={onConfirm}
           isLoading={isLoading}
+          userId={userId}
         />
         <EditableField
           label="Typ Konta"
@@ -149,9 +166,11 @@ function AccountInfo() {
           value={user.role}
           onConfirm={onConfirm}
           isLoading={isLoading}
-          type="text"
-          editable={false}
+          type="select"
+          options={["Użytkownik", "Administrator"]}
+          editable={user.role !== "Administrator"}
           inputMap={twoWayRoleMap}
+          userId={userId}
         />
         <EditableField
           label="Płeć"
@@ -162,6 +181,7 @@ function AccountInfo() {
           type="select"
           options={["Kobieta", "Mężczyzna"]}
           inputMap={twoWayGenderMap}
+          userId={userId}
         />
         <EditableField
           label="Data urodzenia"
@@ -172,6 +192,7 @@ function AccountInfo() {
           onConfirm={onConfirm}
           isLoading={isLoading}
           type="date"
+          userId={userId}
         />
         <EditableField
           label="Data utworzenia konta"
@@ -184,6 +205,40 @@ function AccountInfo() {
           isLoading={isLoading}
           type="text"
           editable={false}
+          userId={userId}
+        />
+        <EditableField
+          label="Ostatnie IP"
+          name="lastIp"
+          value={user.lastIp || "Brak IP"}
+          onConfirm={onConfirm}
+          isLoading={isLoading}
+          type="text"
+          editable={false}
+          userId={userId}
+        />
+        <EditableField
+          label="Ostatnie Urządzenie"
+          name="lastDevice"
+          value={user.lastDevice || "Brak Urządzenia"}
+          onConfirm={onConfirm}
+          isLoading={isLoading}
+          type="text"
+          editable={false}
+          userId={userId}
+        />
+        <EditableField
+          label="Ostatnie Logowanie"
+          name="lastLogin"
+          value={
+            getDateFormatter(user.lastLogin)?.getDMYWithTime() ??
+            "Brak Logowania"
+          }
+          onConfirm={onConfirm}
+          isLoading={isLoading}
+          type="text"
+          editable={false}
+          userId={userId}
         />
       </div>
 
@@ -199,10 +254,11 @@ function AccountInfo() {
             setCropAvatar("");
             setIsCropModalOpen(false);
           }}
+          userId={userId}
         />
       )}
     </div>
   );
 }
 
-export default AccountInfo;
+export default AdminAccountInfo;

@@ -1,4 +1,4 @@
-import { Gender } from "../db/models/user";
+import { Gender, Role } from "../db/models/user";
 import { AuthService } from "../services/auth.service";
 import { ValidationService } from "../services/validation.service";
 
@@ -45,6 +45,14 @@ export const getUserDetailsValidator = (metaData = {}): Validator => {
         50,
         true,
         true,
+      );
+    },
+    role: (value: string) => {
+      ValidationService.checkIfValueMatchesEnum(
+        "Typ konta",
+        value,
+        Role,
+        metaData,
       );
     },
     gender: (value: string) => {

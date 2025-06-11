@@ -4,6 +4,7 @@ import NotFoundPage from "../pages/NotFoundPage";
 import AccountSettings from "../pages/private/AccountSettings";
 import { isUserAdminByStorage } from "../utils/userAuthentication";
 import UsersListPage from "../pages/admin/UsersListPage";
+import AdminAccountSettings from "../pages/admin/AdminAccountSettings";
 
 function PrivateRouter() {
   const isUserAdmin = isUserAdminByStorage();
@@ -19,6 +20,10 @@ function PrivateRouter() {
       {isUserAdmin && (
         <>
           <Route path="/users-management" element={<UsersListPage />} />
+          <Route
+            path="/account-settings/:userId"
+            element={<AdminAccountSettings />}
+          />
         </>
       )}
     </Routes>
