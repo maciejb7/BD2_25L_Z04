@@ -24,8 +24,18 @@ const options: SideBarOption[] = [
     link: "/hobbies",
   },
   {
-    name: "muzyka/filmy/książki",
+    name: "książki",
+    icon: "fas fa-book",
+    link: "/book",
+  },
+  {
+    name: "muzyka",
     icon: "fas fa-music",
+    link: "/music",
+  },
+  {
+    name: "filmy",
+    icon: "fas fa-film",
     link: "/media",
   },
   {

@@ -3,7 +3,9 @@ import DashboardPage from "../pages/private/DashBoardPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import AccountSettings from "../pages/private/AccountSettings";
 import HobbyPage from "../pages/private/HobbysPage";
-import MediaPage from "../pages/private/MediaPage";
+import MediaPage from "../pages/private/MoviePage";
+import BooksPage from "../pages/private/BookPage";
+import MusicPage from "../pages/private/MusicPage";
 
 function PrivateRouter() {
   return (
@@ -15,6 +17,8 @@ function PrivateRouter() {
       <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="/hobbies" element={<HobbyPage />} />
       <Route path="/media" element={< MediaPage />} />
+      <Route path="/music" element={< MusicPage />} />
+      <Route path="/book" element={< BooksPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
