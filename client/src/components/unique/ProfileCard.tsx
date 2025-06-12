@@ -53,6 +53,19 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
         const loadUserData = async () => {
             setIsLoadingData(true);
 
+            // Reset all user-specific state
+            setSharedHobby(null);
+            setRandomMusic(null);
+            setRandomAnswer(null);
+            setLocation(null);
+
+            // Stop any playing audio from previous user
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = "";
+                setIsPlaying(false);
+            }
+
             try {
                 // Load avatar
                 const avatarPromise = getUserAvatar().catch(() => "");
@@ -101,6 +114,8 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
                 if (userMusic.favorites && userMusic.favorites.length > 0) {
                     const randomIndex = Math.floor(Math.random() * userMusic.favorites.length);
                     setRandomMusic(userMusic.favorites[randomIndex]);
+                } else {
+                    setRandomMusic(null);
                 }
 
             } catch (error) {
@@ -111,6 +126,15 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
         };
 
         loadUserData();
+
+        // Stop audio when switching users
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = "";
+                setIsPlaying(false);
+            }
+        };
     }, [user.userId]);
 
     const calculateAge = (birthDate: string): number => {
@@ -153,7 +177,7 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
         for (const currentHobby of currentUserHobbies) {
             for (const targetHobby of targetUserHobbies) {
                 if (currentHobby.hobbyId === targetHobby.hobbyId) {
-                    return `You both like ${currentHobby.hobby.hobby_name}`;
+                    return `Oboje lubicie ${currentHobby.hobby.hobby_name}`;
                 }
             }
         }
@@ -162,7 +186,7 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
         for (const currentHobby of currentUserHobbies) {
             for (const targetHobby of targetUserHobbies) {
                 if (currentHobby.hobby.hobby_category_id === targetHobby.hobby.hobby_category_id) {
-                    return `You both like ${currentHobby.hobby.category.hobby_category_name}`;
+                    return `Oboje lubicie ${currentHobby.hobby.category.hobby_category_name}`;
                 }
             }
         }
@@ -255,6 +279,15 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
                                 </p>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {/* No music placeholder */}
+                {!randomMusic && !isLoadingData && (
+                    <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-sm text-gray-500 text-center">
+                            Brak ulubionych utworów
+                        </p>
                     </div>
                 )}
 
