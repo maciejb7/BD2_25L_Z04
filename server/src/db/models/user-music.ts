@@ -7,7 +7,7 @@ import {
   BelongsTo,
 } from "sequelize-typescript";
 import { User } from "./user";
-import { MusicTrack } from "./music_track";
+import { MusicTrack } from "./music-track";
 
 @Table({
   tableName: "user_music",

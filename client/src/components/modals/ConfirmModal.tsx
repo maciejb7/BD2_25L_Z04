@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAlert } from "../../contexts/AlertContext";
 import { ConfirmFormData } from "../../types/requests";
 import FormField from "../inputs/FormField";
-import { getUser } from "../../utils/userAuthentication";
+import { getUserFromAPI } from "../../api/api.user";
 
 interface ConfirmModalDataProps {
   apiCall: (data: ConfirmFormData) => Promise<any>;
@@ -59,7 +59,7 @@ function ConfirmModal({
 
   useEffect(() => {
     const fetchPlaceholder = async () => {
-      const { nickname } = await getUser();
+      const { nickname } = await getUserFromAPI();
       setPlaceHolder({
         nickname,
       });

@@ -2,6 +2,7 @@ import multer, { FileFilterCallback, StorageEngine } from "multer";
 import { Request, Response, NextFunction, RequestHandler } from "express";
 import { FileUploadError } from "../errors/errors";
 import logger from "../logger";
+import { services } from "../constants/services";
 
 interface FileMiddlewareOptions {
   formField: string;
@@ -40,7 +41,7 @@ export const uploadSingleFile = (
         const error = new FileUploadError({
           message: "Niedozwolony typ pliku.",
           metaData: {
-            service: "file_upload",
+            service: services.fileUpload,
             nickname: nickname,
             formField: formField,
             mimetype: file.mimetype,
@@ -62,11 +63,15 @@ export const uploadSingleFile = (
 
     upload(req, res, (error) => {
       if (error instanceof FileUploadError) {
-        logger.error(error.loggerMessage, {
-          ...error.metaData,
-        });
-
-        return res.status(error.statusCode).json({ message: error.message });
+        logger.error(
+          error.options.loggerMessage ?? "Błąd podczas uploadu pliku.",
+          {
+            ...error.options.metaData,
+          },
+        );
+        return res
+          .status(error.options.statusCode ?? 400)
+          .json({ message: error.message });
       }
 
       if (error instanceof multer.MulterError) {

@@ -1,9 +1,9 @@
 import axios from "axios";
-import { MusicTrack } from "../db/models/music_track";
-import { MusicArtist } from "../db/models/music_artist";
-import { MusicAlbum } from "../db/models/music_album";
-import { MusicGenre } from "../db/models/music_genre";
-import { UserMusic } from "../db/models/user_music";
+import { MusicTrack } from "../db/models/music-track";
+import { MusicArtist } from "../db/models/music-artist";
+import { MusicAlbum } from "../db/models/music-album";
+import { MusicGenre } from "../db/models/music-genre";
+import { UserMusic } from "../db/models/user-music";
 import { Transaction } from "sequelize";
 import { database } from "../db/database";
 import logger from "../logger";

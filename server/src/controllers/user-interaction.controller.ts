@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { UserInteractionService } from "../services/user-interaction.service";
-import { LikeStatus } from "../db/models/user_like";
+import { LikeStatus } from "../db/models/user-like";
 import logger from "../logger";
 import { handleRequest } from "../utils/handle-request";
 

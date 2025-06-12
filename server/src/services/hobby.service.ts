@@ -1,7 +1,7 @@
 import { Transaction } from "sequelize";
-import { HobbyCategory, hobbyCategories } from "../db/models/hobby_category";
+import { HobbyCategory, hobbyCategories } from "../db/models/hobby-category";
 import { Hobby, hobbies } from "../db/models/hobby";
-import { UserHobby } from "../db/models/user_hobby";
+import { UserHobby } from "../db/models/user-hobby";
 import logger from "../logger";
 import { database } from "../db/database";
 

@@ -1,13 +1,10 @@
-import { Gender } from "../db/models/user";
+import { Gender, Role } from "../db/models/user";
 import { AuthService } from "../services/auth.service";
 import { ValidationService } from "../services/validation.service";
-import { emptyMetaData } from "./others";
 
 export type Validator = Record<string, (value: string) => void | Promise<void>>;
 
-export const getUserDetailsValidator = (
-  metaData = emptyMetaData,
-): Validator => {
+export const getUserDetailsValidator = (metaData = {}): Validator => {
   return {
     nickname: async (value: string) => {
       ValidationService.checkIfValueIsValid(
@@ -22,11 +19,11 @@ export const getUserDetailsValidator = (
       await AuthService.isNicknameTaken(value);
     },
     email: async (value: string) => {
-      ValidationService.isEmailValid(value, metaData);
+      ValidationService.chekcIfEmailIsValid(value, metaData);
       await AuthService.isEmailTaken(value);
     },
     password: (value: string) => {
-      ValidationService.isPasswordValid(value, metaData);
+      ValidationService.checkIfPasswordIsValid(value, metaData);
     },
     name: (value: string) => {
       ValidationService.checkIfValueIsValid(
@@ -50,6 +47,14 @@ export const getUserDetailsValidator = (
         true,
       );
     },
+    role: (value: string) => {
+      ValidationService.checkIfValueMatchesEnum(
+        "Typ konta",
+        value,
+        Role,
+        metaData,
+      );
+    },
     gender: (value: string) => {
       ValidationService.checkIfValueMatchesEnum(
         "Płeć",
@@ -64,7 +69,7 @@ export const getUserDetailsValidator = (
   };
 };
 
-export const getUserLoginValidator = (metaData = emptyMetaData): Validator => {
+export const getUserLoginValidator = (metaData = {}): Validator => {
   return {
     nicknameOrEmail: (value: string) => {
       ValidationService.checkIfValueIsValid(
@@ -91,9 +96,7 @@ export const getUserLoginValidator = (metaData = emptyMetaData): Validator => {
   };
 };
 
-export function getUserConfirmationValidator(
-  metaData = emptyMetaData,
-): Validator {
+export function getUserConfirmationValidator(metaData = {}): Validator {
   return {
     nickname: (value: string) => {
       ValidationService.checkIfValueIsValid(
@@ -120,9 +123,26 @@ export function getUserConfirmationValidator(
   };
 }
 
-export function getPasswordChangeValidator(
-  metaData = emptyMetaData,
-): Validator {
+export const getPasswordResetValidator = (metaData = {}): Validator => {
+  return {
+    passwordResetLinkId: (value: string) => {
+      ValidationService.checkIfValueIsValid(
+        "Id linku resetującego hasło",
+        value,
+        metaData,
+        1,
+        50,
+        false,
+        false,
+      );
+    },
+    password: (value: string) => {
+      ValidationService.checkIfPasswordIsValid(value, metaData);
+    },
+  };
+};
+
+export const getPasswordChangeValidator = (metaData = {}): Validator => {
   return {
     oldPassword: (value: string) => {
       ValidationService.checkIfValueIsValid(
@@ -136,7 +156,35 @@ export function getPasswordChangeValidator(
       );
     },
     newPassword: (value: string) => {
-      ValidationService.isPasswordValid(value, metaData);
+      ValidationService.checkIfPasswordIsValid(value, metaData);
     },
   };
-}
+};
+
+export const getEmailValidator = (metaData = {}): Validator => {
+  return {
+    email: (value: string) => {
+      ValidationService.chekcIfEmailIsValid(value, metaData);
+    },
+  };
+};
+
+export const getUserBanValidator = (metaData = {}): Validator => {
+  return {
+    userId: (value: string) => {
+      ValidationService.checkIfUUIDIsValid(value, "ID użytkownika", metaData);
+    },
+    reason: (value: string) => {
+      ValidationService.checkIfValueIsValid(
+        "Powód bana",
+        value,
+        metaData,
+        1,
+        500,
+        false,
+        false,
+        false,
+      );
+    },
+  };
+};

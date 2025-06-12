@@ -34,7 +34,9 @@ export interface DateFormatter {
  * @param dateString
  * @returns A DateFormatter object or null if the date string is invalid.
  */
-export function getDateFormatter(dateString: string): DateFormatter | null {
+export function getDateFormatter(
+  dateString: string | null,
+): DateFormatter | null {
   if (!dateString) return null;
 
   const date = new Date(dateString);

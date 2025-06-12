@@ -1,5 +1,5 @@
 import { DataType, Table, Model, Column, HasMany } from "sequelize-typescript";
-import { UserMatchPreference } from "./user_match_preference";
+import { UserMatchPreference } from "./user-match-preference";
 
 @Table({
   tableName: "match_types",

@@ -12,12 +12,19 @@ import { MatchPreferenceService } from "./services/match-preference.service";
 import questionRouter from "./routers/question.router";
 import hobbyRouter from "./routers/hobby.router";
 import { HobbyService } from "./services/hobby.service";
+import { QuestionService } from "./services/question.service";
 import musicRouter from "./routers/music.router";
 import locationRouter from "./routers/location.router";
 import path from "path";
 import fs from "fs";
 import userRouter from "./routers/user.router";
 import { errorHandler } from "./middlewares/error.handler";
+import helmet from "helmet";
+import hpp from "hpp";
+import adminRouter from "./routers/admin.router";
+import { scheduleDeleteExpiredPasswordResetLinks } from "./tasks/delete-expired-password-resets";
+import { scheduleDeleteUnactiveExpiredAccounts } from "./tasks/delete-expired-unactive-accounts";
+import { scheduleDeleteAvatars } from "./tasks/delete-avatars";
 import movieRouter from "./routers/movie.router";
 import bookRouter from "./routers/book.router";
 import { MoviesService } from "./services/movie.service";
@@ -37,14 +44,21 @@ export const connectToDatabase = async () => {
 export const initializeExpress = async (): Promise<Express> => {
   const app = express();
 
-  app.use(express.json());
+  app.use(helmet());
+
   app.use(
     cors({
       origin: config.CLIENT_URL,
       credentials: true,
     }),
   );
+
+  app.use(hpp());
+
   app.use(cookieParser());
+
+  app.use(express.json());
+
   addRouters(app);
 
   app.use(errorHandler);
@@ -60,6 +74,11 @@ const onStart = async () => {
 
   await HobbyService.initializeHobbyData();
   logger.info("Zainicjalizowano dane hobby.");
+
+  scheduleCronTasks();
+
+  await QuestionService.initializeQuestionsData();
+  logger.info("Zainicjalizowano pytania.");
 
   await MoviesService.initializeMoviesData();
   logger.info("Zainicjalizowano dane filmów.");
@@ -85,6 +104,7 @@ const startServer = async () => {
 const addRouters = (app: express.Application) => {
   app.use("/api/auth", authRouter);
   app.use("/api/user", userRouter);
+  app.use("/api/admin", adminRouter);
   app.use("/api/match-preferences", matchPreferenceRouter);
   app.use("/api/recommendations", recommendationRouter);
   app.use("/api/interactions", userInteractionRouter);
@@ -94,6 +114,16 @@ const addRouters = (app: express.Application) => {
   app.use("/api/movies", movieRouter);
   app.use("/api/books", bookRouter);
   app.use("/api/location", locationRouter);
+};
+
+/**
+ * Schedules cron tasks for deleting expired password reset links
+ * and deleting unactive expired accounts.
+ */
+const scheduleCronTasks = () => {
+  scheduleDeleteExpiredPasswordResetLinks();
+  scheduleDeleteUnactiveExpiredAccounts();
+  scheduleDeleteAvatars();
 };
 
 /**

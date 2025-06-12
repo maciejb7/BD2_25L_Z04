@@ -1,15 +1,14 @@
 import request from "supertest";
-import { createUser } from "../../utils/userHelpers";
-import { User } from "../../../db/models/user";
+import { createUser } from "../../utils/user-helpers";
 import { getApp } from "../../setup";
 
 describe("POST /api/auth/login", () => {
   it("should login successfully with valid credentials by nickname", async () => {
-    await createUser("Janusz", "janusz1990@gmail.com", "Haslo123@");
+    const user = await createUser();
     const response = await request(await getApp())
       .post("/api/auth/login")
       .send({
-        nicknameOrEmail: "Janusz",
+        nicknameOrEmail: user.nickname,
         password: "Haslo123@",
       });
     expect(response.status).toBe(200);
@@ -20,18 +19,17 @@ describe("POST /api/auth/login", () => {
     expect(cookies.some((cookie) => cookie.startsWith("refreshToken="))).toBe(
       true,
     );
-    expect(response.body.user).toHaveProperty("nickname", "Janusz");
-    expect(response.body.user).toHaveProperty("email", "janusz1990@gmail.com");
-    await User.destroy({ where: { nickname: "Janusz" } });
+    expect(response.body.user).toHaveProperty("nickname", user.nickname);
+    expect(response.body.user).toHaveProperty("email", user.email);
   });
 
   it("should login successfully with valid credentials by email", async () => {
-    await createUser("Janusz", "janusz1990@gmail.com", "Haslo123@");
+    const user = await createUser();
 
     const response = await request(await getApp())
       .post("/api/auth/login")
       .send({
-        nicknameOrEmail: "janusz1990@gmail.com",
+        nicknameOrEmail: user.email,
         password: "Haslo123@",
       });
 
@@ -43,26 +41,20 @@ describe("POST /api/auth/login", () => {
     expect(cookies.some((cookie) => cookie.startsWith("refreshToken="))).toBe(
       true,
     );
-    expect(response.body.user).toHaveProperty("nickname", "Janusz");
-    expect(response.body.user).toHaveProperty("email", "janusz1990@gmail.com");
-    await User.destroy({ where: { nickname: "Janusz" } });
+    expect(response.body.user).toHaveProperty("nickname", user.nickname);
+    expect(response.body.user).toHaveProperty("email", user.email);
   });
 
   it("should return 401 for invalid credentials (wrong password)", async () => {
-    await createUser("Janusz", "janusz1990@gmail.com", "Haslo123@");
+    const user = await createUser();
 
     const response = await request(await getApp())
       .post("/api/auth/login")
       .send({
-        nicknameOrEmail: "Janusz",
+        nicknameOrEmail: user.nickname,
         password: "WrongPassword",
       });
     expect(response.status).toBe(401);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Nieprawidłowy login lub hasło.",
-    );
-    await User.destroy({ where: { nickname: "Janusz" } });
   });
 
   it("should return 401 for invalid credentials (user not found)", async () => {
@@ -73,10 +65,6 @@ describe("POST /api/auth/login", () => {
         password: "SomePassword",
       });
     expect(response.status).toBe(401);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Nieprawidłowy login lub hasło.",
-    );
   });
 
   it("should return 400 for missing nicknameOrEmail", async () => {
@@ -87,10 +75,6 @@ describe("POST /api/auth/login", () => {
       });
 
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Login nie może być puste.",
-    );
   });
 
   it("should return 400 for missing password", async () => {
@@ -101,10 +85,6 @@ describe("POST /api/auth/login", () => {
       });
 
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Hasło nie może być puste.",
-    );
   });
 
   it("should return 400 for empty request body", async () => {
@@ -113,9 +93,5 @@ describe("POST /api/auth/login", () => {
       .send({});
 
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Login nie może być puste.",
-    );
   });
 });

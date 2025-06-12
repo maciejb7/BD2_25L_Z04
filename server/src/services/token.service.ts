@@ -7,24 +7,31 @@ import {
   ExpiredRefreshTokenError,
   InvalidRefreshTokenError,
   NoRefreshTokenError,
+  UserNotActiveError,
   UserNotFoundError,
 } from "../errors/errors";
 import { createHash, randomUUID } from "crypto";
-import { emptyMetaData } from "../types/others";
-import { loggerMessages } from "../errors/loggerMessages";
-
-/**
- * Service for handling tokens.
- */
+import { services } from "../constants/services";
+import { AccountBan } from "../db/models/account-ban";
+import { AuthService } from "./auth.service";
 
 /**
  * Generates an access token for the given user.
  * @param user The user for whom to generate the access token.
  * @returns The generated access token as a string.
  */
-const generateAccessToken = (user: User): string => {
+const generateAccessToken = async (user: User): Promise<string> => {
+  const isBanned = await AccountBan.findOne({
+    where: { givenTo: user.userId },
+  });
   return jwt.sign(
-    { userId: user.userId, userNickname: user.nickname, userRole: user.role },
+    {
+      userId: user.userId,
+      userNickname: user.nickname,
+      userRole: user.role,
+      isActive: user.isActive,
+      isBanned: isBanned ? true : false,
+    },
     config.ACCESS_TOKEN_SECRET as string,
     {
       expiresIn: "15m",
@@ -37,13 +44,19 @@ const generateAccessToken = (user: User): string => {
  * @param user The user for whom to generate the refresh token.
  * @returns The generated refresh token as a string.
  */
-const generateRefreshToken = async (user: User): Promise<string> => {
+const generateRefreshToken = async (
+  user: User,
+  userIpAdress: string | null,
+  deviceInfo: string | null,
+): Promise<string> => {
   const token = randomUUID().toString();
   const hashedToken = createHash("sha256").update(token).digest("hex");
   const expiresAt = DateTime.now().plus({ days: 30 }).toJSDate();
   await Session.create({
     refreshToken: hashedToken,
     expiresAt: expiresAt,
+    ipAddress: userIpAdress,
+    deviceInfo: deviceInfo,
     userId: user.userId,
   });
   return token;
@@ -60,7 +73,7 @@ const generateRefreshToken = async (user: User): Promise<string> => {
  */
 const refreshAccessToken = async (
   refreshToken: string,
-  metaData = emptyMetaData,
+  metaData = { service: services.refresh },
 ): Promise<string> => {
   const hashedRefreshToken = createHash("sha256")
     .update(refreshToken)
@@ -73,13 +86,13 @@ const refreshAccessToken = async (
   if (!session)
     throw new InvalidRefreshTokenError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono sesji dla podanego refresh tokena.`,
+      makeLog: false,
     });
 
   if (DateTime.now() > DateTime.fromJSDate(session.expiresAt))
     throw new ExpiredRefreshTokenError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Token odświeżający wygasł.`,
+      makeLog: false,
     });
 
   const user = await User.findByPk(session.userId);
@@ -87,8 +100,22 @@ const refreshAccessToken = async (
   if (!user)
     throw new UserNotFoundError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono użytkownika dla sesji.`,
+      makeLog: false,
     });
+
+  if (!user.isActive) {
+    throw new UserNotActiveError({
+      message: "Twoje konto jest nieaktywne.",
+      metaData: { ...metaData, userId: user.userId },
+      statusCode: 403,
+      loggerMessage: `Użytkownik ${user.nickname} próbował wykonać akcję, ale jego konto jest nieaktywne.`,
+    });
+  }
+
+  AuthService.checkIfUserIsBanned(user, {
+    service: services.refresh,
+    userId: user.userId,
+  });
 
   return generateAccessToken(user);
 };
@@ -101,7 +128,7 @@ const refreshAccessToken = async (
  */
 const revokeSession = async (
   refreshToken: string,
-  metaData = emptyMetaData,
+  metaData = { service: services.logout },
 ) => {
   const hashedRefreshToken = createHash("sha256")
     .update(refreshToken)
@@ -114,7 +141,7 @@ const revokeSession = async (
   if (destroyCounter === 0) {
     throw new InvalidRefreshTokenError({
       metaData: { ...metaData },
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono sesji dla podanego refresh tokena.`,
+      loggerMessage: `Nie znaleziono sesji do dla tokena.`,
     });
   }
 };
@@ -125,17 +152,20 @@ const revokeSession = async (
  * @param metaData Optional metadata for logging and error handling.
  * @throws NoRefreshTokenError if no sessions are found for the user.
  */
-const revokeAllSessions = async (userId: string, metaData = emptyMetaData) => {
+const revokeAllSessions = async (
+  userId: string,
+  metaData = { service: services.logoutFromAllDevices },
+) => {
   const destroyCount = await Session.destroy({
     where: { userId: userId },
   });
 
   if (destroyCount === 0) {
     throw new NoRefreshTokenError({
-      message: "Nie znaleziono żadnych sesji dla użytkownika.",
+      message: "Nie znaleziono żadnych sesji, z których można się wylogować.",
       metaData: { ...metaData, userId: userId },
       statusCode: 404,
-      loggerMessage: `${loggerMessages(metaData.service)}: Nie znaleziono żadnych sesji dla użytkownika.`,
+      loggerMessage: `Nie znaleziono żadnych sesji dla użytkownika.`,
     });
   }
 };

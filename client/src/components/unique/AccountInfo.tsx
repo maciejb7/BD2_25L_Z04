@@ -1,7 +1,11 @@
+/* eslint-disable prettier/prettier */
 import { useEffect, useState } from "react";
 import { User } from "../../types/others";
-import { deleteUserAvatar, getUserAvatar } from "../../api/api.user";
-import { getUser, getUserFromStorage } from "../../utils/userAuthentication";
+import {
+  deleteUserAvatar,
+  getUserAvatar,
+  getUserFromAPI,
+} from "../../api/api.user";
 import EditableField from "../inputs/EditableField";
 import Avatar from "../common/Avatar";
 import AvatarCropModal from "../modals/CropAvatarModal";
@@ -15,11 +19,12 @@ import { getDateFormatter } from "../../utils/formatters";
 function AccountInfo() {
   const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
-  const [cropImage, setCropImage] = useState<string>("");
-  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [avatar, setAvatar] = useState<string>("");
-  const [userInfo, setUserInfo] = useState<User>(
-    getUserFromStorage() ?? {
+  const [cropAvatar, setCropAvatar] = useState<string>("");
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [user, setUser] = useState<User>(
+    {
+      userId: "",
       nickname: "",
       name: "",
       surname: "",
@@ -31,30 +36,33 @@ function AccountInfo() {
     },
   );
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      setIsLoading(true);
-      const user = await getUser();
-      const mappedGender = twoWayGenderMap.to(user.gender);
-      const mappedRole = twoWayRoleMap.to(user.role);
-      if (mappedGender) user.gender = mappedGender;
-      if (mappedRole) user.role = mappedRole;
-      setUserInfo(user);
-      setIsLoading(false);
-    };
-    fetchUser();
-  }, []);
+  const fetchUser = async () => {
+    setIsLoading(true);
+    const user = await getUserFromAPI();
+    const mappedGender = twoWayGenderMap.to(user.gender);
+    const mappedRole = twoWayRoleMap.to(user.role);
+    if (mappedGender) user.gender = mappedGender;
+    if (mappedRole) user.role = mappedRole;
+    setUser(user);
+    setIsLoading(false);
+  };
+
+  const fetchAvatar = async () => {
+    try {
+      const avatarUrl = await getUserAvatar();
+      setAvatar(avatarUrl);
+    } catch {
+      setAvatar("");
+    }
+  };
 
   useEffect(() => {
-    const fetchAvatar = async () => {
-      const avatarUrl = await getUserAvatar();
-      setAvatar(avatarUrl ?? "");
-    };
+    fetchUser();
     fetchAvatar();
   }, []);
 
   const onConfirm = (fieldName: string, newValue: string) =>
-    setUserInfo((prev) => ({
+    setUser((prev) => ({
       ...prev,
       [fieldName]: newValue,
     }));
@@ -69,7 +77,7 @@ function AccountInfo() {
 
     const reader = new FileReader();
     reader.onload = () => {
-      setCropImage(reader.result as string);
+      setCropAvatar(reader.result as string);
       setIsCropModalOpen(true);
     };
     reader.readAsDataURL(file);
@@ -87,7 +95,7 @@ function AccountInfo() {
       const response = await deleteUserAvatar();
       showAlert(response.message, "success");
       setAvatar("");
-      setCropImage("");
+      setCropAvatar("");
     } catch (error: any) {
       showAlert(error.message, "error");
     }
@@ -116,35 +124,35 @@ function AccountInfo() {
         <EditableField
           label="Imię"
           name="name"
-          value={userInfo.name}
+          value={user.name}
           onConfirm={onConfirm}
           isLoading={isLoading}
         />
         <EditableField
           label="Nazwisko"
           name="surname"
-          value={userInfo.surname}
+          value={user.surname}
           onConfirm={onConfirm}
           isLoading={isLoading}
         />
         <EditableField
           label="Nick"
           name="nickname"
-          value={userInfo.nickname}
+          value={user.nickname}
           onConfirm={onConfirm}
           isLoading={isLoading}
         />
         <EditableField
           label="Mail"
           name="email"
-          value={userInfo.email}
+          value={user.email}
           onConfirm={onConfirm}
           isLoading={isLoading}
         />
         <EditableField
           label="Typ Konta"
           name="role"
-          value={userInfo.role}
+          value={user.role}
           onConfirm={onConfirm}
           isLoading={isLoading}
           type="text"
@@ -154,7 +162,7 @@ function AccountInfo() {
         <EditableField
           label="Płeć"
           name="gender"
-          value={userInfo.gender}
+          value={user.gender}
           onConfirm={onConfirm}
           isLoading={isLoading}
           type="select"
@@ -165,8 +173,7 @@ function AccountInfo() {
           label="Data urodzenia"
           name="birthDate"
           value={
-            getDateFormatter(userInfo.birthDate)?.getDMYWithTime() ??
-            "Nieprawidłowa Data"
+            getDateFormatter(user.birthDate)?.getDMY() ?? "Nieprawidłowa Data"
           }
           onConfirm={onConfirm}
           isLoading={isLoading}
@@ -176,7 +183,7 @@ function AccountInfo() {
           label="Data utworzenia konta"
           name="createdAt"
           value={
-            getDateFormatter(userInfo.createdAt)?.getDMYWithTime() ??
+            getDateFormatter(user.createdAt)?.getDMYWithTime() ??
             "Nieprawidłowa Data"
           }
           onConfirm={onConfirm}
@@ -186,16 +193,16 @@ function AccountInfo() {
         />
       </div>
 
-      {cropImage && isCropModalOpen && (
+      {cropAvatar && isCropModalOpen && (
         <AvatarCropModal
-          imageSrc={cropImage}
+          imageSrc={cropAvatar}
           onClose={() => {
-            setCropImage("");
+            setCropAvatar("");
             setIsCropModalOpen(false);
           }}
           onSave={(newAvatar) => {
             setAvatar(newAvatar);
-            setCropImage("");
+            setCropAvatar("");
             setIsCropModalOpen(false);
           }}
         />

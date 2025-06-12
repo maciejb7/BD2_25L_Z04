@@ -1,6 +1,7 @@
 import { User } from "../types/others";
-import { ResetPasswordFormData } from "../types/requests";
+import { ConfirmFormData, ResetPasswordFormData } from "../types/requests";
 import { CommonResponse, UserResponse } from "../types/responses";
+import { getAuthObserver } from "../utils/AuthObserver";
 import api, { handleApiError } from "./api";
 
 export const getUserFromAPI = async (): Promise<User> => {
@@ -11,12 +12,18 @@ export const getUserFromAPI = async (): Promise<User> => {
 };
 
 export const getUserAvatar = async (): Promise<string> => {
-  const response = await api.get(`/api/user/avatar`, {
-    responseType: "blob",
-    withCredentials: true,
-  });
-  if (response.status !== 200) return "";
-  return URL.createObjectURL(response.data);
+  try {
+    const response = await api.get(`/api/user/avatar`, {
+      responseType: "blob",
+      withCredentials: true,
+    });
+    return URL.createObjectURL(response.data);
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas pobierania zdjęcia profilowego. Spróbuj ponownie.",
+    );
+  }
 };
 
 export const uploadUserAvatar = async (file: File): Promise<CommonResponse> => {
@@ -75,6 +82,57 @@ export const changeUserInfoField = async (
   }
 };
 
+export const createResetPasswordLink = async (
+  email: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/reset-password-link",
+      { email },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas wysyłania linku resetowania hasła. Sprawdź poprawność adresu e-mail.",
+    );
+  }
+};
+
+export const checkIfPasswordResetLinkExists = async (
+  passwordResetLinkId: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.get<CommonResponse>(
+      `/api/user/reset-password-link/${passwordResetLinkId}`,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas sprawdzania linku resetowania hasła. Sprawdź poprawność linku.",
+    );
+  }
+};
+
+export const resetPassword = async (
+  passwordResetLinkId: string,
+  password: string,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/reset-password",
+      { passwordResetLinkId, password },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas resetowania hasła. Sprawdź poprawność linku resetowania hasła.",
+    );
+  }
+};
+
 export const changePassword = async (
   data: ResetPasswordFormData,
 ): Promise<CommonResponse> => {
@@ -88,6 +146,26 @@ export const changePassword = async (
     throw handleApiError(
       error,
       "Wystąpił błąd zmiany hasła. Spróbuj ponownie.",
+    );
+  }
+};
+
+export const deleteAccount = async (
+  data: ConfirmFormData,
+): Promise<CommonResponse> => {
+  try {
+    const response = await api.post<CommonResponse>(
+      "/api/user/delete-account",
+      data,
+    );
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    getAuthObserver().emitLogout(response.data.message, "success");
+    return response.data;
+  } catch (error: unknown) {
+    throw handleApiError(
+      error,
+      "Wystąpił błąd podczas usuwania konta. Spróbuj ponownie.",
     );
   }
 };

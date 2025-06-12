@@ -1,4 +1,6 @@
+/* eslint-disable prettier/prettier */
 import { logout } from "../api/api.auth";
+import { isUserAdminByStorage } from "../utils/userAuthentication";
 
 export interface SideBarOption {
   name: string;
@@ -6,6 +8,7 @@ export interface SideBarOption {
   link?: string;
   onClick?: () => void;
   active?: boolean;
+  admin?: boolean;
 }
 
 /**
@@ -13,10 +16,22 @@ export interface SideBarOption {
  */
 const options: SideBarOption[] = [
   { name: "Dashboard", icon: "fas fa-home", link: "/dashboard" },
+  { name: "Eksploruj", icon: "fas fa-compass", link: "/explore" },
+  {
+    name: "Pytania",
+    icon: "fas fa-question-circle",
+    link: "/questions",
+  },
   {
     name: "Konto",
     icon: "fas fa-user",
     link: "/account-settings",
+  },
+  {
+    name: "Użytkownicy",
+    icon: "fas fa-user-cog",
+    link: "/users-management",
+    admin: true,
   },
   {
     name: "Hobby",
@@ -56,5 +71,10 @@ export const getSideBarOptions = (activeOption?: string) => {
     else option.active = false;
   });
 
-  return options;
+  return options.filter((option) => {
+    if (option.admin && !isUserAdminByStorage()) {
+      return false;
+    }
+    return true;
+  });
 };

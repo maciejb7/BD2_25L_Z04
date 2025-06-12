@@ -1,5 +1,5 @@
-import { MatchType } from "../db/models/match_type";
-import { UserMatchPreference } from "../db/models/user_match_preference";
+import { MatchType } from "../db/models/match-type";
+import { UserMatchPreference } from "../db/models/user-match-preference";
 import { Transaction } from "sequelize";
 
 /**
@@ -9,16 +9,19 @@ import { Transaction } from "sequelize";
 const initializeMatchTypes = async (): Promise<void> => {
   const defaultMatchTypes = [
     {
+      match_type_id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
       match_type_name: "friend",
-      match_type_description: "Find friends",
+      match_type_description: "I cyk - nowy ziomal",
     },
     {
+      match_type_id: "e57a6b13-48b9-4a4d-917a-345f665e2d1c",
       match_type_name: "romantic",
-      match_type_description: "Find romantic partners",
+      match_type_description: "Buzi buzi ;)",
     },
     {
+      match_type_id: "a7bc4e9e-09e4-4bde-8b9c-328e6e042e8a",
       match_type_name: "business",
-      match_type_description: "Find business partners",
+      match_type_description: "$$$$$$$",
     },
   ];
 
