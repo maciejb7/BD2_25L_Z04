@@ -1,9 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RecommendedUser } from "../../api/api.recommendation";
 import Avatar from "../common/Avatar";
 import { getUserAvatar } from "../../api/api.user";
 import { getUserLocation, UserLocation } from "../../api/api.location";
 import { getUserAnswers } from "../../api/api.questions";
+import {
+    getUserHobbies,
+    getCurrentUserHobbies,
+    getUserFavoriteMusic,
+    UserHobby,
+    UserMusicFavorite
+} from "../../api/api.hobbies-music";
 
 interface ProfileCardProps {
     user: RecommendedUser;
@@ -36,6 +43,10 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
     const [location, setLocation] = useState<UserLocation | null>(null);
     const [randomAnswer, setRandomAnswer] = useState<Answer | null>(null);
     const [isLoadingData, setIsLoadingData] = useState(true);
+    const [sharedHobby, setSharedHobby] = useState<string | null>(null);
+    const [randomMusic, setRandomMusic] = useState<UserMusicFavorite | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     // Load user data when component mounts
     useEffect(() => {
@@ -60,15 +71,38 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
                     })
                     .catch(() => null);
 
-                const [avatar, userLocation, answer] = await Promise.all([
+                // Load current user's hobbies
+                const currentUserHobbiesPromise = getCurrentUserHobbies().catch(() => []);
+
+                // Load target user's hobbies
+                const targetUserHobbiesPromise = getUserHobbies(user.userId).catch(() => []);
+
+                // Load target user's music
+                const userMusicPromise = getUserFavoriteMusic(user.userId).catch(() => ({ favorites: [], count: 0 }));
+
+                const [avatar, userLocation, answer, currentUserHobbies, targetUserHobbies, userMusic] = await Promise.all([
                     avatarPromise,
                     locationPromise,
-                    answersPromise
+                    answersPromise,
+                    currentUserHobbiesPromise,
+                    targetUserHobbiesPromise,
+                    userMusicPromise
                 ]);
 
                 setAvatarUrl(avatar || "");
                 setLocation(userLocation);
                 setRandomAnswer(answer);
+
+                // Find shared hobbies
+                const shared = findSharedHobby(currentUserHobbies, targetUserHobbies);
+                setSharedHobby(shared);
+
+                // Pick random music
+                if (userMusic.favorites && userMusic.favorites.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * userMusic.favorites.length);
+                    setRandomMusic(userMusic.favorites[randomIndex]);
+                }
+
             } catch (error) {
                 console.error("Error loading user data:", error);
             } finally {
@@ -101,13 +135,59 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
             return location.address;
         }
 
-        // If no address, show coordinates
+        // If no address, show coordinates in a user-friendly way
         return `${location.latitude.toFixed(2)}°, ${location.longitude.toFixed(2)}°`;
     };
 
     const truncateAnswer = (answer: string, maxLength: number = 50): string => {
         if (answer.length <= maxLength) return answer;
         return answer.substring(0, maxLength) + "...";
+    };
+
+    const findSharedHobby = (currentUserHobbies: UserHobby[], targetUserHobbies: UserHobby[]): string | null => {
+        if (currentUserHobbies.length === 0 || targetUserHobbies.length === 0) {
+            return null;
+        }
+
+        // Check for exact hobby matches first
+        for (const currentHobby of currentUserHobbies) {
+            for (const targetHobby of targetUserHobbies) {
+                if (currentHobby.hobbyId === targetHobby.hobbyId) {
+                    return `You both like ${currentHobby.hobby.hobby_name}`;
+                }
+            }
+        }
+
+        // Check for category matches
+        for (const currentHobby of currentUserHobbies) {
+            for (const targetHobby of targetUserHobbies) {
+                if (currentHobby.hobby.hobby_category_id === targetHobby.hobby.hobby_category_id) {
+                    return `You both like ${currentHobby.hobby.category.hobby_category_name}`;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    const handleMusicPlay = () => {
+        if (!randomMusic || !audioRef.current) return;
+
+        if (isPlaying) {
+            audioRef.current.pause();
+            setIsPlaying(false);
+        } else {
+            audioRef.current.src = randomMusic.track.music_track_preview_link;
+            audioRef.current.play().then(() => {
+                setIsPlaying(true);
+            }).catch((error) => {
+                console.error("Error playing audio:", error);
+            });
+        }
+    };
+
+    const handleAudioEnded = () => {
+        setIsPlaying(false);
     };
 
     return (
@@ -136,6 +216,47 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
                         {isLoadingData ? "Ładowanie..." : formatLocation(location)}
                     </span>
                 </div>
+
+                {/* Shared Hobby */}
+                {sharedHobby && !isLoadingData && (
+                    <div className="bg-green-50 rounded-lg p-3">
+                        <div className="flex items-center">
+                            <i className="fas fa-heart text-green-600 mr-2"></i>
+                            <span className="text-sm font-medium text-green-800">
+                                {sharedHobby}
+                            </span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Random Music */}
+                {randomMusic && !isLoadingData && (
+                    <div className="bg-purple-50 rounded-lg p-3">
+                        <div className="flex items-center space-x-3">
+                            <div className="relative">
+                                <img
+                                    src={randomMusic.album.music_album_cover_small}
+                                    alt={randomMusic.album.music_album_title}
+                                    className="w-12 h-12 rounded-md object-cover"
+                                />
+                                <button
+                                    onClick={handleMusicPlay}
+                                    className="absolute inset-0 bg-black bg-opacity-50 text-white rounded-md flex items-center justify-center hover:bg-opacity-70 transition-opacity"
+                                >
+                                    <i className={`fas ${isPlaying ? 'fa-pause' : 'fa-play'} text-sm`}></i>
+                                </button>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-purple-800 truncate">
+                                    {randomMusic.track.music_track_title}
+                                </p>
+                                <p className="text-xs text-purple-600 truncate">
+                                    {randomMusic.artist.music_artist_name}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Random Question/Answer */}
                 {randomAnswer && !isLoadingData && (
@@ -193,6 +314,13 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 </div>
             )}
+
+            {/* Hidden audio element for music playback */}
+            <audio
+                ref={audioRef}
+                onEnded={handleAudioEnded}
+                preload="none"
+            />
         </div>
     );
 }
