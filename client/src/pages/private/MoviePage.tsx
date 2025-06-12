@@ -204,13 +204,6 @@ function MediaPage() {
 
       setRatingsInProgress(prev => ({ ...prev, [movieId]: true }));
 
-      // Sprawdź czy film rzeczywiście istnieje w liście użytkownika
-      const existingUserMovie = userMovies.find(um => um.movie_id === movieId);
-      if (!existingUserMovie) {
-        showAlert("Film nie znajduje się na Twojej liście", "info");
-        return;
-      }
-
       console.log(`Próba usunięcia filmu o ID: ${movieId}`); // Debug log
 
       await removeUserMovie(movieId);
