@@ -109,7 +109,6 @@ function HobbyPage() {
     window.location.reload();
   };
 
-  // Funkcja do renderowania gwiazdek na podstawie oceny
   const renderStars = (rating: number, interactive = false, hobbyId?: number) => {
     const stars = [];
     for (let i = 1; i <= 10; i++) {
@@ -126,14 +125,13 @@ function HobbyPage() {
     return stars;
   };
 
-  // Funkcja do obsługi oceniania hobby
   const handleRateHobby = async (hobbyId: number, rating: number) => {
     try {
       setRatingsInProgress(prev => ({ ...prev, [hobbyId]: true }));
 
       await rateHobby(hobbyId, rating);
 
-      // Odświeżenie listy hobby użytkownika
+
       const updatedUserHobbies = await getUserHobbies();
       setUserHobbies(updatedUserHobbies);
 
@@ -146,14 +144,12 @@ function HobbyPage() {
     }
   };
 
-  // Funkcja do usuwania oceny hobby
   const handleRemoveRating = async (hobbyId: number) => {
     try {
       setRatingsInProgress(prev => ({ ...prev, [hobbyId]: true }));
 
       await removeHobbyRating(hobbyId);
 
-      // Odświeżenie listy hobby użytkownika
       const updatedUserHobbies = await getUserHobbies();
       setUserHobbies(updatedUserHobbies);
 
@@ -166,7 +162,6 @@ function HobbyPage() {
     }
   };
 
-  // Funkcja do sprawdzenia czy użytkownik już ocenił dane hobby
   const getUserRatingForHobby = (hobbyId: number): number | null => {
     const userHobby = userHobbies.find(uh => uh.hobbyId === hobbyId);
     return userHobby ? userHobby.rating : null;
@@ -245,10 +240,8 @@ function HobbyPage() {
                 )}
               </div>
 
-              {/* Separator */}
               <hr className="border-gray-300 max-w-4xl mx-auto" />
 
-              {/* Przeglądaj hobby */}
               <div className="max-w-4xl mx-auto">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">Przeglądaj hobby</h2>
 

@@ -20,7 +20,7 @@ const options: SideBarOption[] = [
   },
   {
     name: "Hobby",
-    icon: "fas fa-art",
+    icon: "fas fa-palette",
     link: "/hobbies",
   },
   {

@@ -66,11 +66,19 @@ const initializeBookData = async (): Promise<void> => {
  */
 const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
   try {
+    // Najpierw sprawdź czy są książki w bazie, jeśli nie - zainicjalizuj
+    const bookCount = await Book.count();
+    if (bookCount === 0) {
+      logger.info("No books found, initializing book data");
+      await initializeBookData();
+    }
+
     const where: any = {};
     const include: any[] = [
       {
         model: BookAuthor,
         as: "author",
+        required: false, // LEFT JOIN zamiast INNER JOIN
       },
     ];
 
@@ -105,6 +113,7 @@ const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
           [Op.iLike]: `%${filters.author}%`,
         },
       };
+      include[0].required = true;
     }
 
     const books = await Book.findAll({
@@ -113,10 +122,12 @@ const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
       order: [["publication_year", "DESC"]],
     });
 
+    logger.info(`Found ${books.length} books`);
     return books;
   } catch (error) {
     logger.error("Error getting books", error);
-    throw error;
+
+    return [];
   }
 };
 
@@ -127,11 +138,17 @@ const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
  */
 const getBookDetails = async (bookId: number): Promise<Book | null> => {
   try {
+    if (!bookId || isNaN(bookId)) {
+      logger.error("Invalid book ID provided:", bookId);
+      return null;
+    }
+
     const book = await Book.findByPk(bookId, {
       include: [
         {
           model: BookAuthor,
           as: "author",
+          required: false,
         },
       ],
     });
@@ -139,7 +156,7 @@ const getBookDetails = async (bookId: number): Promise<Book | null> => {
     return book;
   } catch (error) {
     logger.error("Error getting book details", error);
-    throw error;
+    return null;
   }
 };
 
@@ -156,10 +173,19 @@ const addUserBook = async (
   const transaction = await database.transaction();
 
   try {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    if (!data.bookId || isNaN(data.bookId)) {
+      throw new Error("Valid book ID is required");
+    }
+
     const book = await Book.findByPk(data.bookId);
     if (!book) {
       throw new Error("Book not found");
     }
+
     const existingUserBook = await UserBook.findOne({
       where: {
         user_id: userId,
@@ -216,6 +242,14 @@ const updateUserBook = async (
   data: UpdateUserBookData,
 ): Promise<boolean> => {
   try {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    if (!bookId || isNaN(bookId)) {
+      throw new Error("Valid book ID is required");
+    }
+
     if (data.rating !== undefined && (data.rating < 1 || data.rating > 5)) {
       throw new Error("Rating must be between 1 and 5");
     }
@@ -249,6 +283,14 @@ const removeUserBook = async (
   bookId: number,
 ): Promise<boolean> => {
   try {
+    if (!userId) {
+      throw new Error("User ID is required");
+    }
+
+    if (!bookId || isNaN(bookId)) {
+      throw new Error("Valid book ID is required");
+    }
+
     const deleted = await UserBook.destroy({
       where: {
         user_id: userId,
@@ -274,6 +316,12 @@ const getUserBooks = async (
   status?: "to_read" | "reading" | "finished" | "abandoned",
 ): Promise<Array<{ userBook: UserBook; book: Book; author: BookAuthor }>> => {
   try {
+    // Walidacja danych wejściowych
+    if (!userId) {
+      logger.error("User ID is required");
+      return [];
+    }
+
     const where: Record<string, unknown> = { user_id: userId };
 
     if (status) {
@@ -285,10 +333,12 @@ const getUserBooks = async (
       include: [
         {
           model: Book,
+          required: true, // Wymagamy książkę
           include: [
             {
               model: BookAuthor,
               as: "author",
+              required: false, // Autor może nie istnieć
             },
           ],
         },
@@ -299,11 +349,11 @@ const getUserBooks = async (
     return userBooks.map((userBook) => ({
       userBook,
       book: userBook.book,
-      author: userBook.book.author,
+      author: userBook.book?.author || null,
     }));
   } catch (error) {
     logger.error("Error getting user books", error);
-    throw error;
+    return [];
   }
 };
 
@@ -316,6 +366,12 @@ const getUserFavoriteBooks = async (
   userId: string,
 ): Promise<Array<{ userBook: UserBook; book: Book; author: BookAuthor }>> => {
   try {
+    // Walidacja danych wejściowych
+    if (!userId) {
+      logger.error("User ID is required");
+      return [];
+    }
+
     const favoriteBooks = await UserBook.findAll({
       where: {
         user_id: userId,
@@ -324,10 +380,12 @@ const getUserFavoriteBooks = async (
       include: [
         {
           model: Book,
+          required: true,
           include: [
             {
               model: BookAuthor,
               as: "author",
+              required: false,
             },
           ],
         },
@@ -338,11 +396,11 @@ const getUserFavoriteBooks = async (
     return favoriteBooks.map((userBook) => ({
       userBook,
       book: userBook.book,
-      author: userBook.book.author,
+      author: userBook.book?.author || null,
     }));
   } catch (error) {
     logger.error("Error getting user favorite books", error);
-    throw error;
+    return [];
   }
 };
 
@@ -352,6 +410,12 @@ const getUserFavoriteBooks = async (
  */
 const getBookAuthors = async (): Promise<BookAuthor[]> => {
   try {
+    const authorCount = await BookAuthor.count();
+    if (authorCount === 0) {
+      logger.info("No authors found, initializing book data");
+      await initializeBookData();
+    }
+
     const authors = await BookAuthor.findAll({
       order: [["author_name", "ASC"]],
     });
@@ -359,7 +423,7 @@ const getBookAuthors = async (): Promise<BookAuthor[]> => {
     return authors;
   } catch (error) {
     logger.error("Error getting book authors", error);
-    throw error;
+    return [];
   }
 };
 
@@ -369,6 +433,12 @@ const getBookAuthors = async (): Promise<BookAuthor[]> => {
  */
 const getBookGenres = async (): Promise<string[]> => {
   try {
+    const bookCount = await Book.count();
+    if (bookCount === 0) {
+      logger.info("No books found, initializing book data");
+      await initializeBookData();
+    }
+
     const genres = await Book.findAll({
       attributes: ["book_genre"],
       where: {
@@ -383,7 +453,7 @@ const getBookGenres = async (): Promise<string[]> => {
     return genres.map((book) => book.book_genre).filter(Boolean);
   } catch (error) {
     logger.error("Error getting book genres", error);
-    throw error;
+    return [];
   }
 };
 
@@ -403,6 +473,19 @@ const getUserReadingStats = async (
   averageRating: number;
 }> => {
   try {
+    // Walidacja danych wejściowych
+    if (!userId) {
+      logger.error("User ID is required");
+      return {
+        totalBooks: 0,
+        finishedBooks: 0,
+        currentlyReading: 0,
+        toRead: 0,
+        abandoned: 0,
+        averageRating: 0,
+      };
+    }
+
     const userBooks = await UserBook.findAll({
       where: { user_id: userId },
     });
@@ -436,7 +519,14 @@ const getUserReadingStats = async (
     return stats;
   } catch (error) {
     logger.error("Error getting user reading stats", error);
-    throw error;
+    return {
+      totalBooks: 0,
+      finishedBooks: 0,
+      currentlyReading: 0,
+      toRead: 0,
+      abandoned: 0,
+      averageRating: 0,
+    };
   }
 };
 

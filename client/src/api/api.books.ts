@@ -88,7 +88,7 @@ export const getBooks = async (filters?: BooksFilter): Promise<Book[]> => {
     if (filters?.search) params.append('search', filters.search);
 
     const queryString = params.toString();
-    const url = queryString ? `/api/books?${queryString}` : '/api/books';
+    const url = queryString ? `/api/books/books?${queryString}` : '/api/books/books';
 
     const response = await api.get<Book[]>(url);
     return response.data;
@@ -114,7 +114,7 @@ export const getBookDetails = async (bookId: number): Promise<Book> => {
 
 export const getBookAuthors = async (): Promise<BookAuthor[]> => {
   try {
-    const response = await api.get<BookAuthor[]>('/api/authors');
+    const response = await api.get<BookAuthor[]>('/api/books/authors');
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -126,7 +126,7 @@ export const getBookAuthors = async (): Promise<BookAuthor[]> => {
 
 export const getBookGenres = async (): Promise<string[]> => {
   try {
-    const response = await api.get<string[]>('/api/genres');
+    const response = await api.get<string[]>('/api/books/genres');
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -139,7 +139,7 @@ export const getBookGenres = async (): Promise<string[]> => {
 // Protected routes
 export const getUserBooks = async (userId?: string): Promise<UserBook[]> => {
   try {
-    const url = userId ? `/api/library/user/${userId}` : '/api/library';
+    const url = userId ? `/api/library/user/${userId}` : '/api/books/library';
     const response = await api.get<UserBook[]>(url);
     return response.data;
   } catch (error: unknown) {
@@ -152,7 +152,7 @@ export const getUserBooks = async (userId?: string): Promise<UserBook[]> => {
 
 export const getUserFavoriteBooks = async (userId?: string): Promise<UserBook[]> => {
   try {
-    const url = userId ? `/api/favorites/user/${userId}` : '/api/favorites';
+    const url = userId ? `/api/favorites/user/${userId}` : '/api/books/favorites';
     const response = await api.get<UserBook[]>(url);
     return response.data;
   } catch (error: unknown) {
@@ -165,7 +165,7 @@ export const getUserFavoriteBooks = async (userId?: string): Promise<UserBook[]>
 
 export const addUserBook = async (data: AddUserBookData): Promise<UserBook> => {
   try {
-    const response = await api.post<UserBook>('/api/library', data);
+    const response = await api.post<UserBook>('/api/books/library', data);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -177,7 +177,7 @@ export const addUserBook = async (data: AddUserBookData): Promise<UserBook> => {
 
 export const updateUserBook = async (bookId: number, data: UpdateUserBookData): Promise<any> => {
   try {
-    const response = await api.put(`/api/library/${bookId}`, data);
+    const response = await api.put(`/api/books/library/${bookId}`, data);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -189,7 +189,7 @@ export const updateUserBook = async (bookId: number, data: UpdateUserBookData): 
 
 export const removeUserBook = async (bookId: number): Promise<any> => {
   try {
-    const response = await api.delete(`/api/library/${bookId}`);
+    const response = await api.delete(`/api/books/library/${bookId}`);
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
@@ -201,7 +201,7 @@ export const removeUserBook = async (bookId: number): Promise<any> => {
 
 export const getUserReadingStats = async (userId?: string): Promise<ReadingStats> => {
   try {
-    const url = userId ? `/api/stats/user/${userId}` : '/api/stats';
+    const url = userId ? `/api/books/stats/user/${userId}` : '/api/books/stats';
     const response = await api.get<ReadingStats>(url);
     return response.data;
   } catch (error: unknown) {
