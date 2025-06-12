@@ -130,7 +130,7 @@ function MediaPage() {
       stars.push(
         <span
           key={i}
-          className={`${i <= rating ? "text-yellow-400" : "text-gray-300"} ${interactive ? "cursor-pointer hover:text-yellow-500 text-lg" : ""}`}
+          className={`${i <= rating ? "text-yellow-400" : "text-gray-300"} ${interactive ? "cursor-pointer hover:text-yellow-500 text-lg" : "text-lg"}`}
           onClick={interactive && movieId ? () => handleRateMovie(movieId, i) : undefined}
         >
           ★
@@ -146,46 +146,45 @@ function MediaPage() {
 
       const existingUserMovie = userMovies.find(um => um.movie_id === movieId);
 
+      let updatedUserMovie;
       if (existingUserMovie) {
         await updateUserMovie(movieId, { rating });
+        // Aktualizuj lokalnie istniejący film
+        updatedUserMovie = { ...existingUserMovie, rating };
       } else {
-        await addUserMovie({ movieId, rating });
+        // Dodaj nowy film do listy użytkownika
+        const newUserMovie = await addUserMovie({ movieId, rating });
+        updatedUserMovie = newUserMovie;
       }
 
-      const updatedUserMovies = await getUserMovies();
-      setUserMovies(updatedUserMovies);
+      // Aktualizuj stan lokalnie dla natychmiastowej responsywności
+      setUserMovies(prevUserMovies => {
+        if (existingUserMovie) {
+          return prevUserMovies.map(um =>
+            um.movie_id === movieId
+              ? { ...um, rating }
+              : um
+          );
+        } else {
+          return [...prevUserMovies, updatedUserMovie];
+        }
+      });
 
       showAlert(`Film został oceniony na ${rating}/10!`, "success");
     } catch (error: any) {
       console.error("Błąd podczas oceniania filmu:", error);
-      showAlert("Wystąpił błąd podczas oceniania filmu. Spróbuj ponownie.", "error");
-    } finally {
-      setRatingsInProgress(prev => ({ ...prev, [movieId]: false }));
-    }
-  };
 
-  const handleToggleFavorite = async (movieId: number) => {
-    try {
-      setRatingsInProgress(prev => ({ ...prev, [movieId]: true }));
+      // Dodaj więcej szczegółów do błędu
+      const errorMessage = error?.response?.data?.message || error?.message || "Nieznany błąd";
+      showAlert(`Wystąpił błąd podczas oceniania filmu: ${errorMessage}`, "error");
 
-      const existingUserMovie = userMovies.find(um => um.movie_id === movieId);
-
-      if (existingUserMovie) {
-        await updateUserMovie(movieId, { is_favorite: !existingUserMovie.is_favorite });
-      } else {
-        await addUserMovie({ movieId, is_favorite: true });
+      // Odśwież dane w przypadku błędu
+      try {
+        const refreshedUserMovies = await getUserMovies();
+        setUserMovies(refreshedUserMovies);
+      } catch (refreshError) {
+        console.error("Błąd podczas odświeżania danych:", refreshError);
       }
-
-      const updatedUserMovies = await getUserMovies();
-      setUserMovies(updatedUserMovies);
-
-      showAlert(
-        existingUserMovie?.is_favorite ? "Film usunięty z ulubionych!" : "Film dodany do ulubionych!",
-        "success"
-      );
-    } catch (error: any) {
-      console.error("Błąd podczas zmiany statusu ulubionego:", error);
-      showAlert("Wystąpił błąd. Spróbuj ponownie.", "error");
     } finally {
       setRatingsInProgress(prev => ({ ...prev, [movieId]: false }));
     }
@@ -193,22 +192,115 @@ function MediaPage() {
 
   const handleRemoveMovie = async (movieId: number) => {
     try {
+      // Debug: sprawdź co zostało przekazane
+      console.log("handleRemoveMovie wywołane z movieId:", movieId, "typ:", typeof movieId);
+
+      // Dodaj walidację movieId
+      if (!movieId || isNaN(movieId) || movieId <= 0) {
+        console.error("Błędny movieId:", movieId);
+        showAlert("Nieprawidłowy identyfikator filmu", "error");
+        return;
+      }
+
       setRatingsInProgress(prev => ({ ...prev, [movieId]: true }));
+
+      // Sprawdź czy film rzeczywiście istnieje w liście użytkownika
+      const existingUserMovie = userMovies.find(um => um.movie_id === movieId);
+      if (!existingUserMovie) {
+        showAlert("Film nie znajduje się na Twojej liście", "info");
+        return;
+      }
+
+      console.log(`Próba usunięcia filmu o ID: ${movieId}`); // Debug log
 
       await removeUserMovie(movieId);
 
-      const updatedUserMovies = await getUserMovies();
-      setUserMovies(updatedUserMovies);
+      // POPRAWKA: Aktualizuj stan lokalnie - usuń film z listy (używaj !== zamiast ===)
+      setUserMovies(prevUserMovies =>
+        prevUserMovies.filter(um => um.movie_id !== movieId)  // Zmienione z === na !==
+      );
 
       showAlert("Film został usunięty z Twojej listy!", "success");
     } catch (error: any) {
       console.error("Błąd podczas usuwania filmu:", error);
-      showAlert("Wystąpił błąd podczas usuwania filmu. Spróbuj ponownie.", "error");
+
+      const errorMessage = error?.response?.data?.message || error?.message || "Nieznany błąd";
+      showAlert(`Wystąpił błąd podczas usuwania filmu: ${errorMessage}`, "error");
+
+      // Odśwież dane w przypadku błędu
+      try {
+        const refreshedUserMovies = await getUserMovies();
+        setUserMovies(refreshedUserMovies);
+      } catch (refreshError) {
+        console.error("Błąd podczas odświeżania danych:", refreshError);
+      }
     } finally {
       setRatingsInProgress(prev => ({ ...prev, [movieId]: false }));
     }
   };
+  const handleToggleFavorite = async (movieId: number) => {
+    try {
+      // Dodaj walidację movieId
+      if (!movieId || isNaN(movieId) || movieId <= 0) {
+        showAlert(`Nieprawidłowy identyfikator film${movieId}`, "error");
+        return;
+      }
 
+      setRatingsInProgress(prev => ({ ...prev, [movieId]: true }));
+
+      const existingUserMovie = userMovies.find(um => um.movie_id === movieId);
+      const newFavoriteStatus = existingUserMovie ? !existingUserMovie.is_favorite : true;
+
+      console.log(`Zmiana statusu ulubionego dla filmu ID: ${movieId}`); // Debug log
+
+      if (existingUserMovie) {
+        await updateUserMovie(movieId, { is_favorite: newFavoriteStatus });
+      } else {
+        await addUserMovie({ movieId, is_favorite: true });
+      }
+
+      setUserMovies(prevUserMovies => {
+        if (existingUserMovie) {
+          return prevUserMovies.map(um =>
+            um.movie_id === movieId
+              ? { ...um, is_favorite: newFavoriteStatus }
+              : um
+          );
+        } else {
+          // Znajdź film w allMovies i utwórz nowy UserMovie
+          const movie = allMovies.find(m => m.id === movieId);
+          if (movie) {
+            // Odśwież dane z serwera zamiast tworzyć tymczasowy obiekt
+            getUserMovies().then(refreshedUserMovies => {
+              setUserMovies(refreshedUserMovies);
+            }).catch(console.error);
+
+            return prevUserMovies; // Zwróć obecny stan, odświeżenie nastąpi asynchronicznie
+          }
+          return prevUserMovies;
+        }
+      });
+
+      showAlert(
+        newFavoriteStatus ? "Film dodany do ulubionych!" : "Film usunięty z ulubionych!",
+        "success"
+      );
+    } catch (error: any) {
+      console.error("Błąd podczas zmiany statusu ulubionego:", error);
+
+      const errorMessage = error?.response?.data?.message || error?.message || "Nieznany błąd";
+      showAlert(`Wystąpił błąd: ${errorMessage}`, "error");
+
+      try {
+        const refreshedUserMovies = await getUserMovies();
+        setUserMovies(refreshedUserMovies);
+      } catch (refreshError) {
+        console.error("Błąd podczas odświeżania danych:", refreshError);
+      }
+    } finally {
+      setRatingsInProgress(prev => ({ ...prev, [movieId]: false }));
+    }
+  };
   const getUserMovieData = (movieId: number) => {
     return userMovies.find(um => um.movie_id === movieId);
   };
@@ -257,7 +349,10 @@ function MediaPage() {
                               {userMovie.movie.genre.movie_genre_name}
                             </span>
                             {userMovie.is_favorite && (
-                              <span className="text-red-500">❤️</span>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-red-500 text-lg">❤️</span>
+                                <span className="text-xs text-red-600 font-medium">Ulubiony</span>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -268,26 +363,39 @@ function MediaPage() {
                         {userMovie.movie.movie_director && (
                           <p className="text-gray-500 text-xs mb-3">Reżyser: {userMovie.movie.movie_director}</p>
                         )}
-                        {userMovie.rating && (
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-1">
-                              <span className="text-sm font-medium text-gray-700">Ocena:</span>
-                              <div className="flex">{renderStars(userMovie.rating)}</div>
+
+                        {userMovie.rating ? (
+                          <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-semibold text-gray-700">Twoja ocena:</span>
+                              <span className="text-lg font-bold text-blue-600">{userMovie.rating}/10</span>
                             </div>
-                            <span className="text-sm font-bold text-blue-600">{userMovie.rating}/10</span>
+                            <div className="flex justify-center space-x-1">
+                              {renderStars(userMovie.rating)}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 rounded-lg p-3 mb-3 text-center">
+                            <span className="text-sm text-gray-500">Film nie został jeszcze oceniony</span>
                           </div>
                         )}
+
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-medium text-gray-700">Status:</span>
+                          <div className="flex items-center space-x-2">
+                            {userMovie.is_favorite ? (
+                              <span className="bg-red-100 text-red-800 text-xs font-medium px-2 py-1 rounded-full">
+                                ❤️ W ulubionych
+                              </span>
+                            ) : (
+                              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-1 rounded-full">
+                                Na liście
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
                         <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleToggleFavorite(userMovie.movie_id)}
-                            disabled={ratingsInProgress[userMovie.movie_id]}
-                            className={`flex-1 px-3 py-1 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed ${userMovie.is_favorite
-                              ? "bg-red-500 text-white hover:bg-red-600"
-                              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                              }`}
-                          >
-                            {ratingsInProgress[userMovie.movie_id] ? "..." : (userMovie.is_favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych")}
-                          </button>
                           <button
                             onClick={() => handleRemoveMovie(userMovie.movie_id)}
                             disabled={ratingsInProgress[userMovie.movie_id]}
@@ -391,7 +499,10 @@ function MediaPage() {
                                     <span className="text-xs text-gray-500">({movie.movie_release_year})</span>
                                   )}
                                   {userMovieData?.is_favorite && (
-                                    <span className="text-red-500">❤️</span>
+                                    <div className="flex items-center space-x-1">
+                                      <span className="text-red-500">❤️</span>
+                                      <span className="text-xs text-red-600 font-medium">Ulubiony</span>
+                                    </div>
                                   )}
                                 </div>
                               </div>

@@ -26,7 +26,7 @@ export interface Book {
 }
 
 export interface UserBook {
-  id: string;
+  id: number;
   user_id: string;
   book_id: number;
   rating?: number;
@@ -142,7 +142,7 @@ export const getUserBooks = async (userId?: string): Promise<UserBook[]> => {
   try {
     const url = userId ? `/api/library/user/${userId}` : '/api/books/library';
     const response = await api.get<UserBook[]>(url);
-    return response.data;
+    return response.data.books;
   } catch (error: unknown) {
     throw handleApiError(
       error,
