@@ -351,7 +351,7 @@ function BooksPage() {
       if (!selectedUserBook) return;
 
       try {
-        await updateUserBook(selectedUserBook.book_id, formData);
+        await updateUserBook(selectedUserBook.id, formData);
 
         const updatedUserBooks = await getUserBooks();
         const updatedStats = await getUserReadingStats();
@@ -362,10 +362,10 @@ function BooksPage() {
         showAlert("Książka została zaktualizowana!", "success");
       } catch (error: any) {
         console.error("Błąd podczas aktualizacji książki:", error);
-        showAlert("Wystąpił błąd podczas aktualizacji książki. Spróbuj ponownie.", "error");
+        showAlert(`Wystąpił błąd podczas aktualizacji książki. Spróbuj ponownie. ${error}`, "error");
       }
     };
-
+    console.log("userBooks:", userBooks);
     if (!showUpdateModal || !selectedUserBook) return null;
 
     return (
@@ -584,7 +584,7 @@ function BooksPage() {
                             Edytuj
                           </button>
                           <button
-                            onClick={() => handleRemoveFromLibrary(userBook.id)}
+                            onClick={() => handleRemoveFromLibrary(userBook.book.id)}
                             disabled={operationsInProgress[userBook.book_id]}
                             className="flex-1 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
