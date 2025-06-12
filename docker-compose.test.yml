@@ -32,6 +32,9 @@ services:
       TEST_MODE: true
       ACCESS_TOKEN_SECRET: "test_secret"
       CLIENT_URL: "http://localhost"
+      EMAIL_SERVICE: ${EMAIL_SERVICE}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
