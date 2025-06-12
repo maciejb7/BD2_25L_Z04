@@ -313,6 +313,10 @@ const createResetPasswordLink = handleRequest(
       });
     }
 
+    AuthService.checkIfUserIsBanned(user, {
+      metaData: loggerMetaData,
+    });
+
     const resetLink = await PasswordResetLink.create({
       userId: user.userId,
       expiresAt: DateTime.now().plus({ minutes: 15 }),

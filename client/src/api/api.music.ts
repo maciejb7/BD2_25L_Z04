@@ -1,4 +1,3 @@
-
 import api, { handleApiError } from "./api";
 
 export interface MusicArtist {
@@ -84,14 +83,30 @@ export interface UserFavoriteTrack {
   album: MusicAlbum;
 }
 
+// Backend API response interfaces
+interface SearchTracksResponse {
+  results: DeezerTrack[];
+  count: number;
+}
+
+interface GetFavoritesResponse {
+  favorites: UserFavoriteTrack[];
+  count: number;
+}
+
+interface AddFavoriteResponse {
+  message: string;
+  track: MusicTrack;
+}
+
 // Protected routes (all music routes are protected)
 export const searchTracks = async (query: string): Promise<DeezerTrack[]> => {
   try {
     const params = new URLSearchParams();
     params.append('q', query);
 
-    const response = await api.get<DeezerTrack[]>(`/api/music/search?${params.toString()}`);
-    return response.data;
+    const response = await api.get<SearchTracksResponse>(`/api/music/search?${params.toString()}`);
+    return response.data.results;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -115,8 +130,8 @@ export const getTrackDetails = async (trackId: number): Promise<TrackDetails> =>
 export const getUserFavoriteTracks = async (userId?: string): Promise<UserFavoriteTrack[]> => {
   try {
     const url = userId ? `/api/music/favorites/user/${userId}` : '/api/music/favorites';
-    const response = await api.get<UserFavoriteTrack[]>(url);
-    return response.data;
+    const response = await api.get<GetFavoritesResponse>(url);
+    return response.data.favorites;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -125,9 +140,9 @@ export const getUserFavoriteTracks = async (userId?: string): Promise<UserFavori
   }
 };
 
-export const addFavoriteTrack = async (trackId: number): Promise<UserMusic> => {
+export const addFavoriteTrack = async (trackData: DeezerTrack): Promise<AddFavoriteResponse> => {
   try {
-    const response = await api.post<UserMusic>('/api/music/favorites', { trackId });
+    const response = await api.post<AddFavoriteResponse>('/api/music/favorites', { trackData });
     return response.data;
   } catch (error: unknown) {
     throw handleApiError(
