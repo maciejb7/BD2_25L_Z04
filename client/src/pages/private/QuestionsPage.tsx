@@ -372,7 +372,7 @@ function QuestionsPage() {
     <div className="relative min-h-screen flex">
       <Background blur="lg">
         <SideBar options={getSideBarOptions("Pytania")} />
-        <div className="ml-12 sm:ml-16 py-8 px-4 max-w-4xl mx-auto">
+        <div className="flex flex-col items-center justify-center py-20">
           <h2 className="flex flex-row items-center justify-start gap-4 text-2xl font-bold mb-6 text-gray-800">
             <i className="fas fa-question-circle"></i>Pytania i Preferencje
           </h2>
