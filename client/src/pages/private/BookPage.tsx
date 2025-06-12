@@ -3,7 +3,7 @@ import SideBar from "../../components/common/SideBar";
 import { getSideBarOptions } from "../../constants/sideBarOptions";
 import { useState, useEffect, useRef } from "react";
 import { useAlert } from "../../contexts/AlertContext";
-import { getUser } from "../../utils/userAuthentication";
+import { getUserFromAPI } from "../../api/api.user";
 import {
   getBooks,
   getUserBooks,
@@ -50,7 +50,7 @@ function BooksPage() {
     const initializeData = async () => {
       try {
         setIsLoading(true);
-        const user = await getUser();
+        const user = await getUserFromAPI();
         if (!user) throw new Error("Nie udało się pobrać ID użytkownika");
 
         const [booksRes, authorsRes, genresRes] = await Promise.all([
