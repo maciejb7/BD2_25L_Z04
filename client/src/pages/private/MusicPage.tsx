@@ -96,11 +96,11 @@ function MusicPage() {
     }
   };
 
-  const handleAddToFavorites = async (trackId: number) => {
+  const handleAddToFavorites = async (track: DeezerTrack) => {
     try {
-      setActionsInProgress(prev => ({ ...prev, [trackId]: true }));
+      setActionsInProgress(prev => ({ ...prev, [track.id]: true }));
 
-      await addFavoriteTrack(trackId);
+      await addFavoriteTrack(track);
 
       // Refresh favorites list
       const updatedFavorites = await getUserFavoriteTracks();
@@ -111,7 +111,7 @@ function MusicPage() {
       console.error("Błąd podczas dodawania do ulubionych:", error);
       showAlert("Wystąpił błąd podczas dodawania utworu do ulubionych. Spróbuj ponownie.", "error");
     } finally {
-      setActionsInProgress(prev => ({ ...prev, [trackId]: false }));
+      setActionsInProgress(prev => ({ ...prev, [track.id]: false }));
     }
   };
 
@@ -411,7 +411,7 @@ function MusicPage() {
                               <button
                                 onClick={() => isTrackInFavorites(track.id)
                                   ? handleRemoveFromFavorites(track.id)
-                                  : handleAddToFavorites(track.id)
+                                  : handleAddToFavorites(track)
                                 }
                                 disabled={actionsInProgress[track.id]}
                                 className={`flex-1 px-3 py-2 text-sm rounded disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-1 ${isTrackInFavorites(track.id)
