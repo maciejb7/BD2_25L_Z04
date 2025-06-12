@@ -351,7 +351,7 @@ function BooksPage() {
       if (!selectedUserBook) return;
 
       try {
-        await updateUserBook(selectedUserBook.id, formData);
+        await updateUserBook(selectedUserBook.book.id, formData);
 
         const updatedUserBooks = await getUserBooks();
         const updatedStats = await getUserReadingStats();

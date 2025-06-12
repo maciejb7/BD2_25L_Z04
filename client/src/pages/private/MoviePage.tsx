@@ -248,10 +248,10 @@ function MediaPage() {
 
       setRatingsInProgress(prev => ({ ...prev, [movieId]: true }));
 
-      const existingUserMovie = userMovies.find(um => um.movie_id === movieId);
+      const existingUserMovie = userMovies.find(um => um.movie.id === movieId);
       const newFavoriteStatus = existingUserMovie ? !existingUserMovie.is_favorite : true;
 
-      console.log(`Zmiana statusu ulubionego dla filmu ID: ${movieId}`); // Debug log
+      console.log(`Zmiana statusu ulubionego dla filmu ID: ${movieId}`);
 
       if (existingUserMovie) {
         await updateUserMovie(movieId, { is_favorite: newFavoriteStatus });
@@ -397,7 +397,7 @@ function MediaPage() {
 
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleRemoveMovie(userMovie.movie_id)}
+                            onClick={() => handleRemoveMovie(userMovie.movie.id)}
                             disabled={ratingsInProgress[userMovie.movie_id]}
                             className="flex-1 px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
