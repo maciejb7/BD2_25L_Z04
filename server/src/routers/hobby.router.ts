@@ -41,15 +41,15 @@ hobbyRouter.post("/user/hobbies/rate", HobbyController.rateHobby);
 // Remove a hobby rating
 hobbyRouter.delete("/user/hobbies/:hobbyId", HobbyController.removeHobbyRating);
 
+// Get a specific user's hobbies (admin only)
+hobbyRouter.get("/admin/users/:userId/hobbies", HobbyController.getUserHobbies);
+
 // ADMIN ROUTES
 
 // Admin routes
 const adminRouter = Router();
 adminRouter.use(authenticateUser());
 adminRouter.use(authorizeRole("admin"));
-
-// Get a specific user's hobbies (admin only)
-adminRouter.get("/admin/users/:userId/hobbies", HobbyController.getUserHobbies);
 
 // Get users by hobby (admin only)
 adminRouter.get(

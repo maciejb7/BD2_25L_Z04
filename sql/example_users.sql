@@ -391,3 +391,16 @@ VALUES
 ('67b4c10a-8866-437a-b0e4-52d782a3cb3b', '82baf87b-3ad5-452b-97be-2c2331888feb', 4, 5, NOW(), NOW()),
 ('9552a82b-101b-4373-90cf-a38c2816b845', '82baf87b-3ad5-452b-97be-2c2331888feb', 2, 3, NOW(), NOW()),
 ('760b5925-54fe-43fa-9967-07769a6104f8', '82baf87b-3ad5-452b-97be-2c2331888feb', 1, 4, NOW(), NOW());
+
+-- Music
+INSERT INTO music_tracks (music_track_id, music_track_title, music_album_id, music_artist_id, music_track_preview_link, music_track_deezer_link, "createdAt", "updatedAt") VALUES (445997982, 'I Need A Dollar', 54302092, 10183, 'https://cdnt-preview.dzcdn.net/api/1/1/5/d/f/0/5df6516a1974846259d6ea0586a93a77.mp3?hdnea=exp=1749736597~acl=/api/1/1/5/d/f/0/5df6516a1974846259d6ea0586a93a77.mp3*~data=user_id=0,application_id=42~hmac=259290f0c891230c5dc2f5e6f7d7b0dbbfe1fc1aa89d95f96c5b2e534a181a1a', 'https://www.deezer.com/track/445997982', '2025-06-12 13:41:39.262000 +00:00', '2025-06-12 13:41:39.262000 +00:00');
+INSERT INTO music_albums (music_album_id, music_album_title, music_artist_id, music_album_cover_small, music_album_release_date, music_genre_id, "createdAt", "updatedAt") VALUES (54302092, 'Good Things', 10183, 'https://cdn-images.dzcdn.net/images/cover/d43f664e66b16ac6d017df449c61f0d2/56x56-000000-80-0-0.jpg', '2010-01-01', null, '2025-06-12 13:41:39.250000 +00:00', '2025-06-12 13:41:39.250000 +00:00');
+INSERT INTO music_artists (music_artist_id, music_artist_name, music_artist_picture_small, "createdAt", "updatedAt") VALUES (10183, 'Aloe Blacc', 'https://cdn-images.dzcdn.net/images/artist/9c32944158f7eb8870785258e84313ff/56x56-000000-80-0-0.jpg', '2025-06-12 13:41:39.149000 +00:00', '2025-06-12 13:41:39.149000 +00:00');
+
+-- User music
+INSERT INTO user_music (user_music_id, user_id, music_track_id, added_at, "createdAt", "updatedAt") VALUES ('f22dd0b8-df8d-4d5f-b4c3-ea30492ef648', 'c3b0c5f4-5c5e-4c5b-8c5b-5c5b5c5b5c5b', 445997982, '2025-06-12 13:41:39.280000 +00:00', '2025-06-12 13:41:39.280000 +00:00', '2025-06-12 13:41:39.280000 +00:00');
+
+
+-- Answers
+INSERT INTO user_answers (id, user_id, question_id, answer, "createdAt", "updatedAt") VALUES ('1ba31d40-177a-4c3b-8893-077e690a7270', '1f52dc82-560f-47b4-8b84-c53a131d1f21', 'q9', 'Żuk', '2025-06-12 13:21:23.028000 +00:00', '2025-06-12 13:21:23.029000 +00:00');
+INSERT INTO user_answers (id, user_id, question_id, answer, "createdAt", "updatedAt") VALUES ('ddff6056-ad29-4640-9cb1-e1da9ea43fe9', 'c3b0c5f4-5c5e-4c5b-8c5b-5c5b5c5b5c5b', 'q9', 'Niedźwiedź', '2025-06-12 13:21:23.028000 +00:00', '2025-06-12 13:21:23.029000 +00:00');
