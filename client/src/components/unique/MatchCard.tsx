@@ -43,6 +43,13 @@ function MatchCard({ match }: MatchCardProps) {
                         {match.otherUser.name} {match.otherUser.surname}
                     </h3>
                     <p className="text-gray-600">@{match.otherUser.nickname}</p>
+                    <a
+                        href={`mailto:${match.otherUser.email}`}
+                        className="text-sm text-blue-600 hover:text-blue-800 break-all hover:underline transition-colors cursor-pointer"
+                        title={`Wyślij email do ${match.otherUser.name} ${match.otherUser.surname}`}
+                    >
+                        {match.otherUser.email}
+                    </a>
                     <p className="text-sm text-gray-500">
                         {calculateAge(match.otherUser.birthDate)} lat
                     </p>

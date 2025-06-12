@@ -10,6 +10,7 @@ export interface RecommendedUser {
   nickname: string;
   name: string;
   surname: string;
+  email: string;
   birthDate: string;
   gender: string;
   role: string;
