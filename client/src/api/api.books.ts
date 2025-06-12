@@ -90,8 +90,9 @@ export const getBooks = async (filters?: BooksFilter): Promise<Book[]> => {
     const queryString = params.toString();
     const url = queryString ? `/api/books/books?${queryString}` : '/api/books/books';
 
-    const response = await api.get<Book[]>(url);
-    return response.data;
+    const response = await api.get<{books: Book[], count: number}>(url);
+
+    return response.data.books;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -115,7 +116,7 @@ export const getBookDetails = async (bookId: number): Promise<Book> => {
 export const getBookAuthors = async (): Promise<BookAuthor[]> => {
   try {
     const response = await api.get<BookAuthor[]>('/api/books/authors');
-    return response.data;
+    return response.data.authors;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -127,7 +128,7 @@ export const getBookAuthors = async (): Promise<BookAuthor[]> => {
 export const getBookGenres = async (): Promise<string[]> => {
   try {
     const response = await api.get<string[]>('/api/books/genres');
-    return response.data;
+    return response.data.genres;
   } catch (error: unknown) {
     throw handleApiError(
       error,

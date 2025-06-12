@@ -107,7 +107,6 @@ const saveTrack = async (
   const t = transaction || (await database.transaction());
 
   try {
-    // First, save the artist if they don't exist
     const [artist] = await MusicArtist.findOrCreate({
       where: { music_artist_id: track.artist.id },
       defaults: {
@@ -118,10 +117,7 @@ const saveTrack = async (
       transaction: t,
     });
 
-    // Get album details
     const albumDetails = await getAlbumDetails(track.album.id);
-
-    // Save genre if it exists and doesn't already exist in the database
     let genreId = null;
     if (albumDetails.genres?.data?.length > 0) {
       const genre = albumDetails.genres.data[0];
@@ -136,7 +132,6 @@ const saveTrack = async (
       genreId = savedGenre.music_genre_id;
     }
 
-    // Save the album if it doesn't exist
     const [album] = await MusicAlbum.findOrCreate({
       where: { music_album_id: track.album.id },
       defaults: {
@@ -152,7 +147,6 @@ const saveTrack = async (
       transaction: t,
     });
 
-    // Finally, save the track if it doesn't exist
     const [savedTrack] = await MusicTrack.findOrCreate({
       where: { music_track_id: track.id },
       defaults: {
@@ -195,14 +189,12 @@ const addFavoriteTrack = async (
   const transaction = await database.transaction();
 
   try {
-    // Check if track exists in the database
     const track = await MusicTrack.findByPk(trackId);
 
     if (!track) {
       throw new Error("Track not found in database");
     }
 
-    // Check if the user already has this track in favorites
     const existingFavorite = await UserMusic.findOne({
       where: {
         user_id: userId,
@@ -214,7 +206,6 @@ const addFavoriteTrack = async (
       throw new Error("Track is already in user's favorites");
     }
 
-    // Add to favorites
     const userMusic = await UserMusic.create(
       {
         user_id: userId,

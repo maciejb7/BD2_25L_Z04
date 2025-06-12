@@ -62,7 +62,7 @@ export const getMovies = async (filters?: MoviesFilter): Promise<Movie[]> => {
     const url = queryString ? `/api/movies?${queryString}` : '/api/movies';
 
     const response = await api.get<Movie[]>(url);
-    return response.data;
+    return response.data.movies;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -74,7 +74,7 @@ export const getMovies = async (filters?: MoviesFilter): Promise<Movie[]> => {
 export const getMovieDetails = async (movieId: number): Promise<Movie> => {
   try {
     const response = await api.get<Movie>(`/api/movies/${movieId}`);
-    return response.data;
+    return response.data.movies;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -86,7 +86,7 @@ export const getMovieDetails = async (movieId: number): Promise<Movie> => {
 export const getMovieGenres = async (): Promise<MovieGenre[]> => {
   try {
     const response = await api.get<MovieGenre[]>('/api/movies/genres/all');
-    return response.data;
+    return response.data.genres;
   } catch (error: unknown) {
     throw handleApiError(
       error,
@@ -99,7 +99,7 @@ export const getUserMovies = async (userId?: string): Promise<UserMovie[]> => {
   try {
     const url = userId ? `/api/movies/user/${userId}` : '/api/movies/user/me/list';
     const response = await api.get<UserMovie[]>(url);
-    return response.data;
+    return response.data.movies;
   } catch (error: unknown) {
     throw handleApiError(
       error,

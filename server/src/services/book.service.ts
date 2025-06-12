@@ -127,7 +127,7 @@ const getBooks = async (filters: BooksFilter = {}): Promise<Book[]> => {
   } catch (error) {
     logger.error("Error getting books", error);
 
-    return [];
+    throw new Error("Failed to retrieve books");
   }
 };
 
@@ -319,7 +319,7 @@ const getUserBooks = async (
     // Walidacja danych wejściowych
     if (!userId) {
       logger.error("User ID is required");
-      return [];
+      throw new Error("User ID is required");
     }
 
     const where: Record<string, unknown> = { user_id: userId };
@@ -353,7 +353,7 @@ const getUserBooks = async (
     }));
   } catch (error) {
     logger.error("Error getting user books", error);
-    return [];
+    throw new Error("Failed to retrieve user books");
   }
 };
 
@@ -369,7 +369,7 @@ const getUserFavoriteBooks = async (
     // Walidacja danych wejściowych
     if (!userId) {
       logger.error("User ID is required");
-      return [];
+      throw new Error("User ID is required");
     }
 
     const favoriteBooks = await UserBook.findAll({
@@ -400,7 +400,7 @@ const getUserFavoriteBooks = async (
     }));
   } catch (error) {
     logger.error("Error getting user favorite books", error);
-    return [];
+    throw new Error("Failed to retrieve user's favorite books");
   }
 };
 
@@ -423,7 +423,7 @@ const getBookAuthors = async (): Promise<BookAuthor[]> => {
     return authors;
   } catch (error) {
     logger.error("Error getting book authors", error);
-    return [];
+    throw new Error("Failed to retrieve book authors");
   }
 };
 
@@ -453,7 +453,7 @@ const getBookGenres = async (): Promise<string[]> => {
     return genres.map((book) => book.book_genre).filter(Boolean);
   } catch (error) {
     logger.error("Error getting book genres", error);
-    return [];
+    throw new Error("Failed to retrieve book genres");
   }
 };
 
