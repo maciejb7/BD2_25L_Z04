@@ -25,6 +25,10 @@ import adminRouter from "./routers/admin.router";
 import { scheduleDeleteExpiredPasswordResetLinks } from "./tasks/delete-expired-password-resets";
 import { scheduleDeleteUnactiveExpiredAccounts } from "./tasks/delete-expired-unactive-accounts";
 import { scheduleDeleteAvatars } from "./tasks/delete-avatars";
+import movieRouter from "./routers/movie.router";
+import bookRouter from "./routers/book.router";
+import { MoviesService } from "./services/movie.service";
+import { BooksService } from "./services/book.service";
 
 export const connectToDatabase = async () => {
   try {
@@ -75,6 +79,12 @@ const onStart = async () => {
 
   await QuestionService.initializeQuestionsData();
   logger.info("Zainicjalizowano pytania.");
+
+  await MoviesService.initializeMoviesData();
+  logger.info("Zainicjalizowano dane filmów.");
+
+  await BooksService.initializeBookData();
+  logger.info("Zainicjalizowano dane książek.");
 };
 
 const startExpress = (app: Express) => {
@@ -101,6 +111,8 @@ const addRouters = (app: express.Application) => {
   app.use("/api/questions", questionRouter);
   app.use("/api/hobbies", hobbyRouter);
   app.use("/api/music", musicRouter);
+  app.use("/api/movies", movieRouter);
+  app.use("/api/books", bookRouter);
   app.use("/api/location", locationRouter);
 };
 

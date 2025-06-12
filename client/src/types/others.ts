@@ -9,6 +9,7 @@ export interface User {
   role: string;
   birthDate: string;
   createdAt: string;
+  userId: string;
 }
 
 export interface UserWithSessions extends User {

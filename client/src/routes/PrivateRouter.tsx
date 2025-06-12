@@ -7,6 +7,10 @@ import UsersListPage from "../pages/admin/UsersListPage";
 import AdminAccountSettings from "../pages/admin/AdminAccountSettings";
 import QuestionsPage from "../pages/private/QuestionsPage";
 import ExplorePage from "../pages/private/ExplorePage";
+import HobbyPage from "../pages/private/HobbysPage";
+import MediaPage from "../pages/private/MoviePage";
+import BooksPage from "../pages/private/BookPage";
+import MusicPage from "../pages/private/MusicPage";
 
 function PrivateRouter() {
   const isUserAdmin = isUserAdminByStorage();
@@ -20,6 +24,10 @@ function PrivateRouter() {
       <Route path="/account-settings" element={<AccountSettings />} />
       <Route path="/login" element={<Navigate to="/" replace />} />
       <Route path="/register" element={<Navigate to="/" replace />} />
+      <Route path="/hobbies" element={<HobbyPage />} />
+      <Route path="/media" element={< MediaPage />} />
+      <Route path="/music" element={< MusicPage />} />
+      <Route path="/book" element={< BooksPage />} />
       <Route path="*" element={<NotFoundPage />} />
       {isUserAdmin && (
         <>

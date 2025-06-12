@@ -34,6 +34,26 @@ const options: SideBarOption[] = [
     admin: true,
   },
   {
+    name: "Hobby",
+    icon: "fas fa-palette",
+    link: "/hobbies",
+  },
+  {
+    name: "książki",
+    icon: "fas fa-book",
+    link: "/book",
+  },
+  {
+    name: "muzyka",
+    icon: "fas fa-music",
+    link: "/music",
+  },
+  {
+    name: "filmy",
+    icon: "fas fa-film",
+    link: "/media",
+  },
+  {
     name: "Wyloguj",
     icon: "fas fa-sign-out-alt",
     onClick: async () => await logout(),

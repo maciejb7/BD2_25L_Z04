@@ -11,14 +11,12 @@ import { database } from "../db/database";
 const initializeHobbyData = async (): Promise<void> => {
   const transaction = await database.transaction();
   try {
-    // Check if categories exist, if not create them
     const categoryCount = await HobbyCategory.count();
     if (categoryCount === 0) {
       logger.info("Initializing hobby category data");
       await HobbyCategory.bulkCreate(hobbyCategories, { transaction });
     }
 
-    // Check if hobbies exist, if not create them
     const hobbyCount = await Hobby.count();
     if (hobbyCount === 0) {
       logger.info("Initializing hobby data");
@@ -130,18 +128,15 @@ const rateHobby = async (
   const t = transaction || (await database.transaction());
 
   try {
-    // Check if the hobby exists
     const hobby = await Hobby.findByPk(hobbyId, { transaction: t });
     if (!hobby) {
       throw new Error("Hobby not found");
     }
 
-    // Validate rating value
     if (rating < 1 || rating > 10) {
       throw new Error("Rating must be between 1 and 10");
     }
 
-    // Find or create user hobby rating
     const [userHobby, created] = await UserHobby.findOrCreate({
       where: {
         userId,
@@ -153,20 +148,17 @@ const rateHobby = async (
       transaction: t,
     });
 
-    // If not created (already exists), update the rating
     if (!created) {
       userHobby.rating = rating;
       await userHobby.save({ transaction: t });
     }
 
-    // Commit transaction if started
     if (!transaction) {
       await t.commit();
     }
 
     return userHobby;
   } catch (error) {
-    // Rollback transaction if started
     if (!transaction) {
       await t.rollback();
     }
@@ -193,14 +185,12 @@ const removeHobbyRating = async (
       transaction: t,
     });
 
-    // Commit transaction if started it
     if (!transaction) {
       await t.commit();
     }
 
     return result > 0;
   } catch (error) {
-    // Rollback transaction if started it
     if (!transaction) {
       await t.rollback();
     }

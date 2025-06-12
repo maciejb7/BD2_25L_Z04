@@ -20,6 +20,13 @@ import { Question } from "./models/question";
 import { PasswordResetLink } from "./models/password-reset-link";
 import { AccountActivationLink } from "./models/account-activation-link";
 import { AccountBan } from "./models/account-ban";
+import { MovieGenre } from "./models/movie_genre";
+import { Movie } from "./models/movies";
+import { UserMovie } from "./models/user_movie";
+import { BookAuthor } from "./models/book_author";
+import { Book } from "./models/book";
+import { UserBook } from "./models/user_books";
+
 const models = [
   User,
   Session,
@@ -36,6 +43,12 @@ const models = [
   MusicTrack,
   UserMusic,
   UserLocation,
+  MovieGenre,
+  Movie,
+  UserMovie,
+  BookAuthor,
+  Book,
+  UserBook,
   PasswordResetLink,
   AccountActivationLink,
   AccountBan,

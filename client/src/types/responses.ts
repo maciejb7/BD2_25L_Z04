@@ -36,3 +36,4 @@ export interface BanResponse {
   reason: string;
   givenAt: string;
 }
+

@@ -7,7 +7,7 @@ import {
 
 const hobbyRouter = Router();
 
-// PUBLIC ROUTES
+// PUBLIC ROUTES - te muszą być przed middleware uwierzytelniającym
 
 // Get all categories
 hobbyRouter.get("/categories", HobbyController.getAllCategories);
@@ -27,37 +27,45 @@ hobbyRouter.get(
 // Get hobby by ID
 hobbyRouter.get("/hobbies/:hobbyId", HobbyController.getHobbyById);
 
-// PROTECTED ROUTES
-
-// User hobby routes
-hobbyRouter.use("/user", authenticateUser());
+// PROTECTED USER ROUTES
 
 // Get current user's hobbies
-hobbyRouter.get("/user/hobbies", HobbyController.getCurrentUserHobbies);
+hobbyRouter.get(
+  "/user/hobbies",
+  authenticateUser(),
+  HobbyController.getCurrentUserHobbies,
+);
 
 // Rate a hobby
-hobbyRouter.post("/user/hobbies/rate", HobbyController.rateHobby);
+hobbyRouter.post(
+  "/user/hobbies/rate",
+  authenticateUser(),
+  HobbyController.rateHobby,
+);
 
 // Remove a hobby rating
-hobbyRouter.delete("/user/hobbies/:hobbyId", HobbyController.removeHobbyRating);
-
-// Get a specific user's hobbies (admin only)
-hobbyRouter.get("/admin/users/:userId/hobbies", HobbyController.getUserHobbies);
+hobbyRouter.delete(
+  "/user/hobbies/:hobbyId",
+  authenticateUser(),
+  HobbyController.removeHobbyRating,
+);
 
 // ADMIN ROUTES
 
-// Admin routes
-const adminRouter = Router();
-adminRouter.use(authenticateUser());
-adminRouter.use(authorizeRole("admin"));
-
-// Get users by hobby (admin only)
-adminRouter.get(
-  "/admin/hobbies/:hobbyId/users",
-  HobbyController.getUsersByHobby,
+// Get a specific user's hobbies (admin only)
+hobbyRouter.get(
+  "/admin/users/:userId/hobbies",
+  authenticateUser(),
+  authorizeRole("admin"),
+  HobbyController.getUserHobbies,
 );
 
-// Add admin routes to the main router
-hobbyRouter.use("/", adminRouter);
+// Get users by hobby (admin only)
+hobbyRouter.get(
+  "/admin/hobbies/:hobbyId/users",
+  authenticateUser(),
+  authorizeRole("admin"),
+  HobbyController.getUsersByHobby,
+);
 
 export default hobbyRouter;
