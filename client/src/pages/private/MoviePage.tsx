@@ -354,23 +354,6 @@ function MediaPage() {
                         {userMovie.movie.movie_director && (
                           <p className="text-gray-500 text-xs mb-3">Reżyser: {userMovie.movie.movie_director}</p>
                         )}
-
-                        {userMovie.rating ? (
-                          <div className="bg-gray-50 rounded-lg p-3 mb-3">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-semibold text-gray-700">Twoja ocena:</span>
-                              <span className="text-lg font-bold text-blue-600">{userMovie.rating}/10</span>
-                            </div>
-                            <div className="flex justify-center space-x-1">
-                              {renderStars(userMovie.rating)}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-gray-50 rounded-lg p-3 mb-3 text-center">
-                            <span className="text-sm text-gray-500">Film nie został jeszcze oceniony</span>
-                          </div>
-                        )}
-
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-sm font-medium text-gray-700">Status:</span>
                           <div className="flex items-center space-x-2">
@@ -515,10 +498,6 @@ function MediaPage() {
                                   )}
                                 </div>
 
-                                <div className="flex items-center justify-center space-x-1 mb-2">
-                                  {renderStars(userMovieData?.rating || 0, true, movie.id)}
-                                </div>
-
                                 <div className="flex space-x-2 mt-2">
                                   <button
                                     onClick={() => handleToggleFavorite(movie.id)}
@@ -540,16 +519,6 @@ function MediaPage() {
                                       {ratingsInProgress[movie.id] ? "Usuwanie..." : "Usuń z listy"}
                                     </button>
                                   )}
-                                </div>
-
-                                {ratingsInProgress[movie.id] && (
-                                  <div className="text-center text-sm text-gray-500 mt-2">
-                                    Przetwarzanie...
-                                  </div>
-                                )}
-
-                                <div className="text-xs text-gray-500 mt-2 text-center">
-                                  Kliknij na gwiazdkę, aby ocenić (1-10)
                                 </div>
                               </div>
                             </div>
