@@ -42,7 +42,7 @@ export class NoAuthenticationError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 401,
+      statusCode: options.statusCode ?? 401,
       message: options.message ?? "Brak autoryzacji.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -57,7 +57,7 @@ export class FieldValidationError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 400,
+      statusCode: options.statusCode ?? 400,
       message:
         options.message ??
         "Błąd walidacji danych podczas przetwarzania żądania.",
@@ -74,7 +74,7 @@ export class UserAlreadyExistsByNicknameError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 409,
+      statusCode: options.statusCode ?? 409,
       message: options.message ?? "Użytkownik o podanym nicku już istnieje.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -88,7 +88,7 @@ export class UserAlreadyExistsByEmailError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 409,
+      statusCode: options.statusCode ?? 409,
       message:
         options.message ?? "Użytkownik o podanym adresie e-mail już istnieje.",
       loggerMessage: buildLoggerMessage(
@@ -104,7 +104,7 @@ export class UserNotFoundError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 404,
+      statusCode: options.statusCode ?? 404,
       message: options.message ?? "Nie znaleziono użytkownika.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -152,7 +152,7 @@ export class InvalidPasswordError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 401,
+      statusCode: options.statusCode ?? 401,
       message: options.message ?? "Nieprawidłowe hasło.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -166,7 +166,7 @@ export class NoRefreshTokenError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 401,
+      statusCode: options.statusCode ?? 401,
       message: "Nie jesteś zalogowany. Zaloguj się ponownie.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -181,7 +181,7 @@ export class InvalidRefreshTokenError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 401,
+      statusCode: options.statusCode ?? 401,
       message: options.message ?? "Nie znaleziono sesji. Zaloguj się ponownie.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -196,7 +196,7 @@ export class ExpiredRefreshTokenError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 401,
+      statusCode: options.statusCode ?? 401,
       message: options.message ?? "Twoja sesja wygasła. Zaloguj się ponownie.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -211,7 +211,7 @@ export class FileUploadError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 400,
+      statusCode: options.statusCode ?? 400,
       message: options.message ?? "Błąd przesyłania pliku.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -225,7 +225,7 @@ export class ActivationLinkNotFoundError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 404,
+      statusCode: options.statusCode ?? 404,
       message: options.message ?? "Nie znaleziono linku aktywacyjnego.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -240,7 +240,7 @@ export class ActivationLinkExpiredError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 400,
+      statusCode: options.statusCode ?? 400,
       message:
         options.message ??
         "Link aktywacyjny wygasł. Proszę zarejestrować się ponownie.",
@@ -257,7 +257,7 @@ export class PasswordResetLinkNotFoundError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 404,
+      statusCode: options.statusCode ?? 404,
       message: options.message ?? "Nie znaleziono linku do resetu hasła.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -272,7 +272,7 @@ export class PasswordResetLinkExpiredError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 400,
+      statusCode: options.statusCode ?? 400,
       message: options.message ?? "Link do resetu hasła wygasł.",
       loggerMessage: buildLoggerMessage(
         options.metaData,
@@ -287,7 +287,7 @@ export class ForbiddenActionError extends ApiError {
   constructor(options: ApiErrorOptions = {}) {
     super({
       ...options,
-      statusCode: 403,
+      statusCode: options.statusCode ?? 403,
       message: options.message ?? "Ta akcja jest niedozwolona.",
       loggerMessage: buildLoggerMessage(
         options.metaData,

@@ -10,12 +10,12 @@ import { getApp } from "../setup";
  * @param password
  * @returns User added to the database.
  */
-export const createUser = async (
-  nickname: string,
-  email: string,
-  password: string,
-): Promise<User> => {
+export const createUser = async (password = "Haslo123@"): Promise<User> => {
   const hashedPassword = await bcrypt.hash(password, 10);
+
+  const unique = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  const nickname = `user_${unique}A1!`;
+  const email = `user${unique}@email.com`;
 
   const user = await User.create({
     name: "Janusz",
@@ -26,6 +26,7 @@ export const createUser = async (
     gender: Gender.M,
     birthDate: new Date("1990-01-01"),
     role: Role.USER,
+    isActive: true,
   });
 
   return user;
@@ -46,20 +47,18 @@ export const extractRefreshToken = (
 };
 
 export const getLoggedUserData = async (
-  nickname: string,
-  email: string,
-  password: string,
+  password = "Haslo123@",
 ): Promise<{
   user: User;
   accessToken: string;
   refreshToken: string | null;
 }> => {
-  const user = await createUser(nickname, email, password);
+  const user = await createUser();
 
   const loginResponse = await request(await getApp())
     .post("/api/auth/login")
     .send({
-      nicknameOrEmail: nickname,
+      nicknameOrEmail: user.nickname,
       password: password,
     });
 

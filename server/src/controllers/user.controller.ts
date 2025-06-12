@@ -261,6 +261,7 @@ const deleteAccountByUser = handleRequest(
         message: "Nieprawidłowy login lub hasło.",
         metaData: loggerMetaData,
         loggerMessage: `Nieudana próba usunięcia konta przez użytkownika ${userNickname} - podano inny nick.`,
+        statusCode: 400,
       });
     }
 

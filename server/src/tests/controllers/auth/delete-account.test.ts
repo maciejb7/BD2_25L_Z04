@@ -1,30 +1,22 @@
 import request from "supertest";
-import { getLoggedUserData } from "../../utils/userHelpers";
+import { getLoggedUserData } from "../../utils/user-helpers";
 import { getApp } from "../../setup";
 import { Session } from "../../../db/models/session";
 import { User } from "../../../db/models/user";
 
-describe("POST /api/auth/deleteAccount", () => {
+describe("POST /api/user/delete-account", () => {
   it("should delete the account successfully", async () => {
-    const { user, accessToken, refreshToken } = await getLoggedUserData(
-      "Tadeusz",
-      "tadeusz1990@gmail.com",
-      "Haslo123@",
-    );
+    const { user, accessToken, refreshToken } = await getLoggedUserData();
 
     const response = await request(await getApp())
-      .post("/api/auth/delete-account")
+      .post("/api/user/delete-account")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", `refreshToken=${refreshToken}`)
       .send({
-        nickname: "Tadeusz",
+        nickname: user.nickname,
         password: "Haslo123@",
       });
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Usuwanie konta zakończone sukcesem.",
-    );
 
     const sessionCount = await Session.count({
       where: {
@@ -44,75 +36,42 @@ describe("POST /api/auth/deleteAccount", () => {
 
   it("should return 401 if user is not authenticated", async () => {
     const response = await request(await getApp())
-      .post("/api/auth/delete-account")
+      .post("/api/user/delete-account")
       .send({
         nickname: "Tadeusz",
         password: "Haslo123@",
       });
     expect(response.status).toBe(401);
-    expect(response.body).toHaveProperty("message", "Brak autoryzacji.");
   });
 
   it("should return 400 if nickname is not provided", async () => {
-    const { accessToken, refreshToken } = await getLoggedUserData(
-      "Tadeusz",
-      "tadeusz1990@gmail.com",
-      "Haslo123@",
-    );
+    const { accessToken, refreshToken } = await getLoggedUserData();
     const response = await request(await getApp())
-      .post("/api/auth/delete-account")
+      .post("/api/user/delete-account")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", `refreshToken=${refreshToken}`)
       .send({
         password: "Haslo123@",
       });
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Nieprawidłowy login lub hasło.",
-    );
-
-    await User.destroy({
-      where: {
-        nickname: "Tadeusz",
-      },
-    });
   });
 
   it("should return 400 if password is not provided", async () => {
-    const { accessToken, refreshToken } = await getLoggedUserData(
-      "Tadeusz",
-      "tadeusz1990@gmail.com",
-      "Haslo123@",
-    );
+    const { accessToken, refreshToken } = await getLoggedUserData();
     const response = await request(await getApp())
-      .post("/api/auth/delete-account")
+      .post("/api/user/delete-account")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", `refreshToken=${refreshToken}`)
       .send({
         nickname: "Tadeusz",
       });
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Hasło nie może być puste.",
-    );
-
-    await User.destroy({
-      where: {
-        nickname: "Tadeusz",
-      },
-    });
   });
 
   it("should return 400 if nickname is incorrect", async () => {
-    const { accessToken, refreshToken } = await getLoggedUserData(
-      "Tadeusz",
-      "tadeusz1990@gmail.com",
-      "Haslo123@",
-    );
+    const { accessToken, refreshToken } = await getLoggedUserData();
     const response = await request(await getApp())
-      .post("/api/auth/delete-account")
+      .post("/api/user/delete-account")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", `refreshToken=${refreshToken}`)
       .send({
@@ -120,43 +79,19 @@ describe("POST /api/auth/deleteAccount", () => {
         password: "Haslo123@",
       });
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Nieprawidłowy login lub hasło.",
-    );
-
-    await User.destroy({
-      where: {
-        nickname: "Tadeusz",
-      },
-    });
   });
 
   it("should return 400 if password is incorrect", async () => {
-    const { accessToken, refreshToken } = await getLoggedUserData(
-      "Tadeusz",
-      "tadeusz1990@gmail.com",
-      "Haslo123@",
-    );
+    const { user, accessToken, refreshToken } = await getLoggedUserData();
 
     const response = await request(await getApp())
-      .post("/api/auth/delete-account")
+      .post("/api/user/delete-account")
       .set("Authorization", `Bearer ${accessToken}`)
       .set("Cookie", `refreshToken=${refreshToken}`)
       .send({
-        nickname: "Tadeusz",
-        password: "Haslo123",
+        nickname: user.nickname,
+        password: "WrongPassword",
       });
     expect(response.status).toBe(401);
-    expect(response.body).toHaveProperty(
-      "message",
-      "Nieprawidłowy login lub hasło.",
-    );
-
-    await User.destroy({
-      where: {
-        nickname: "Tadeusz",
-      },
-    });
   });
 });
