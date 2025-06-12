@@ -152,12 +152,10 @@ function MediaPage() {
         // Aktualizuj lokalnie istniejący film
         updatedUserMovie = { ...existingUserMovie, rating };
       } else {
-        // Dodaj nowy film do listy użytkownika
         const newUserMovie = await addUserMovie({ movieId, rating });
         updatedUserMovie = newUserMovie;
       }
 
-      // Aktualizuj stan lokalnie dla natychmiastowej responsywności
       setUserMovies(prevUserMovies => {
         if (existingUserMovie) {
           return prevUserMovies.map(um =>
@@ -174,11 +172,9 @@ function MediaPage() {
     } catch (error: any) {
       console.error("Błąd podczas oceniania filmu:", error);
 
-      // Dodaj więcej szczegółów do błędu
       const errorMessage = error?.response?.data?.message || error?.message || "Nieznany błąd";
       showAlert(`Wystąpił błąd podczas oceniania filmu: ${errorMessage}`, "error");
 
-      // Odśwież dane w przypadku błędu
       try {
         const refreshedUserMovies = await getUserMovies();
         setUserMovies(refreshedUserMovies);
@@ -228,6 +224,8 @@ function MediaPage() {
         console.error("Błąd podczas odświeżania danych:", refreshError);
       }
     } finally {
+      const refreshedMovies = await getUserMovies();
+      setUserMovies(refreshedMovies);
       setRatingsInProgress(prev => ({ ...prev, [movieId]: false }));
     }
   };
