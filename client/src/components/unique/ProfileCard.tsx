@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RecommendedUser } from "../../api/api.recommendation";
 import Avatar from "../common/Avatar";
 import { getUserAvatar } from "../../api/api.user";
-import { getDateFormatter } from "../../utils/formatters";
+import { getUserLocation, UserLocation } from "../../api/api.location";
+import { getUserAnswers } from "../../api/api.questions";
 
 interface ProfileCardProps {
     user: RecommendedUser;
@@ -11,21 +12,72 @@ interface ProfileCardProps {
     isLoading?: boolean;
 }
 
+interface Answer {
+    id: string;
+    userId: string;
+    questionId: string;
+    answer: string;
+    createdAt: string;
+    updatedAt: string;
+    user: {
+        userId: string;
+        nickname: string;
+        name: string;
+        surname: string;
+    };
+    question: {
+        id: string;
+        content: string;
+    };
+}
+
 function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCardProps) {
     const [avatarUrl, setAvatarUrl] = useState<string>("");
+    const [location, setLocation] = useState<UserLocation | null>(null);
+    const [randomAnswer, setRandomAnswer] = useState<Answer | null>(null);
+    const [isLoadingData, setIsLoadingData] = useState(true);
 
-    // Load user avatar when component mounts
-    useState(() => {
-        const loadAvatar = async () => {
+    // Load user data when component mounts
+    useEffect(() => {
+        const loadUserData = async () => {
+            setIsLoadingData(true);
+
             try {
-                const url = await getUserAvatar();
-                setAvatarUrl(url || "");
+                // Load avatar
+                const avatarPromise = getUserAvatar().catch(() => "");
+
+                // Load location
+                const locationPromise = getUserLocation(user.userId).catch(() => null);
+
+                // Load answers and pick a random one
+                const answersPromise = getUserAnswers(user.userId)
+                    .then(answers => {
+                        if (answers && answers.length > 0) {
+                            const randomIndex = Math.floor(Math.random() * answers.length);
+                            return answers[randomIndex];
+                        }
+                        return null;
+                    })
+                    .catch(() => null);
+
+                const [avatar, userLocation, answer] = await Promise.all([
+                    avatarPromise,
+                    locationPromise,
+                    answersPromise
+                ]);
+
+                setAvatarUrl(avatar || "");
+                setLocation(userLocation);
+                setRandomAnswer(answer);
             } catch (error) {
-                setAvatarUrl("");
+                console.error("Error loading user data:", error);
+            } finally {
+                setIsLoadingData(false);
             }
         };
-        loadAvatar();
-    });
+
+        loadUserData();
+    }, [user.userId]);
 
     const calculateAge = (birthDate: string): number => {
         const birth = new Date(birthDate);
@@ -42,11 +94,27 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
         return gender === "male" ? "Mężczyzna" : "Kobieta";
     };
 
+    const formatLocation = (location: UserLocation | null): string => {
+        if (!location) return "Lokalizacja niedostępna";
+
+        if (location.address) {
+            return location.address;
+        }
+
+        // If no address, show coordinates
+        return `${location.latitude.toFixed(2)}°, ${location.longitude.toFixed(2)}°`;
+    };
+
+    const truncateAnswer = (answer: string, maxLength: number = 50): string => {
+        if (answer.length <= maxLength) return answer;
+        return answer.substring(0, maxLength) + "...";
+    };
+
     return (
-        <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full mx-auto">
+        <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full mx-auto relative">
             {/* Basic Info */}
             <div className="flex flex-col items-center mb-6">
-                <Avatar src={avatarUrl} size="large" />
+                <Avatar size="large" />
                 <h2 className="text-2xl font-bold text-gray-800 mt-4">
                     {user.name} {user.surname}
                 </h2>
@@ -56,19 +124,48 @@ function ProfileCard({ user, onLike, onDislike, isLoading = false }: ProfileCard
             {/* Profile Details */}
             <div className="space-y-3 mb-6">
                 <div className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium">Wiek:</span>
-                    <span className="text-gray-800">{calculateAge(user.birthDate)} lat</span>
-                </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium">Płeć:</span>
-                    <span className="text-gray-800">{formatGender(user.gender)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-600 font-medium">Dołączył:</span>
+                    <span className="text-gray-600 font-medium">Wiek i płeć:</span>
                     <span className="text-gray-800">
-                        {getDateFormatter(user.createdAt)?.getDMY() || "Nieznana data"}
+                        {calculateAge(user.birthDate)} lat, {formatGender(user.gender)}
                     </span>
                 </div>
+
+                <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">Lokalizacja:</span>
+                    <span className="text-gray-800 text-right text-sm max-w-[150px]">
+                        {isLoadingData ? "Ładowanie..." : formatLocation(location)}
+                    </span>
+                </div>
+
+                {/* Random Question/Answer */}
+                {randomAnswer && !isLoadingData && (
+                    <div className="bg-blue-50 rounded-lg p-3 mt-4">
+                        <p className="text-sm font-medium text-blue-800 mb-1">
+                            {randomAnswer.question.content}
+                        </p>
+                        <p className="text-sm text-blue-600 italic">
+                            "{truncateAnswer(randomAnswer.answer)}"
+                        </p>
+                    </div>
+                )}
+
+                {/* No answers placeholder */}
+                {!randomAnswer && !isLoadingData && (
+                    <div className="bg-gray-50 rounded-lg p-3 mt-4">
+                        <p className="text-sm text-gray-500 text-center">
+                            Brak odpowiedzi na pytania
+                        </p>
+                    </div>
+                )}
+
+                {/* Loading placeholder */}
+                {isLoadingData && (
+                    <div className="bg-gray-50 rounded-lg p-3 mt-4">
+                        <p className="text-sm text-gray-500 text-center">
+                            Ładowanie informacji...
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Action Buttons */}
