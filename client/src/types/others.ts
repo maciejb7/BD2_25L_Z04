@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 export interface User {
   userId: string;
   nickname: string;
@@ -9,7 +8,6 @@ export interface User {
   role: string;
   birthDate: string;
   createdAt: string;
-  userId: string;
 }
 
 export interface UserWithSessions extends User {
